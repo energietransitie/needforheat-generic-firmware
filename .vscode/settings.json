@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "freertos.h": "c",
+        "manager.h": "c",
+        "scheme_ble.h": "c",
+        "protocomm_ble.h": "c",
+        "protocomm.h": "c"
+    }
+}
