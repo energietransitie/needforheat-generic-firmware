@@ -21,10 +21,16 @@
 #include <esp_attr.h>
 #include <esp_sleep.h>
 #include <esp_sntp.h>
+#include <esp_netif.h>
 #include <nvs_flash.h>
+#include <esp_tls.h>
+#include <esp_http_client.h>
 
 #include <wifi_provisioning/manager.h>
-#define CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
+
+#define MAX_HTTP_OUTPUT_BUFFER 2048
+#define MAX_HTTP_RECV_BUFFER 512
+#define CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
@@ -35,6 +41,11 @@
 
 static const char *TAG = "app";
 
+// extern const char certificate_start[] asm("_binary_certificate_pem_start");
+// extern const char certificate_end[]   asm("_binary_certificate_pem_end");
+
+char *https_url = "192.168.178.75:4444/set/house/opentherm";
+
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
 static EventGroupHandle_t wifi_event_group;
@@ -42,9 +53,9 @@ static EventGroupHandle_t wifi_event_group;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv)
 {
-   settimeofday(tv, NULL);
-   ESP_LOGI(TAG, "Time is synchronized from custom code");
-   sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
+    settimeofday(tv, NULL);
+    ESP_LOGI(TAG, "Time is synchronized from custom code");
+    sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
 }
 #endif
 
@@ -54,51 +65,95 @@ void time_sync_notification_cb(struct timeval *tv)
 }
 
 /* Event handler for catching system events */
-static void event_handler(void* arg, esp_event_base_t event_base,
-                          int32_t event_id, void* event_data)
+static void event_handler(void *arg, esp_event_base_t event_base,
+                          int32_t event_id, void *event_data)
 {
-    if (event_base == WIFI_PROV_EVENT) {
-        switch (event_id) {
-            case WIFI_PROV_START:
-                ESP_LOGI(TAG, "Provisioning started");
-                break;
-            case WIFI_PROV_CRED_RECV: {
-                wifi_sta_config_t *wifi_sta_cfg = (wifi_sta_config_t *)event_data;
-                ESP_LOGI(TAG, "Received Wi-Fi credentials"
-                         "\n\tSSID     : %s\n\tPassword : %s",
-                         (const char *) wifi_sta_cfg->ssid,
-                         (const char *) wifi_sta_cfg->password);
-                break;
-            }
-            case WIFI_PROV_CRED_FAIL: {
-                wifi_prov_sta_fail_reason_t *reason = (wifi_prov_sta_fail_reason_t *)event_data;
-                ESP_LOGE(TAG, "Provisioning failed!\n\tReason : %s"
-                         "\n\tPlease reset to factory and retry provisioning",
-                         (*reason == WIFI_PROV_STA_AUTH_ERROR) ?
-                         "Wi-Fi station authentication failed" : "Wi-Fi access-point not found");
-                break;
-            }
-            case WIFI_PROV_CRED_SUCCESS:
-                ESP_LOGI(TAG, "Provisioning successful");
-                break;
-            case WIFI_PROV_END:
-                /* De-initialize manager once provisioning is finished */
-                wifi_prov_mgr_deinit();
-                break;
-            default:
-                break;
+    if (event_base == WIFI_PROV_EVENT)
+    {
+        switch (event_id)
+        {
+        case WIFI_PROV_START:
+            ESP_LOGI(TAG, "Provisioning started");
+            break;
+        case WIFI_PROV_CRED_RECV:
+        {
+            wifi_sta_config_t *wifi_sta_cfg = (wifi_sta_config_t *)event_data;
+            ESP_LOGI(TAG, "Received Wi-Fi credentials"
+                          "\n\tSSID     : %s\n\tPassword : %s",
+                     (const char *)wifi_sta_cfg->ssid,
+                     (const char *)wifi_sta_cfg->password);
+            break;
         }
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        case WIFI_PROV_CRED_FAIL:
+        {
+            wifi_prov_sta_fail_reason_t *reason = (wifi_prov_sta_fail_reason_t *)event_data;
+            ESP_LOGE(TAG, "Provisioning failed!\n\tReason : %s"
+                          "\n\tPlease reset to factory and retry provisioning",
+                     (*reason == WIFI_PROV_STA_AUTH_ERROR) ? "Wi-Fi station authentication failed" : "Wi-Fi access-point not found");
+            break;
+        }
+        case WIFI_PROV_CRED_SUCCESS:
+            ESP_LOGI(TAG, "Provisioning successful");
+            break;
+        case WIFI_PROV_END:
+            /* De-initialize manager once provisioning is finished */
+            wifi_prov_mgr_deinit();
+            break;
+        default:
+            break;
+        }
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
+    {
         esp_wifi_connect();
-    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+    }
+    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+    {
+        ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
         ESP_LOGI(TAG, "Connected with IP Address:" IPSTR, IP2STR(&event->ip_info.ip));
         /* Signal main application to continue execution */
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
-    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+    }
+    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+    {
         ESP_LOGI(TAG, "Disconnected. Connecting to the AP again...");
         esp_wifi_connect();
     }
+}
+
+esp_err_t _http_event_handle(esp_http_client_event_t *evt)
+{
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ERROR:
+        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
+        break;
+    case HTTP_EVENT_ON_CONNECTED:
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
+        break;
+    case HTTP_EVENT_HEADER_SENT:
+        ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
+        break;
+    case HTTP_EVENT_ON_HEADER:
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
+        printf("%.*s", evt->data_len, (char *)evt->data);
+        break;
+    case HTTP_EVENT_ON_DATA:
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+        if (!esp_http_client_is_chunked_response(evt->client))
+        {
+            printf("%.*s", evt->data_len, (char *)evt->data);
+        }
+
+        break;
+    case HTTP_EVENT_ON_FINISH:
+        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
+        break;
+    case HTTP_EVENT_DISCONNECTED:
+        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+        break;
+    }
+    return ESP_OK;
 }
 
 static void wifi_init_sta(void)
@@ -122,14 +177,16 @@ static void get_device_service_name(char *service_name, size_t max)
  * Applications can choose to use other formats like protobuf, JSON, XML, etc.
  */
 esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen,
-                                          uint8_t **outbuf, ssize_t *outlen, void *priv_data)
+                                   uint8_t **outbuf, ssize_t *outlen, void *priv_data)
 {
-    if (inbuf) {
+    if (inbuf)
+    {
         ESP_LOGI(TAG, "Received data: %.*s", inlen, (char *)inbuf);
     }
     char response[] = "SUCCESS";
     *outbuf = (uint8_t *)strdup(response);
-    if (*outbuf == NULL) {
+    if (*outbuf == NULL)
+    {
         ESP_LOGE(TAG, "System out of memory");
         return ESP_ERR_NO_MEM;
     }
@@ -150,10 +207,9 @@ static void initialize_sntp(void)
     sntp_init();
 }
 
-
 static void obtain_time(void)
 {
-    ESP_ERROR_CHECK( nvs_flash_init() );
+    ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     // ESP_ERROR_CHECK( esp_event_loop_create_default() );
 
@@ -167,10 +223,11 @@ static void obtain_time(void)
 
     // wait for time to be set
     time_t now = 0;
-    struct tm timeinfo = { 0 };
+    struct tm timeinfo = {0};
     int retry = 0;
     const int retry_count = 10;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+    {
         ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
@@ -180,11 +237,72 @@ static void obtain_time(void)
     // ESP_ERROR_CHECK( example_disconnect() );
 }
 
+static void https(char *data)
+{
+    char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   // Buffer to store response of http request
+    int content_length = 0;
+    esp_http_client_config_t config = {
+        .host = "192.168.178.75",
+        .port = 4444,
+        .path = "/set/house/opentherm",
+        .transport_type = HTTP_TRANSPORT_OVER_SSL,
+        // .cert_pem = certificate_start,
+        .event_handler = _http_event_handle
+        };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    // esp_err_t err = esp_http_client_perform(client);
+    // if (err == ESP_OK) {
+    //     ESP_LOGI(TAG, "Finished performing for the first time?");
+    //     ESP_LOGI(TAG, "Status = %d, content_length = %d",
+    // esp_http_client_get_status_code(client),
+    // esp_http_client_get_content_length(client));
+
+    // second request
+    esp_http_client_set_url(client, "/set/house/opentherm");
+    esp_http_client_set_method(client, HTTP_METHOD_GET);
+    esp_http_client_set_header(client, "Host", "energietransitiewindesheim.nl:4444");
+    esp_http_client_set_header(client, "Content-Type", "text/plain");
+    ESP_LOGI(TAG, "Made it past headers!!");
+    // esp_http_client_set_post_field(client, data, strlen(data));
+    ESP_LOGI(TAG, "DATA BE LIKE: %s %d", data, strlen(data));
+    esp_err_t err = esp_http_client_open(client, 0);
+    ESP_LOGI(TAG, "Made it past open!!");
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+    }
+    else
+    {
+        ESP_LOGI(TAG, "Made it past else!!");
+        int wlen = esp_http_client_write(client, data, strlen(data));
+        ESP_LOGI(TAG, "Made it past else write!!");
+        if (wlen < 0)
+        {
+            ESP_LOGE(TAG, "Write failed");
+        }
+        // int data_read = esp_http_client_read_response(client, output_buffer, MAX_HTTP_OUTPUT_BUFFER);
+        // ESP_LOGI(TAG, "Made it past else read!!");
+        // if (data_read >= 0)
+        // {
+        //     ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
+        //              esp_http_client_get_status_code(client),
+        //              esp_http_client_get_content_length(client));
+        //     ESP_LOG_BUFFER_HEX(TAG, output_buffer, strlen(output_buffer));
+        // }
+        // else
+        // {
+        //     ESP_LOGE(TAG, "Failed to read response");
+        // }
+    }
+    esp_http_client_cleanup(client);
+}
+
 void app_main(void)
 {
     /* Initialize NVS partition */
     esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES)
+    {
         /* NVS partition was truncated
          * and needs to be erased */
         ESP_ERROR_CHECK(nvs_flash_erase());
@@ -206,16 +324,16 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
 
     /* Initialize Wi-Fi including netif with default config */
-    esp_netif_create_default_wifi_sta();
+    // esp_netif_create_default_wifi_sta();
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-    esp_netif_create_default_wifi_ap();
+    // esp_netif_create_default_wifi_ap();
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     /* Configuration for the provisioning manager */
     wifi_prov_mgr_config_t config = {
-        /* What is the Provisioning Scheme that we want ?
+    /* What is the Provisioning Scheme that we want ?
          * wifi_prov_scheme_softap or wifi_prov_scheme_ble */
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
         .scheme = wifi_prov_scheme_ble,
@@ -224,7 +342,7 @@ void app_main(void)
         .scheme = wifi_prov_scheme_softap,
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
 
-        /* Any default scheme specific event handler that you would
+    /* Any default scheme specific event handler that you would
          * like to choose. Since our example application requires
          * neither BT nor BLE, we can choose to release the associated
          * memory once provisioning is complete, or not needed
@@ -236,7 +354,7 @@ void app_main(void)
         .scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-        .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
+                                    .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
     };
 
@@ -249,7 +367,8 @@ void app_main(void)
     ESP_ERROR_CHECK(wifi_prov_mgr_is_provisioned(&provisioned));
 
     /* If device is not yet provisioned start provisioning service */
-    if (!provisioned) {
+    if (!provisioned)
+    {
         ESP_LOGI(TAG, "Starting provisioning");
 
         /* What is the Device Service Name that we want
@@ -294,8 +413,22 @@ void app_main(void)
         uint8_t custom_service_uuid[] = {
             /* LSB <---------------------------------------
              * ---------------------------------------> MSB */
-            0xb4, 0xdf, 0x5a, 0x1c, 0x3f, 0x6b, 0xf4, 0xbf,
-            0xea, 0x4a, 0x82, 0x03, 0x04, 0x90, 0x1a, 0x02,
+            0xb4,
+            0xdf,
+            0x5a,
+            0x1c,
+            0x3f,
+            0x6b,
+            0xf4,
+            0xbf,
+            0xea,
+            0x4a,
+            0x82,
+            0x03,
+            0x04,
+            0x90,
+            0x1a,
+            0x02,
         };
         wifi_prov_scheme_ble_set_service_uuid(custom_service_uuid);
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
@@ -320,7 +453,9 @@ void app_main(void)
          * by the default event loop handler, we don't need to call the following */
         // wifi_prov_mgr_wait();
         // wifi_prov_mgr_deinit();
-    } else {
+    }
+    else
+    {
         ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
 
         /* We don't need the manager as device is already provisioned,
@@ -338,26 +473,26 @@ void app_main(void)
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    if(timeinfo.tm_year < (2016 - 1900)){
+    if (timeinfo.tm_year < (2016 - 1900))
+    {
         ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
         obtain_time();
         // update 'now' variable with current time
         time(&now);
     }
     char strftime_buf[64];
-   // Set timezone to Eastern Standard Time and print local time
+    // Set timezone to Eastern Standard Time and print local time
     setenv("TZ", "Europe/Amsterdam,M3.2.0/2,M11.1.0", 0);
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGI(TAG, "The current date/time in New York is: %s", strftime_buf);
 
-
-
     /* Start main application now */
-    while (1) {
+    while (1)
+    {
         ESP_LOGI(TAG, "Hello World!");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+        https("{\"deviceMac\":\"8C:AA:B5:85:A2:3D\",\"measurements\": [{\"property\":\"testy\",\"value\":\"hello_world\"}\"time\":7}");
     }
 }
-
