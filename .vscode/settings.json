@@ -4,6 +4,11 @@
         "manager.h": "c",
         "scheme_ble.h": "c",
         "protocomm_ble.h": "c",
-        "protocomm.h": "c"
+        "protocomm.h": "c",
+        "stdio.h": "c",
+        "main.h": "c",
+        "esp_http_client.h": "c",
+        "esp_netif.h": "c",
+        "esp_tls.h": "c"
     }
 }

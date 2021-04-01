@@ -6,40 +6,128 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/event_groups.h>
-
-#include <esp_system.h>
-#include <esp_log.h>
-#include <esp_wifi.h>
-#include <esp_event.h>
-#include <esp_attr.h>
-#include <esp_sleep.h>
-#include <esp_sntp.h>
-#include <esp_netif.h>
-#include <nvs_flash.h>
-#include <esp_tls.h>
-#include <esp_http_client.h>
-
-#include <wifi_provisioning/manager.h>
+#include "main.h"
 
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
-#define CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
-#include <wifi_provisioning/scheme_ble.h>
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
 
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-#include <wifi_provisioning/scheme_softap.h>
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
+static const char *TAG = "Twomes Generic Firmware";
 
-static const char *TAG = "app";
+const char* rootCAR3 = "-----BEGIN CERTIFICATE-----\n" \
+                       "MIIEZTCCA02gAwIBAgIQQAF1BIMUpMghjISpDBbN3zANBgkqhkiG9w0BAQsFADA/\n" \
+                       "MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT\n" \
+                       "DkRTVCBSb290IENBIFgzMB4XDTIwMTAwNzE5MjE0MFoXDTIxMDkyOTE5MjE0MFow\n" \
+                       "MjELMAkGA1UEBhMCVVMxFjAUBgNVBAoTDUxldCdzIEVuY3J5cHQxCzAJBgNVBAMT\n" \
+                       "AlIzMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuwIVKMz2oJTTDxLs\n" \
+                       "jVWSw/iC8ZmmekKIp10mqrUrucVMsa+Oa/l1yKPXD0eUFFU1V4yeqKI5GfWCPEKp\n" \
+                       "Tm71O8Mu243AsFzzWTjn7c9p8FoLG77AlCQlh/o3cbMT5xys4Zvv2+Q7RVJFlqnB\n" \
+                       "U840yFLuta7tj95gcOKlVKu2bQ6XpUA0ayvTvGbrZjR8+muLj1cpmfgwF126cm/7\n" \
+                       "gcWt0oZYPRfH5wm78Sv3htzB2nFd1EbjzK0lwYi8YGd1ZrPxGPeiXOZT/zqItkel\n" \
+                       "/xMY6pgJdz+dU/nPAeX1pnAXFK9jpP+Zs5Od3FOnBv5IhR2haa4ldbsTzFID9e1R\n" \
+                       "oYvbFQIDAQABo4IBaDCCAWQwEgYDVR0TAQH/BAgwBgEB/wIBADAOBgNVHQ8BAf8E\n" \
+                       "BAMCAYYwSwYIKwYBBQUHAQEEPzA9MDsGCCsGAQUFBzAChi9odHRwOi8vYXBwcy5p\n" \
+                       "ZGVudHJ1c3QuY29tL3Jvb3RzL2RzdHJvb3RjYXgzLnA3YzAfBgNVHSMEGDAWgBTE\n" \
+                       "p7Gkeyxx+tvhS5B1/8QVYIWJEDBUBgNVHSAETTBLMAgGBmeBDAECATA/BgsrBgEE\n" \
+                       "AYLfEwEBATAwMC4GCCsGAQUFBwIBFiJodHRwOi8vY3BzLnJvb3QteDEubGV0c2Vu\n" \
+                       "Y3J5cHQub3JnMDwGA1UdHwQ1MDMwMaAvoC2GK2h0dHA6Ly9jcmwuaWRlbnRydXN0\n" \
+                       "LmNvbS9EU1RST09UQ0FYM0NSTC5jcmwwHQYDVR0OBBYEFBQusxe3WFbLrlAJQOYf\n" \
+                       "r52LFMLGMB0GA1UdJQQWMBQGCCsGAQUFBwMBBggrBgEFBQcDAjANBgkqhkiG9w0B\n" \
+                       "AQsFAAOCAQEA2UzgyfWEiDcx27sT4rP8i2tiEmxYt0l+PAK3qB8oYevO4C5z70kH\n" \
+                       "ejWEHx2taPDY/laBL21/WKZuNTYQHHPD5b1tXgHXbnL7KqC401dk5VvCadTQsvd8\n" \
+                       "S8MXjohyc9z9/G2948kLjmE6Flh9dDYrVYA9x2O+hEPGOaEOa1eePynBgPayvUfL\n" \
+                       "qjBstzLhWVQLGAkXXmNs+5ZnPBxzDJOLxhF2JIbeQAcH5H0tZrUlo5ZYyOqA7s9p\n" \
+                       "O5b85o3AM/OJ+CktFBQtfvBhcJVd9wvlwPsk+uyOy2HI7mNxKKgsBTt375teA2Tw\n" \
+                       "UdHkhVNcsAKX1H7GNNLOEADksd86wuoXvg==\n" \
+                       "-----END CERTIFICATE-----\n";
+
+const char* rootCert = "-----BEGIN CERTIFICATE-----\n" \
+"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\n" \
+"-----END CERTIFICATE-----\n";
+
+const char* rootKey = "-----BEGIN ENCRYPTED PRIVATE KEY-----\n" \
+"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\n" \
+"HwtaqlZ4AiuvIQBcFzyVmA==\n" \
+"-----END ENCRYPTED PRIVATE KEY-----\n";
 
 // extern const char certificate_start[] asm("_binary_certificate_pem_start");
 // extern const char certificate_end[]   asm("_binary_certificate_pem_end");
@@ -65,7 +153,7 @@ void time_sync_notification_cb(struct timeval *tv)
 }
 
 /* Event handler for catching system events */
-static void event_handler(void *arg, esp_event_base_t event_base,
+static void prov_event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
 {
     if (event_base == WIFI_PROV_EVENT)
@@ -121,37 +209,75 @@ static void event_handler(void *arg, esp_event_base_t event_base,
     }
 }
 
-esp_err_t _http_event_handle(esp_http_client_event_t *evt)
+esp_err_t http_event_handler(esp_http_client_event_t *evt)
 {
-    switch (evt->event_id)
-    {
-    case HTTP_EVENT_ERROR:
-        ESP_LOGI(TAG, "HTTP_EVENT_ERROR");
-        break;
-    case HTTP_EVENT_ON_CONNECTED:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_CONNECTED");
-        break;
-    case HTTP_EVENT_HEADER_SENT:
-        ESP_LOGI(TAG, "HTTP_EVENT_HEADER_SENT");
-        break;
-    case HTTP_EVENT_ON_HEADER:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_HEADER");
-        printf("%.*s", evt->data_len, (char *)evt->data);
-        break;
-    case HTTP_EVENT_ON_DATA:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
-        if (!esp_http_client_is_chunked_response(evt->client))
-        {
-            printf("%.*s", evt->data_len, (char *)evt->data);
-        }
+    static char *output_buffer;  // Buffer to store response of http request from event handler
+    static int output_len;       // Stores number of bytes read
+    switch(evt->event_id) {
+        case HTTP_EVENT_ERROR:
+            ESP_LOGD(TAG, "HTTP_EVENT_ERROR");
+            break;
+        case HTTP_EVENT_ON_CONNECTED:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_CONNECTED");
+            break;
+        case HTTP_EVENT_HEADER_SENT:
+            ESP_LOGD(TAG, "HTTP_EVENT_HEADER_SENT");
+            break;
+        case HTTP_EVENT_ON_HEADER:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_HEADER, key=%s, value=%s", evt->header_key, evt->header_value);
+            break;
+        case HTTP_EVENT_ON_DATA:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
+            /*
+             *  Check for chunked encoding is added as the URL for chunked encoding used in this example returns binary data.
+             *  However, event handler can also be used in case chunked encoding is used.
+             */
+            if (!esp_http_client_is_chunked_response(evt->client)) {
+                // If user_data buffer is configured, copy the response into the buffer
+                if (evt->user_data) {
+                    memcpy(evt->user_data + output_len, evt->data, evt->data_len);
+                } else {
+                    if (output_buffer == NULL) {
+                        output_buffer = (char *) malloc(esp_http_client_get_content_length(evt->client));
+                        output_len = 0;
+                        if (output_buffer == NULL) {
+                            ESP_LOGE(TAG, "Failed to allocate memory for output buffer");
+                            return ESP_FAIL;
+                        }
+                    }
+                    memcpy(output_buffer + output_len, evt->data, evt->data_len);
+                }
+                output_len += evt->data_len;
+            }
 
-        break;
-    case HTTP_EVENT_ON_FINISH:
-        ESP_LOGI(TAG, "HTTP_EVENT_ON_FINISH");
-        break;
-    case HTTP_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
-        break;
+            break;
+        case HTTP_EVENT_ON_FINISH:
+            ESP_LOGD(TAG, "HTTP_EVENT_ON_FINISH");
+            if (output_buffer != NULL) {
+                // Response is accumulated in output_buffer. Uncomment the below line to print the accumulated response
+                // ESP_LOG_BUFFER_HEX(TAG, output_buffer, output_len);
+                free(output_buffer);
+                output_buffer = NULL;
+                output_len = 0;
+            }
+            break;
+        case HTTP_EVENT_DISCONNECTED:
+            ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+            int mbedtls_err = 0;
+            esp_err_t err = esp_tls_get_and_clear_last_error(evt->data, &mbedtls_err, NULL);
+            if (err != 0) {
+                if (output_buffer != NULL) {
+                    free(output_buffer);
+                    output_buffer = NULL;
+                    output_len = 0;
+                }
+                ESP_LOGI(TAG, "Last esp error code: 0x%x", err);
+                ESP_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
+            }
+            break;
+        default:
+            ESP_LOGI(TAG, "GOT AN ERROR BUT DONT KNOW WHAT!");
+            break;
     }
     return ESP_OK;
 }
@@ -242,30 +368,34 @@ static void https(char *data)
     char output_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};   // Buffer to store response of http request
     int content_length = 0;
     esp_http_client_config_t config = {
-        .host = "192.168.178.75",
-        .port = 4444,
-        .path = "/set/house/opentherm",
+        .url = "https://192.168.178.75:4444/set/house/opentherm",
+        // .host = "192.168.178.75",
+        // .port = 4444,
+        // .path = "/set/house/opentherm",
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
-        // .cert_pem = certificate_start,
-        .event_handler = _http_event_handle
+        // .client_cert_pem = rootCert,
+        // .client_key_pem = rootKey,
+        .event_handler = http_event_handler
         };
     esp_http_client_handle_t client = esp_http_client_init(&config);
-    // esp_err_t err = esp_http_client_perform(client);
+    // esp_err_t err = esp_http_client_connect(client);
+    // ESP_LOGI(TAG, "First perform succesful!");
     // if (err == ESP_OK) {
     //     ESP_LOGI(TAG, "Finished performing for the first time?");
     //     ESP_LOGI(TAG, "Status = %d, content_length = %d",
+    // }
     // esp_http_client_get_status_code(client),
     // esp_http_client_get_content_length(client));
 
     // second request
     esp_http_client_set_url(client, "/set/house/opentherm");
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
+    esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_header(client, "Host", "energietransitiewindesheim.nl:4444");
     esp_http_client_set_header(client, "Content-Type", "text/plain");
     ESP_LOGI(TAG, "Made it past headers!!");
-    // esp_http_client_set_post_field(client, data, strlen(data));
+    esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGI(TAG, "DATA BE LIKE: %s %d", data, strlen(data));
-    esp_err_t err = esp_http_client_open(client, 0);
+    esp_err_t err = esp_http_client_perform(client);
     ESP_LOGI(TAG, "Made it past open!!");
     if (err != ESP_OK)
     {
@@ -297,36 +427,16 @@ static void https(char *data)
     esp_http_client_cleanup(client);
 }
 
-void app_main(void)
-{
-    /* Initialize NVS partition */
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES)
-    {
-        /* NVS partition was truncated
-         * and needs to be erased */
-        ESP_ERROR_CHECK(nvs_flash_erase());
-
-        /* Retry nvs_flash_init */
-        ESP_ERROR_CHECK(nvs_flash_init());
-    }
-
-    /* Initialize TCP/IP */
-    ESP_ERROR_CHECK(esp_netif_init());
-
-    /* Initialize the event loop */
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    wifi_event_group = xEventGroupCreate();
-
-    /* Register our event handler for Wi-Fi, IP and Provisioning related events */
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+wifi_prov_mgr_config_t initialize_provisioning(){
+       /* Register our event handler for Wi-Fi, IP and Provisioning related events */
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_PROV_EVENT, ESP_EVENT_ANY_ID, &prov_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &prov_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &prov_event_handler, NULL));
 
     /* Initialize Wi-Fi including netif with default config */
-    // esp_netif_create_default_wifi_sta();
+    esp_netif_create_default_wifi_sta();
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
-    // esp_netif_create_default_wifi_ap();
+    esp_netif_create_default_wifi_ap();
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -357,8 +467,11 @@ void app_main(void)
                                     .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
     };
+    return config;
+}
 
-    /* Initialize provisioning manager with the
+void start_provisioning(wifi_prov_mgr_config_t config){
+/* Initialize provisioning manager with the
      * configuration parameters set above */
     ESP_ERROR_CHECK(wifi_prov_mgr_init(config));
 
@@ -466,9 +579,40 @@ void app_main(void)
         wifi_init_sta();
     }
 
+}
+
+void initialize_nvs(){
+    /* Initialize NVS partition */
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES)
+    {
+        /* NVS partition was truncated
+         * and needs to be erased */
+        ESP_ERROR_CHECK(nvs_flash_erase());
+
+        /* Retry nvs_flash_init */
+        ESP_ERROR_CHECK(nvs_flash_init());
+    }
+}
+
+void app_main(void)
+{
+    initialize_nvs();
+
+    /* Initialize TCP/IP */
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    /* Initialize the event loop */
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    wifi_event_group = xEventGroupCreate();
+
+    wifi_prov_mgr_config_t config = initialize_provisioning();
+    start_provisioning(config);
+
+    
     /* Wait for Wi-Fi connection */
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
-
+    
     time_t now;
     struct tm timeinfo;
     time(&now);
@@ -486,13 +630,13 @@ void app_main(void)
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "The current date/time in New York is: %s", strftime_buf);
+    ESP_LOGI(TAG, "The current date/time in Amsterdam is: %s", strftime_buf);
 
     /* Start main application now */
     while (1)
     {
         ESP_LOGI(TAG, "Hello World!");
         vTaskDelay(10000 / portTICK_PERIOD_MS);
-        https("{\"deviceMac\":\"8C:AA:B5:85:A2:3D\",\"measurements\": [{\"property\":\"testy\",\"value\":\"hello_world\"}\"time\":7}");
+        https("{\"deviceMac\":\"8C:AA:B5:85:A2:3D\",\"measurements\": [{\"property\":\"testy\",\"value\":\"hello_world\"}],\"time\":7}");
     }
 }
