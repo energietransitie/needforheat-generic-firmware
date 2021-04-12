@@ -46,7 +46,8 @@ Open the project in PlatformIO:
 ## Uploading Firmware To ESP 32
 *	Connect device with a USB cable to the PC.  
 *	Open CMD on Windows  
-*	cd to the WP2 Twomes Folder -> 2020-2021 S1 Werkstudent – Twomes Firmware -> BinariesAndDriver Folder (I suggest opening the folder in file explore and copy pasting the path in CMD) so the command would be “cd *twomes path*” where you replace the *twomes path* with the copyed path from the file explorer.  
+*	Download the release that you need from: https://github.com/energietransitie/twomes-generic-esp-firmware/releases and extract it to a directory of your choice
+*	Open command line in that directory and cd to the BinariesAndDriver folder
 *	Then execute: “esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin” without the quotes at the beginning and the end. It should auto detect the USB port that the device is connected to, if not then you can open Device Manager in Windows, go to View and click Show Hidden Devices. Then unfold Ports (COM & LPT) and you should find the device in there, named USB-Serial CH340(COM *) * being the actual port like COM3.  
 *	If COM port is not auto-detected use the command:  esptool.py --chip esp32 --port "COM3" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin
 And replace COM3 with the COM port found in the previous step.
