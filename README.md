@@ -29,6 +29,11 @@ With this software we intend to make it easier to switch software implementation
 	`esptool.py --chip esp32 --port "COM3" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin`  
 And replace COM3 with the COM port found in the previous step.
 
+### Resetting Provisioning
+If you want to reset your provisioning you need to erase the flash memory. You do this by:
+*	Opening a command prompt
+*	Running: `esptool.py erase_flash`. In case the port is not detected automatically: `esptool.py erase_flash --port "COMX"` where X is a number for example COM3.
+*	Then follow the above uploading steps or use PlatformIO to upload the software again and you can run the provisioning apps.
 ## Developing with the source code 
 ### Prerequisites
 Install Visual Studio Code: https://code.visualstudio.com/download
