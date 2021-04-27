@@ -1,9 +1,9 @@
-# Generic Software ESP32 And ESP8266
+# Generic firmware for Twomes measurement devices based on ESP SoCs
 > This repository contains the generic software for the ESP32 and ESP8266 based on ESP-IDF for the Twomes project.
 
 ## Table of contents
 * [General info](#general-info)
-* [Using binary releases](#using-binaries-releases)
+* [Using binary releases](#using-binary-releases)
 * [Developing with the source code ](#developing-with-the-source-code) 
 * [Features](#features)
 * [Status](#status)
@@ -14,26 +14,38 @@
 With this software we intend to make it easier to switch software implementations between ESP32 and ESP8266 devices, making them more portable, as well as having some features already implemented. This helps in kickstarting any project or module when it comes to development with the ESP32 and ESP8266.
 
 ## Using binary releases
+
 ### Prerequisites
 *	Install Python and make sure to add it to your Path variable so you can use it from the command prompt: https://docs.python.org/3/using/windows.html (I use version 3.9 but 3.8 also works, other versions might work as well.)  
 *	Install EspTool: https://github.com/espressif/esptool (use the README on how to install)  
-*	Install the usb driver for the ESP32 for windows, found in the WP2 Twomes Folder -> 2020-2021 S1 Werkstudent – Twomes Firmware -> BinariesAndDriver Folder, the .exe name is CH341SER.exe  
+*	Install the usb driver for the ESP32 for windows, found in the WP2 Twomes Folder -> 2020-2021 S1 Werkstudent – Twomes Firmware -> BinariesAndDriver Folder, the .exe name is CH341SER.exe
+ 
 ### Uploading Firmware To ESP 32
 *	Connect device with a USB cable to the PC.  
-*	Open CMD on Windows  
 *	Download the release that you need from: https://github.com/energietransitie/twomes-generic-esp-firmware/releases and extract it to a directory of your choice
-*	Open command line in that directory and cd to the BinariesAndDriver folder
-*	Then execute:  
-	`esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin`  It should auto detect the USB port that the device is connected to, if not then you can open Device Manager in Windows, go to View and click Show Hidden Devices. Then unfold Ports (COM & LPT) and you should find the device in there, named USB-Serial CH340(COM *) * being the actual port like COM3.  
-*	If COM port is not auto-detected use the command:  
-	`esptool.py --chip esp32 --port "COM3" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin`  
-And replace COM3 with the COM port found in the previous step.
+*	Open a comand prompt in that directory and change the directory to the BinariesAndDriver folder and enter:
+	```shell
+	esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
+	```
+*	This should auto detect the USB port that the device is connected to.
+*	If not, then open the Device Manager in Windows (e.g.hold Windows Key, type X, then select Device Manager), go to View and click Show Hidden Devices. Then unfold Ports (COM & LPT). You should find the device in there, named `USB-Serial CH340 *(COM?)` with ? being a single digit.  
+*	If COM port is not auto-detected then enter (while replacing `?` with the digit found in the previous step): 
+	```shell
+	esptool.py --chip esp32  --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
+	```
 
 ### Resetting Provisioning
-If you want to reset your provisioning you need to erase the flash memory. You do this by:
-*	Opening a command prompt
-*	Running: `esptool.py erase_flash`. In case the port is not detected automatically: `esptool.py erase_flash --port "COMX"` where X is a number for example COM3.
-*	Then follow the above uploading steps or use PlatformIO to upload the software again and you can run the provisioning apps.
+THe Wi-Fi network chosen and its credentials that are selected during the provisioning process are stored persistently and will NOT be erased by uploading new firmware. To select another WiFi or test the provisioniong proces again, you need to erase the memory where these credentials are stored.
+*	Open a command prompt and enter:
+	```shell
+	esptool.py erase_flash
+	```
+*	If the port is not detected automatically, enter (while replacing `?  with the digit found earlier):
+	```shell
+	esptool.py erase_flash --port "COM?" 
+	```
+After these 
+
 ## Developing with the source code 
 ### Prerequisites
 Install Visual Studio Code: https://code.visualstudio.com/download
@@ -71,17 +83,16 @@ Open the project in PlatformIO:
 ## Features
 List of features ready and TODOs for future development. Ready:
 
-* NTP(Time Synchronisation and Timestamping)
-* WiFi Provisioning Bluetooth(ESP32 only) and SoftAP
-* HTTPS/SSL(Only working on the ESP32)
+* Time synchronisation using NTP
+* Unified Provirioning over Bluetooth (ESP32 only) and SoftAP
+* Secure transport over TLS/SSL (ESP32)
 * HTTP
-* Example code on how to implement the features
+* Example code
 
 To-do:
 
-* Fix the ESP8266 HTTPS/SSL functionality
-* Add NVS(Non-volatile Storage)
-* Add OpenTherm Library functionality
+* Secure transpoort over TLS/SSL (ESP8266)
+* Persistent burrering using NVS
 
 ## Status
 Project is: in-progress
