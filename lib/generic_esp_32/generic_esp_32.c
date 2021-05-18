@@ -449,9 +449,6 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect){
         wifi_prov_mgr_deinit();
         if(connect){
             ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
-
-            
-
             /* Start Wi-Fi station */
             wifi_init_sta();
         }else{
