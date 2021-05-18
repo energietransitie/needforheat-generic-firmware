@@ -11,7 +11,7 @@ void app_main(void)
 
     wifi_prov_mgr_config_t config = initialize_provisioning();
     //Starts provisioning if not provisioned, otherwise skips provisioning.
-    start_provisioning(config);
+    start_provisioning(config, false);
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
     //URL Do not forget to use https:// when using the https() function.
@@ -32,5 +32,6 @@ void app_main(void)
         ESP_LOGI(TAG, "Hello World!");
         vTaskDelay(10000 / portTICK_PERIOD_MS);
         post_https(url, data, NULL);
+        start_provisioning(config, true);
     }
 }

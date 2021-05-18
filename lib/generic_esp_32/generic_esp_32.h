@@ -53,6 +53,6 @@ void post_https(char* url, char *data, char* cert);
 void initialize_nvs();
 
 wifi_prov_mgr_config_t initialize_provisioning();
-void start_provisioning(wifi_prov_mgr_config_t config);
+void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 
 #endif

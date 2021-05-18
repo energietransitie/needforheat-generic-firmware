@@ -345,8 +345,8 @@ wifi_prov_mgr_config_t initialize_provisioning(){
     return config;
 }
 
-void start_provisioning(wifi_prov_mgr_config_t config){
-/* Initialize provisioning manager with the
+void start_provisioning(wifi_prov_mgr_config_t config, bool connect){
+    /* Initialize provisioning manager with the
      * configuration parameters set above */
     ESP_ERROR_CHECK(wifi_prov_mgr_init(config));
 
@@ -444,17 +444,22 @@ void start_provisioning(wifi_prov_mgr_config_t config){
     }
     else
     {
-        ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
-
         /* We don't need the manager as device is already provisioned,
          * so let's release it's resources */
         wifi_prov_mgr_deinit();
+        if(connect){
+            ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
 
-        /* Start Wi-Fi station */
-        wifi_init_sta();
+            
+
+            /* Start Wi-Fi station */
+            wifi_init_sta();
+        }else{
+            ESP_LOGI(TAG, "Already provisioned, not starting WiFi because connecting is disabled");
+        }
     }
         /* Wait for Wi-Fi connection */
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
+    if(connect) xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
 }
 
 void initialize_nvs(){
