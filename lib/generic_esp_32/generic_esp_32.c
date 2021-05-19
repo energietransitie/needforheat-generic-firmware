@@ -459,6 +459,22 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect){
     if(connect) xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
 }
 
+void disable_wifi(){
+    if(esp_wifi_stop() == ESP_OK){
+        ESP_LOGI(TAG, "Disabled WiFi");
+    }else{
+        ESP_LOGE(TAG, "Failed to disable WiFi");
+    }
+}
+
+void enable_wifi(){
+    if(esp_wifi_start() == ESP_OK){
+        ESP_LOGI(TAG, "Enabled WiFi");
+    }else{
+        ESP_LOGE(TAG, "Failed to enable WiFi");
+    }
+}
+
 void initialize_nvs(){
     /* Initialize NVS partition */
     esp_err_t ret = nvs_flash_init();

@@ -10,8 +10,12 @@ void app_main(void)
     ESP_ERROR_CHECK(esp_netif_init());
 
     wifi_prov_mgr_config_t config = initialize_provisioning();
-    //Starts provisioning if not provisioned, otherwise skips provisioning. If set to false it will not autoconnect after provisioning. If set to true it will autonnect.
-    start_provisioning(config, false);
+    //Starts provisioning if not provisioned, otherwise skips provisioning. 
+    //If set to false it will not autoconnect after provisioning. 
+    //If set to true it will autonnect.
+    start_provisioning(config, true);
+    
+    bool wifi = false;
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
     //URL Do not forget to use https:// when using the https() function.
@@ -30,9 +34,13 @@ void app_main(void)
     {
         //Logs hello world and tries to post with https every 10 seconds. Replace post_https(url, data, cert) with post_http(url,data) to use plain http over TCP
         ESP_LOGI(TAG, "Hello World!");
+        disable_wifi();
         vTaskDelay(10000 / portTICK_PERIOD_MS);
         post_https(url, data, NULL);
+        if(!wifi){
+            enable_wifi();
+            wifi = true;
+        }
         //Reconnect to provisioning by supplying the conifg and setting connect to true.
-        start_provisioning(config, true);
     }
 }

@@ -54,5 +54,6 @@ void initialize_nvs();
 
 wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
-
+void disable_wifi();
+void enable_wifi();
 #endif
