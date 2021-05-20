@@ -259,7 +259,7 @@ void initialize_time(char* timezone){
     ESP_LOGI(TAG, "The current date/time in Amsterdam is: %s", strftime_buf);
 }
 
-void post_http(char* url, char *data)
+void post_http(char* url, char *data, char* authenticationToken)
 {
     esp_http_client_config_t config = {
         .url = url,
@@ -269,8 +269,17 @@ void post_http(char* url, char *data)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", "energietransitiewindesheim.nl:4444");
+    esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
     esp_http_client_set_header(client, "Content-Type", "text/plain");
+    char* dataLenStr = malloc(sizeof(char)*8);
+    itoa(strlen(data), dataLenStr, 10);
+    esp_http_client_set_header(client, "Content-Length", dataLenStr);
+    char* authenticationTokenStringPlain = "Bearer %s";
+    char* authenticationTokenString = "";
+    int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
+    authenticationTokenString = malloc(sizeof(char)*strCount);
+    snprintf(authenticationTokenString, strCount*sizeof(char), authenticationTokenStringPlain, authenticationToken);
+    esp_http_client_set_header(client, "Authorization", authenticationTokenString);
     esp_http_client_set_post_field(client, data, strlen(data));
     esp_err_t err = esp_http_client_perform(client);
     if (err != ESP_OK)
@@ -280,7 +289,25 @@ void post_http(char* url, char *data)
     esp_http_client_cleanup(client);
 }
 
-void post_https(char* url, char *data, char* cert)
+void get_http(char* url){
+    esp_http_client_config_t config = {
+        .url = url,
+        .transport_type = HTTP_TRANSPORT_OVER_TCP,
+        .event_handler = http_event_handler
+        };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    esp_http_client_set_method(client, HTTP_METHOD_GET);
+    esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
+    esp_err_t err = esp_http_client_perform(client);
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+}
+
+void post_https(char* url, char *data, char* cert, char* authenticationToken)
 {
     esp_http_client_config_t config = {
         .url = url,
@@ -291,8 +318,14 @@ void post_https(char* url, char *data, char* cert)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", "energietransitiewindesheim.nl:4444");
+    esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
     esp_http_client_set_header(client, "Content-Type", "text/plain");
+    char* authenticationTokenStringPlain = "Bearer %s";
+    char* authenticationTokenString = "";
+    int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
+    authenticationTokenString = malloc(sizeof(char)*strCount);
+    snprintf(authenticationTokenString, strCount*sizeof(char), authenticationTokenStringPlain, authenticationToken);
+    esp_http_client_set_header(client, "Authorization", authenticationTokenString);
     esp_http_client_set_post_field(client, data, strlen(data));
     esp_err_t err = esp_http_client_perform(client);
     if (err != ESP_OK)

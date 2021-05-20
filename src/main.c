@@ -19,7 +19,7 @@ void app_main(void)
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
     //URL Do not forget to use https:// when using the https() function.
-    char* url = "https://192.168.178.75:4444/set/house/opentherm";
+    char* url = "http://192.168.178.48:8000/device/measurements/fixed-interval";
 
     //Gets time as epoch time.
     int now = time(NULL);
@@ -29,18 +29,31 @@ void app_main(void)
     char data [strlen(dataPlain)];
     sprintf(data, dataPlain, now);
 
+    char* msgPlain = "{\"upload_time\": \"2021-05-20T20:13:45.110Z\",\"property_measurements\":[    {"
+      "\"property_name\": %s,"
+      "\"timestamp\": \"%d\","
+      "\"timestamp_type\": \"start\","
+      "\"interval\": 0,"
+      "\"measurements\": ["
+      "]}]}";
+    char* msg = "";
+    int length = snprintf(msg, 0, msgPlain, "\"heartbeat\"", now) + 1;
+    msg = (char*)malloc(sizeof(char) * length);
+    int bufLength = length*sizeof(char);
+    snprintf(msg, bufLength, msgPlain, "\"heartbeat\"", now);
     /* Start main application now */
     while (1)
     {
         //Logs hello world and tries to post with https every 10 seconds. Replace post_https(url, data, cert) with post_http(url,data) to use plain http over TCP
         ESP_LOGI(TAG, "Hello World!");
-        disable_wifi();
+        // enable_wifi();
+        // ESP_LOGI(TAG, "%s", msg);
+        post_http(url, msg, "MQ.Aln86snvlJaOZBgqNSU5gmqSoMiW23FODztFLxxy-0I");
         vTaskDelay(10000 / portTICK_PERIOD_MS);
-        post_https(url, data, NULL);
-        if(!wifi){
-            enable_wifi();
-            wifi = true;
-        }
+        // if(!wifi){
+        //     disable_wifi();
+        //     wifi = true;
+        // }
         //Reconnect to provisioning by supplying the conifg and setting connect to true.
     }
 }

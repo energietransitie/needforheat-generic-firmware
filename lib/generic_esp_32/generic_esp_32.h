@@ -47,8 +47,9 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 void initialize_sntp(void);
 void obtain_time(void);
 void initialize_time(char* timezone);
-void post_http(char* url, char *data);
-void post_https(char* url, char *data, char* cert);
+void post_http(char* url, char *data, char* authenticationToken);
+void post_https(char* url, char *data, char* cert, char* authenticationToken);
+void get_http(char* url);
 
 void initialize_nvs();
 
