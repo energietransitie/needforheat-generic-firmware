@@ -31,6 +31,44 @@ void time_sync_notification_cb(struct timeval *tv)
     ESP_LOGI(TAG, "Notification of a time synchronization event");
 }
 
+char* get_types(char* stringf, int count){
+    char* stringfBuffer = stringf;
+    char c = *stringf;
+    char* types = malloc(sizeof(char)*count);
+    for(int i = 0; i < strlen(stringf);i++){
+        c = *stringfBuffer;
+        if(c == '%') {
+            char* tmp = ++stringfBuffer;
+            memcpy(types, tmp, sizeof(char));
+            types += sizeof(char);
+        }else stringfBuffer++;
+    }
+    types -= count*sizeof(char);
+    return types;
+}
+
+int variable_sprintf_size(char* string, int count, ...){
+    va_list list;
+    va_start(list, count);
+    int extraSize = 0;
+    char* snBuf = "";
+    char* types = get_types(string, count);
+    for(int i = 0; i < count; i++){
+        char type = *types++;
+        switch(type){
+            case 'd':
+            // int tmp = va_arg(list, int);
+            extraSize += snprintf(snBuf, 0, "%d", va_arg(list, int));
+            break;
+            case 's':
+            extraSize += snprintf(snBuf, 0, "%s", va_arg(list, char*));
+            break;
+        }
+    }
+    int totalSize = strlen(string)*sizeof(char)+sizeof(char)*extraSize;
+    return totalSize;
+}
+
 /* Event handler for catching system events */
 void prov_event_handler(void *arg, esp_event_base_t event_base,
                           int32_t event_id, void *event_data)
