@@ -75,7 +75,7 @@ As payload entry you can copy the string below, but you should at least replace 
 ```
 
 ### Resetting Wi-Fi provisioning & Proof-of-Possession (pop) identifier
-You can currently only provision a Twomes measurement device once. The Wi-Fi network chosen and its credentials are stored persistently and will NOT be erased by uploading new firmware. To select another Wi-Fi network, change the network credentials and/or test the provisioniong proces again, you need to erase the memory where these credentials are stored. N.B. This will also erase the Proof-of-Posession (pop) that is linked to the QR-code. So after this step, you also have to 
+You can currently only provision a Twomes measurement device once. The Wi-Fi network chosen and its credentials are stored persistently and will NOT be erased by uploading new firmware. To select another Wi-Fi network, change the network credentials and/or test the provisioniong proces again, you need to hold the boot button on the ESP32 device down for 10 seconds. When you have done this you can see in the console that the device reboots and starts the provisioning process again. Doing this does not reset the PoP and bearer/authentication token. It will also not have the device activate itself in the API again. This will only help with resetting WiFi credentials. If you need to reset all the other settings please use the commands below.
 *	Open a command prompt and enter:
 	```shell
 	esptool.py erase_flash
