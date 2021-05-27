@@ -38,10 +38,10 @@ Different Twomes measurement devices may have various features in common, includ
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
 
-### Device Preparation step 2: Establishing a unique Proof-of-Posession (pop)
+### Device Preparation step 2: Establishing a unique Proof-of-Possession (pop)
 * First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement devcie. 
 * Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
-* On the serial monitor window, you should see reset information, including the unique Proof-of-Posession code that was just established:
+* On the serial monitor window, you should see reset information, including the unique Proof-of-Possession code that was just established:
 	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
 
 ### Device Preparation step 3: Creating the device in the Twomes backend using device type and pop  
