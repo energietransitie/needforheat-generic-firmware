@@ -11,16 +11,17 @@ This repository contains the generic firmware, with features common to various T
 * [Credits](#credits)
 
 ## General info
-Different Twomes measurement devices may have various features in common, including provisioning of home Wi-Fi network credentials via a temporary software access point (SoftAP) or Bluetooth Low Energy (BLE), device activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 or ESP8266 SoC. This facilitaties development of firmware for Twomes measurement devices.
+Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 or ESP8266 SoC. This facilitaties development of firmware for Twomes measurement devices.
 
 ## Deploying
 
 ### Prerequisites
-*	A device based on an ESP32 SoS, such as the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3) or on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
+*	A device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3) or on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
 *	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt.
 *	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility.
+*	[Arduino IDE](https://www.arduino.cc/en/software) or [PlatformIO plugin](https://platformio.org/install/ide?install=vscode) for [Visual Studio Code](https://code.visualstudio.com/download)
 
-### Uploading Firmware to ESP32
+### Device Preparation step 1/a: Uploading Firmware to ESP32
 *	Connect the device with a USB cable to the PC.
 *	Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
 *	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3), are based on the  CH340 USB to serial converter, which may not be recognized by Windows. You may need to install a specific usb driver on your computer before you can upload firmware. For Windows, we included `CH341SER.exe` in the release; run this executable to in stall the device driver.
@@ -34,11 +35,41 @@ Different Twomes measurement devices may have various features in common, includ
 	```shell
 	esptool.py --chip esp32  --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
 	```
-### Uploading Firmware to ESP8266 devices
+### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
 
-### Resetting Provisioning
-You can only provision a Twomes measurement device once. The Wi-Fi network chosen and its credentials are stored persistently and will NOT be erased by uploading new firmware. To select another Wi-Fi network, change the network credentials and/or test the provisioniong proces again, you need to erase the memory where these credentials are stored.
+### Device Preparation step 2: Establishing a unique Proof-of-Posession (pop)
+* First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement devcie. 
+* Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
+* On the serial monitor window, you should see reset information, including the unique Proof-of-Posession code that was just established:
+	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
+
+### Device Preparation step 3: Creating the device in the Twomes backend using device type and pop  
+The pop you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the pop you just established and the device's DeviceType.name as a parameter. If you are using the Twomes test server API, you shuold use a DeviceType.name from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
+
+### Device Preparation step 4: Generating a QR-code
+The pop and the [DeviceType.DisplayName](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv) of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement devcie. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAp is not yet fully implemented nor fully documented. 
+
+The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below. An example payload: `{"ver":"v1","name":"testapparaatje","pop":"810667973","transport":"ble"}`
+
+Payload information : 
+
+| Key       	| Detail                             	| Example                                  	| Required                                                            	|
+|-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
+| ver       	| Version of the QR code.            	| v1				               	| Yes                                                                 	|
+| name      	| DeviceType.DisplayName of the device 	| testapparaatje                             	| Yes                                                                 	|
+| pop       	| Proof of possession.               	| 810667973				   	| Yes								 	|
+| transport 	| Wi-Fi provisioning transport type. 	| It can be softap or ble	               	| Yes                                                                 	|
+| security  	| Security for device communication. 	| It can be 0 or 1 int value	              	| Optional. Considered 1 (secure) if not available in QR code data.    	|
+| password  	| Password of SoftAP device.         	| Password to connect with SoftAP device. 	| Optional                                                            	|
+
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Presence code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
+```shell
+{"ver":"v1","name":"testapparaatje","pop":"810667973","transport":"ble"}  
+```
+
+### Resetting Wi-Fi provisioning & Proof-of-Posession (pop) identifier
+You can currently only provision a Twomes measurement device once. The Wi-Fi network chosen and its credentials are stored persistently and will NOT be erased by uploading new firmware. To select another Wi-Fi network, change the network credentials and/or test the provisioniong proces again, you need to erase the memory where these credentials are stored. N.B. This will also erase the Proof-of-Posession (pop) that is linked to the QR-code. So after this step, you also have to 
 *	Open a command prompt and enter:
 	```shell
 	esptool.py erase_flash
@@ -47,15 +78,15 @@ You can only provision a Twomes measurement device once. The Wi-Fi network chose
 	```shell
 	esptool.py erase_flash --port "COM?" 
 	```
-After this command you can perform device provisioning anew.
+After this command you can and should perform the entire device privisioning lifecycle (device peraration, device-app activation and device-backend activation anew).
 
 ## Developing 
 
 ### Prerequisites
 
-*	Install [Visual Studio Code](https://code.visualstudio.com/download)
-*	Install [PlatformIO for Visual Studio Code](https://platformio.org/install/ide?install=vscode)
-*	Clone this GitHub reposotory.
+*	[Visual Studio Code](https://code.visualstudio.com/download)
+*	[PlatformIO for Visual Studio Code](https://platformio.org/install/ide?install=vscode)
+*	Clone this GitHub repisotory.
 
 ### Usage  
 
@@ -100,8 +131,9 @@ Currently ready:
 
 To-do:
 
-* Secure transport over TLS/SSL (ESP8266)
+* Long button press to reset only Wi-Fi privisioning info 
 * Persistent buffering using NVS
+* Secure transport over TLS/SSL (ESP8266)
 
 ## Status
 Project is: in-progress
