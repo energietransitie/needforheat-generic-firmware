@@ -50,13 +50,15 @@ void initialize_sntp(void);
 void obtain_time(void);
 void initialize_time(char* timezone);
 void post_http(char* url, char *data, char* authenticationToken);
-void post_https(char* url, char *data, char* cert, char* authenticationToken);
+char* post_https(char* url, char *data, char* cert, char* authenticationToken);
+char* get_bearer();
+void activate_device(char* url, uint32_t pop, char* cert);
 void get_http(char* url);
 
 void initialize_nvs();
 
 wifi_prov_mgr_config_t initialize_provisioning();
-void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
+void start_provisioning(wifi_prov_mgr_config_t config, char* pop, char* device_name, bool connect);
 void disable_wifi();
 void enable_wifi();
 #endif
