@@ -16,10 +16,12 @@ Different Twomes measurement devices may have various features in common, includ
 ## Deploying
 
 ### Prerequisites
-*	A device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3) or on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
-*	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt.
-*	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility.
-*	[Arduino IDE](https://www.arduino.cc/en/software) or [PlatformIO plugin](https://platformio.org/install/ide?install=vscode) for [Visual Studio Code](https://code.visualstudio.com/download)
+*	a device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3) or an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html);
+*	a USB to micro-USB cable;
+*	a PC with a USB port;
+*	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt;
+*	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility;
+*	[Arduino IDE](https://www.arduino.cc/en/software) or [PlatformIO plugin](https://platformio.org/install/ide?install=vscode) for [Visual Studio Code](https://code.visualstudio.com/download) installed.
 
 ### Device Preparation step 1/a: Uploading Firmware to ESP32
 *	Connect the device with a USB cable to the PC.
@@ -35,13 +37,15 @@ Different Twomes measurement devices may have various features in common, includ
 	```shell
 	esptool.py --chip esp32  --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
 	```
+Should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
+
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
 
 ### Device Preparation step 2: Establishing a unique Proof-of-Possession (pop)
 * First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement devcie. 
 * Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 Mini 32](http://www.lilygo.cn/pro.aspx?TypeId=50033&FId=t3:50033:3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
-* On the serial monitor window, you should see reset information, including the unique Proof-of-Possession code that was just established:
+* On the serial monitor window, you should see reset information, including the unique Proof-of-Possession id (indicated by `PoP`) that was just established:
 	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
 
 ### Device Preparation step 3: Creating the device in the Twomes backend using device type and pop  
@@ -56,29 +60,33 @@ Payload information :
 
 | Key       	| Detail                             	| Example                                  	| Required                                                            	|
 |-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
-| ver       	| Version of the QR code.            	| v1				               	| Yes                                                                 	|
-| name      	| DeviceType.DisplayName of the device 	| testapparaatje                             	| Yes                                                                 	|
-| pop       	| Proof of possession.               	| 810667973				   	| Yes								 	|
-| transport 	| Wi-Fi provisioning transport type. 	| It can be softap or ble	               	| Yes                                                                 	|
-| security  	| Security for device communication. 	| It can be 0 or 1 int value	              	| Optional. Considered 1 (secure) if not available in QR code data.    	|
+| ver       	| Version of the QR code.            	| `v1`				               	| Yes                                                                 	|
+| name      	| DeviceType.DisplayName of the device 	| `testapparaatje`                             	| Yes                                                                 	|
+| pop       	| Proof-of-Possession id               	| `810667973`				   	| Yes								 	|
+| transport 	| Wi-Fi provisioning transport type 	| It can be `softap` or `ble`	               	| Yes                                                                 	|
+| security  	| Security for device communication 	| It can be `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
 | password  	| Password of SoftAP device.         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
-To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Presence code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Possession code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs). 
+
+As payload entry you can copy the string below, but you should at least replace the values `testapparaatje` and `810667973` by the values valid for your specific device.
 ```shell
 {"ver":"v1","name":"testapparaatje","pop":"810667973","transport":"ble"}  
 ```
 
-### Resetting Wi-Fi provisioning & Proof-of-Posession (pop) identifier
+### Resetting Wi-Fi provisioning & Proof-of-Possession (pop) identifier
 You can currently only provision a Twomes measurement device once. The Wi-Fi network chosen and its credentials are stored persistently and will NOT be erased by uploading new firmware. To select another Wi-Fi network, change the network credentials and/or test the provisioniong proces again, you need to erase the memory where these credentials are stored. N.B. This will also erase the Proof-of-Posession (pop) that is linked to the QR-code. So after this step, you also have to 
 *	Open a command prompt and enter:
 	```shell
 	esptool.py erase_flash
 	```
-*	If the port is not detected automatically, enter (while replacing `?  with the digit found earlier):
+*	If the port is not detected automatically, enter (while replacing `?`  with the digit found earlier):
 	```shell
 	esptool.py erase_flash --port "COM?" 
 	```
 After this command you can and should perform the entire device privisioning lifecycle (device peraration, device-app activation and device-backend activation anew).
+
+Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
 
 ## Developing 
 
