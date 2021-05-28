@@ -103,7 +103,24 @@ After this command you can and should perform the entire device privisioning lif
 Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
 
 ## Developing 
-
+### Heartbeat Request
+In the source code you will find the code for making a proper heartbeat JSON request. The JSON for such a request looks like this:
+```
+{
+  "upload_time": "1622237550",
+  "property_measurements": [
+    {
+      "property_name": "heartbeat",
+      "measurements": [
+        {
+          "timestamp": "1622237550",
+          "value": "1"
+        }
+      ]
+    }
+  ]
+}
+```
 ### Prerequisites
 
 Prerequisites for deploying, plus:
