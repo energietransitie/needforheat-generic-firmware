@@ -79,7 +79,7 @@ To change the name and/or associated password of the Wi-Fi network that a device
 
 On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board, this button is labeled  'BOOT'. You can find it just above the micro-USB port. On measurement devices that will be deployed in the field, this button is typically covered by a shield complying with the Wemos D1 Mini form factor and an enclosure; their designs should include a recessed button behind a small hole in the enclosure of the measurement device, which makes it hard to press this button accidentally, but easy to press deliberately with tools comonly available at home, such as a a pen or pencil.
 
-When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can also observe this behaviour via a serial monitor. 
+When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can also observe this behaviour via a serial monitor. Before provisioning again, make sure to empty the building_id column of your device in the online database by putting "[NULL]" as a value without the quotes and delete the activated_on value for your device. Otherwise you cannot use Warmtewachter to provision again. Make sure to press save in the bottom bar for cloudbeaver.
 
 Note that this procedure:
 * will NOT erase the Proof-of-Possession identifier;
