@@ -121,6 +121,7 @@ In the source code you will find the code for making a proper heartbeat JSON req
   ]
 }
 ```
+The API does not support empty values in the measurements part of the JSON so we put a 1 there. This is to make it a bit easier to read than putting a space in there. If this is not done the database will not upload it into the measurement table and thus no heartbeat will be registered.
 ### Prerequisites
 
 Prerequisites for deploying, plus:
