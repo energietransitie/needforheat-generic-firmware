@@ -21,8 +21,15 @@
 #include <esp_netif.h>
 #include <esp_tls.h>
 #include <esp_http_client.h>
+#include <driver/gpio.h>
 
 #include <wifi_provisioning/manager.h>
+
+#define BUTTON_BOOT   GPIO_NUM_0
+#define LED_ERROR   GPIO_NUM_19
+
+#define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
+#define INPUT_BITMASK ((1ULL << BUTTON_BOOT))
 
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
@@ -35,6 +42,11 @@
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv);
 #endif
+
+
+void initGPIO();
+void blink(void *args);
+void buttonPressDuration(void *args);
 
 char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);

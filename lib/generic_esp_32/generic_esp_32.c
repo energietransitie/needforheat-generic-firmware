@@ -5,6 +5,8 @@
 
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 bool activation = false;
+//Interrupt Queue Handler:
+static xQueueHandle gpio_evt_queue = NULL;
 // char *https_url = "192.168.178.75:4444/set/house/opentherm";
 
 /* Signal Wi-Fi events on this event-group */
@@ -20,17 +22,99 @@ void sntp_sync_time(struct timeval *tv)
 }
 #endif
 
+//Gpio ISR handler:
+static void IRAM_ATTR gpio_isr_handler(void *arg) {
+    uint32_t gpio_num = (uint32_t)arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}//gpio_isr_handler
+
+
+//Function to initialise the buttons and LEDs on the gateway, with interrupts on the buttons
+void initGPIO() {
+    gpio_config_t io_conf;
+    //CONFIGURE OUTPUTS:
+    io_conf.intr_type = GPIO_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = OUTPUT_BITMASK;
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 0;
+    gpio_config(&io_conf);
+    //CONFIGURE INPUTS:
+    io_conf.intr_type = GPIO_INTR_NEGEDGE;
+    io_conf.mode = GPIO_MODE_INPUT;
+    io_conf.pin_bit_mask = INPUT_BITMASK;
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 1;
+    gpio_config(&io_conf);
+}
+
 void initialize()
 {
     /* Initialize the event loop */
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     wifi_event_group = xEventGroupCreate();
+    initGPIO();
+    //Attach interrupt handler to GPIO pins:
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(BUTTON_BOOT, gpio_isr_handler, (void *)BUTTON_BOOT);
 }
 
 void time_sync_notification_cb(struct timeval *tv)
 {
     ESP_LOGI(TAG, "Notification of a time synchronization event");
 }
+
+/**Blink LEDs to test GPIO:
+ * Pass two arguments in uint8_t array:
+ * argument[0] = amount of blinks
+ * argument[1] = pin to blink on (LED_STATUS or LED_ERROR)
+ */
+void blink(void *args) {
+    uint8_t *arguments = (uint8_t *)args;
+    uint8_t amount = arguments[0];
+    uint8_t pin = arguments[1];
+    uint8_t i;
+    for (i = 0; i < amount; i++) {
+        gpio_set_level(pin, 1);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        gpio_set_level(pin, 0);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    }//for(i<amount)
+    //Delete the blink task after completion:
+    vTaskDelete(NULL);
+}//void blink;
+
+/**
+ * Check for input of buttons and the duration
+ * if the press duration was more than 5 seconds, erase the flash memory to restart provisioning
+ * otherwise, blink the status LED (and possibly run another task (sensor provisioning?))
+*/
+void buttonPressDuration(void *args) {
+    uint32_t io_num;
+    ESP_LOGI(TAG, "Button Press Duration is Here!");
+    while (1) {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+            uint8_t seconds = 0;
+            while (!gpio_get_level(BUTTON_BOOT)) {
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+                seconds++;
+                if (seconds == 9) {
+                    ESP_LOGI("ISR", "Button held for over 10 seconds\n");
+                    char blinkArgs[2] = { 5, LED_ERROR };
+                    xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
+                    //Long press on P2 is for full Reset, clearing provisioning memory:
+                    ESP_LOGI("ISR", "Resetting Provisioning and Restarting Device!");
+                    esp_wifi_restore();
+                    vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
+                    esp_restart();  //software restart, to get new provisioning. Sensors do NOT need to be paired again when gateway is reset (MAC address does not change) 
+                    break; //Exit loop
+                }
+            }
+        } 
+    } 
+} 
 
 char *get_types(char *stringf, int count)
 {
@@ -69,6 +153,9 @@ int variable_sprintf_size(char *string, int count, ...)
             // int tmp = va_arg(list, int);
             extraSize += snprintf(snBuf, 0, "%d", va_arg(list, int));
             break;
+        case 'u':
+            extraSize += snprintf(snBuf, 0, "%u", va_arg(list, u32_t));
+            break;
         case 's':
             extraSize += snprintf(snBuf, 0, "%s", va_arg(list, char *));
             break;
@@ -77,6 +164,7 @@ int variable_sprintf_size(char *string, int count, ...)
     int totalSize = strlen(string) * sizeof(char) + sizeof(char) * extraSize;
     return totalSize;
 }
+
 
 /* Event handler for catching system events */
 void prov_event_handler(void *arg, esp_event_base_t event_base,
@@ -414,7 +502,7 @@ void activate_device(char *url, uint32_t pop, char *cert)
 {
     esp_err_t err;
     activation = true;
-    char *device_activation_plain = "{ \"proof_of_presence_id\":\"%d\"}";
+    char *device_activation_plain = "{ \"proof_of_presence_id\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
