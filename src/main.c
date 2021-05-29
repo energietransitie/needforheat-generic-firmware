@@ -1,10 +1,29 @@
 #include <generic_esp_32.h>
+
+#define DEVICE_TYPE_NAME = "Generic-Test"
+static const char *TAG = "Twomes Generic-Test firmware ESP32";
+
+//TODO: consider moving URL endpoint definitions to library
+//TODO: consider finding a way to URLs of endpoints as a contactenation of protocol + base_url + endpoint constants
+// #TEST_SERVER = "api.tst.energietransitiewindesheim.nl"
+// #PRODUCTION_SERVER = "api.energietransitiewindesheim.nl"
+// #LOCAL_SERVER = "192.168.178.48:8000"
+
+// #ENDPOINT_UPLOAD_VARIABLE = "/device/measurements/variable-interval"
+// #ENDPOINT_UPLOAD_FIXED = "/device/measurements/fixed-interval"
+// DEVICE_ACTIVATION = "/device/activate"
+
 #define LOCAL_SERVER "http://192.168.178.48:8000/device/measurements/fixed-interval"
 #define OFFICIAL_SERVER "https://api.tst.energietransitiewindesheim.nl/device/measurements/variable-interval"
 #define OFFICIAL_SERVER_DEVICE_ACTIVATION "https://api.tst.energietransitiewindesheim.nl/device/activate"
-static const char *TAG = "Twomes Heartbeat Test Application ESP32";
 
 char *bearer;
+
+#define HEARTBEAT_UPLOAD_INTERVAL = 3600000 //ms, so one hour
+//TODO: use HEARTBEAT_MEASUREMENT_INTERVAL when persistent buffering using non-volatile storage is implemented
+#define HEARTBEAT_MEASUREMENT_INTERVAL = 600000 //ms, so 10 minutes; not yet in effect
+
+//TODO: consider moving rootCA definition to library
 const char *rootCAR3 = "-----BEGIN CERTIFICATE-----\n"
                        "MIIEZTCCA02gAwIBAgIQQAF1BIMUpMghjISpDBbN3zANBgkqhkiG9w0BAQsFADA/\n"
                        "MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT\n"
@@ -37,6 +56,8 @@ void app_main(void)
     esp_err_t err;
     initialize_nvs();
     initialize();
+
+    //TODO: consider moving establishment of pop completely into library (should used by ALL Twomes measurement devices)
     /* Initialize TCP/IP */
     ESP_ERROR_CHECK(esp_netif_init());
 
@@ -88,7 +109,7 @@ void app_main(void)
     //Starts provisioning if not provisioned, otherwise skips provisioning.
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
-    start_provisioning(config, popStr, "Generic-Test", true);
+    start_provisioning(config, popStr, DEVICE_TYPE_NAME, true);
 
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
@@ -99,6 +120,8 @@ void app_main(void)
     ESP_LOGI(TAG, "Getting time!");
     uint32_t now = time(NULL);
     ESP_LOGI(TAG, "Time is: %d", now);
+
+    //TODO: consider deleting stale(?)code related to dataPlain
     //Creates data string replacing %d with the time integer.
     char *dataPlain = "{\"deviceMac\":\"8C:AA:B5:85:A2:3D\",\"measurements\": [{\"property\":\"testy\",\"value\":\"hello_world\"}],\"time\":%d}";
     char data[strlen(dataPlain)];
@@ -112,6 +135,7 @@ void app_main(void)
     else if (strcmp(bearer, "") == 0)
     {
         ESP_LOGI(TAG, "Bearer not found, activating device!");
+        //TODO: consider contatenating URL from more basic components
         activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, pop, rootCAR3);
         bearer = get_bearer();
     }
@@ -130,6 +154,8 @@ void app_main(void)
     /* Start main application now */
     while (1)
     {
+
+        //TODO: consider moving the task of heatbeat uploading completely into library (should used by ALL Twomes measurement devices)
         enable_wifi();
         vTaskDelay(1000);
         char *measurementType = "\"heartbeat\"";
@@ -141,13 +167,11 @@ void app_main(void)
         char *msg = malloc(msgSize);
         //Inputting variables into the plain json string from above(msgPlain).
         snprintf(msg, msgSize, msg2Plain, now, measurementType, now);
-        //Posting data over HTTP for local testing(will be https later), using url, msg and bearer token.
         ESP_LOGI(TAG, "Data: %s", msg);
         post_https(url, msg, rootCAR3, bearer);
         vTaskDelay(1000);
-        //Disconnect WiFi
+        //Disconnect Wi-Fi
         disable_wifi();
-        //Wait an hour
-        vTaskDelay(3600000 / portTICK_PERIOD_MS);
+        vTaskDelay(HEARTBEAT_UPLOAD_INTERVAL / portTICK_PERIOD_MS);
     }
 }
