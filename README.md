@@ -43,7 +43,7 @@ Should you encounter issues you may try to replace `esptool.py` in the above com
 TO BE DOCUMENTED
 
 ### Device Preparation step 2: Establishing a unique Proof-of-Possession (pop)
-* First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement devcie. 
+* First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement device. 
 * Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
 * On the serial monitor window, you should see reset information, including the unique Proof-of-Possession id (indicated by `PoP`) that was just established:
 	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
@@ -52,34 +52,38 @@ TO BE DOCUMENTED
 The pop you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the pop you just established and the device's DeviceType.name as a parameter. If you are using the Twomes test server API, you shuold use a DeviceType.name from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
 
 ### Device Preparation step 4: Generating a QR-code
-The pop and the [DeviceType.DisplayName](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv) of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement devcie. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAp is not yet fully implemented nor fully documented. 
+The pop and the [DeviceType.name](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv) of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement device. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
 
-The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below. An example payload: `{"ver":"v1","name":"testapparaatje","pop":"810667973","transport":"ble"}`
+The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below. An example payload: `{"ver":"v1","name":"Generic-Test","pop":"810667973","transport":"ble"}`
 
 Payload information : 
 
 | Key       	| Detail                             	| Example                                  	| Required                                                            	|
 |-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
 | ver       	| Version of the QR code.            	| `v1`				               	| Yes                                                                 	|
-| name      	| DeviceType.DisplayName of the device 	| `testapparaatje`                             	| Yes                                                                 	|
+| name      	| DeviceType.name of the device 	| `Generic-Test`                             	| Yes                                                                 	|
 | pop       	| Proof-of-Possession id               	| `810667973`				   	| Yes								 	|
 | transport 	| Wi-Fi provisioning transport type 	| It can be `softap` or `ble`	               	| Yes                                                                 	|
 | security  	| Security for device communication 	| It can be `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
 | password  	| Password of SoftAP device.         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
-To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Possession code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs). 
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Possession code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs). Be sure to avoid leading and trailing spaces in the string values of the QR-code payload.
 
-As payload entry you can copy the string below, but you should at least replace the values `testapparaatje` and `810667973` by the values valid for your specific device.
+As payload entry you can copy the string below, but you should at least replace the values `Generic-Test` and `810667973` by the values valid for your specific device.
 ```shell
-{"ver":"v1","name":"testapparaatje","pop":"810667973","transport":"ble"}  
+{"ver":"v1","name":"Generic-Test","pop":"810667973","transport":"ble"}  
 ```
 
 ### Erasing Wi-Fi provisioning data via a long (>10 s) button press 
 To change the name and/or associated password of the Wi-Fi network that a device is connected to, users can hold down a specific button for more than 10 seconds. 
 
-On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board, this button is labeled  'BOOT'. You can find it just above the micro-USB port. On measurement devices that will be deployed in the field, this button is typically covered by a shield complying with the Wemos D1 Mini form factor and an enclosure; their designs should include a recessed button behind a small hole in the enclosure of the measurement device, which makes it hard to press this button accidentally, but easy to press deliberately with tools comonly available at home, such as a a pen or pencil.
+On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board, this button is labeled  'BOOT'. You can find it just above the micro-USB port. 
 
-When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can also observe this behaviour via a serial monitor. Before provisioning again, make sure to empty the building_id column of your device in the online database by putting "[NULL]" as a value without the quotes and delete the activated_on value for your device. Otherwise you cannot use Warmtewachter to provision again. Make sure to press save in the bottom bar for cloudbeaver.
+On measurement devices that will be deployed in the field, this button is typically covered by a shield in the Wemos D1 Mini form factor and an enclosure; their designs should include a recessed button behind a small hole in the enclosure, which makes it hard to press this button accidentally, but easy to press deliberately with tools comonly available at home, such as a a pen or pencil.
+
+When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can currently only observe this behaviour via a serial monitor. 
+
+Before you can use the WarmteWachter app to reprovision Wi-Fi for the device, the current version of the Twomes WarmteWachter app and Twomes API require manual action in the database: make sure to empty the `building_id` column of your device in the backend database. For the test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/) by entering the value `[NULL]`, deleting the `activated_on` value for your device and pressing `SAVE`.
 
 Note that this procedure:
 * will NOT erase the Proof-of-Possession identifier;
@@ -89,7 +93,7 @@ Note that this procedure:
 Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile) memory and will NOT be erased when you upload new firmware. 
 
 ### Erasing the Proof-of-Possession (pop) identifier (erases Wi-Fi provisioning data as well)
-The Proof-of-Posession (pop) identifier is stored in persistent (non-volatile) memory. To erase the pop, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and bearer authorisation token needed to upload measurement data to the server. Doing this does not reset the PoP and bearer/authentication token. . .
+The Proof-of-Posession (pop) identifier is stored in persistent (non-volatile) memory. To erase the pop, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and the device session_token needed added as bearer token to upload measurement data to the server. Doing this does not reset the PoP nor the device session_token bearer token. . .
 *	Open a command prompt and enter:
 	```shell
 	esptool.py erase_flash
@@ -98,30 +102,12 @@ The Proof-of-Posession (pop) identifier is stored in persistent (non-volatile) m
 	```shell
 	esptool.py erase_flash --port "COM?" 
 	```
-After this command you can and should perform the entire device privisioning lifecycle (device peraration, device-app activation and device-backend activation anew).
+After this command you can and should perform the full Twomes device provisioning flow (device peraration, device-app activation and device-backend activation anew).
 
 Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
 
 ## Developing 
-### Heartbeat Request
-In the source code you will find the code for making a proper heartbeat JSON request. The JSON for such a request looks like this:
-```
-{
-  "upload_time": "1622237550",
-  "property_measurements": [
-    {
-      "property_name": "heartbeat",
-      "measurements": [
-        {
-          "timestamp": "1622237550",
-          "value": "1"
-        }
-      ]
-    }
-  ]
-}
-```
-The API does not support empty values in the measurements part of the JSON so we put a 1 there. This is to make it a bit easier to read than putting a space in there. If this is not done the database will not upload it into the measurement table and thus no heartbeat will be registered.
+
 ### Prerequisites
 
 Prerequisites for deploying, plus:
@@ -147,35 +133,62 @@ NOTE: The first time might take a while because PlatformIO needs to install and 
 
 ### Provisioning
 
-Use the [Twomes WarmteWachter app](https://github.com/energietransitie/twomes-app-warmtewachter) to test the full Twomes provisioning flow.
+Use the [Twomes WarmteWachter app](https://github.com/energietransitie/twomes-app-warmtewachter) to test the full Twomes device provisioning flow, which is based on using Espressif Unified Provisioning. 
 
-Alternatively, you may use test apps that only support the network part of provisioning using Espressif Unified Provisioning; these can be found at:
+Alternatively, you may use test apps that only support Wi-Fi provisioning using Espressif Unified Provisioning; these can be found at:
   
 * [Android Unified Provisioning app for BLE](https://play.google.com/store/apps/details?id=com.espressif.provble&hl=en&gl=US)
 * [Android Unified Provisioning app for SoftAP](https://play.google.com/store/apps/details?id=com.espressif.provsoftap&hl=en&gl=US)
 * [Apple Unified Provisioning app for BLE](https://apps.apple.com/us/app/esp-ble-provisioning/id1473590141)
 * [Apple Unified Provisioning app for SoftAP](https://apps.apple.com/us/app/esp-softap-provisioning/id1474040630)
 
-In the apps, click `I don't have a QR code` at the bottom of the screen after you started the provisioning flow.
-  
- ### Other Things To Keep In Mind
- * Check the platformio.ini file in the cloned folder, look at the board_upload.flash_size, board_upload.maximum_size and board_build.partitions to check if they are right for your hardware.
+### Uploading measurements (example: uploading heartbeats) 
+
+The generic firmware includes source code for timestamped measurement `heartbeat` data, indicating to the Twomes backend the device is "alive", a behavior that is mandatory for each Twomes measurement device. The source code also includes code to upload heartbeat measurements via [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval), the endpoint you should use if you want to upload a series of measurement values that each have a timestamp. The JSON payload for the body such a request looks like this:
+```
+{
+  "upload_time": "1622237550",
+  "property_measurements": [
+    {
+      "property_name": "heartbeat",
+      "measurements": [
+        {
+          "timestamp": "1622237550",
+          "value": "1"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval) endpointcurrently ignores measurements with empty `values` so we put a `1` there.
+
+You can use the source code for the timestamping and uploding of the `heartbeat` property as an example for the timestamping and uploading of the properties measured by your specific Twomes measureement device. 
+
+Note that currently, persistent buffering is not supported fully in the generic firmware yet, so we decided to measure and timestamp heartbeats only hourly and upload each heartbeat seperately. Having a single measurement in an upload, with a `timestamp` (nearly) identical to the `upload_timestamp` is an exception, rather than the rule, however.  In future versions of the generic firmware we will measure and timestamp hearbeats every 10 minutes and persistently buffer them until we upload them hourly in a single upload call to [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval).
+
+Also note that we don't use the [POST /device/measurements/fixed-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_fixed_device_measurements_fixed_interval_post) endpoint for heartbeat measurements, since that endpoint is intended for uploading series of measurements by devices that struggle to timestamp each measurement value seperately, but that are able to indicate the (fixed) interval between the measurements as well as a timestamp for the first or the last measurement in the the series.
+
+### Other Things To Keep In Mind
+* Check the platformio.ini file in the cloned folder, look at the board_upload.flash_size, board_upload.maximum_size and board_build.partitions to check if they are right for your hardware.
 
 ## Features
 Currently ready:
 
 * Unified Provisioning over Bluetooth Low Energy (BLE; ESP32 only) and SoftAP
 * Time synchronisation using NTP
-* Secure transport over TLS/SSL (ESP32)
-* Heartbeats: regularly uploading timestamped measurment data with property `heartbeat`
+* Secure transport over TLS/SSL (ESP32 only)
+* Heartbeats: hourly measurement and upload of timestamped measurment data with property `heartbeat`
 * Long button press to erase only Wi-Fi provisioning data 
 * Example code
 
 To-do:
 
-* Persistent buffering of measurement data using NVS
 * Using [ISRG Root X1 certificate](https://crt.sh/?id=3334561879) to check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
-* Secure transport over TLS/SSL (ESP8266)
+* Persistent buffering of measurement data using NVS
+* Heartbeats: timestamped measurement and persistent buffering of heartbeats every 10 minutes and hourly upload of all buffered heartbeats
+* Secure transport over TLS/SSL (ESP8266 as well)
 
 ## Status
 Project is: in-progress
