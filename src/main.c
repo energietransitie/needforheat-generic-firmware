@@ -90,7 +90,7 @@ void app_main(void)
     //If set to true it will autonnect.
     start_provisioning(config, popStr, "Generic-Test", true);
 
-    //Initialize time with timezone Europe and city Amsterdam
+    //TODO: Make Twomes measurement devices completely timezone agnostic; itnitialize time with UTC timezone (does this rewquire an empty string?)
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
     //URL Do not forget to use https:// when using the https() function.
     char *url = OFFICIAL_SERVER;
