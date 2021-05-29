@@ -3,11 +3,15 @@
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
 
+#define LONG_BUTTON_PRESS_DURATION 10 //s
+#define WIFI_RESET_BUTTON BUTTON_BOOT
+#define SSID_PREFIX "TWOMES-"
+
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
+
 bool activation = false;
 //Interrupt Queue Handler:
 static xQueueHandle gpio_evt_queue = NULL;
-// char *https_url = "192.168.178.75:4444/set/house/opentherm";
 
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
@@ -58,7 +62,7 @@ void initialize()
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(BUTTON_BOOT, gpio_isr_handler, (void *)BUTTON_BOOT);
+    gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
 }
 
 void time_sync_notification_cb(struct timeval *tv)
@@ -97,14 +101,15 @@ void buttonPressDuration(void *args) {
     while (1) {
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             uint8_t seconds = 0;
-            while (!gpio_get_level(BUTTON_BOOT)) {
+            while (!gpio_get_level(WIFI_RESET_BUTTON)) {
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
                 seconds++;
-                if (seconds == 9) {
-                    ESP_LOGI("ISR", "Button held for over 10 seconds\n");
+                //TODO: check whether logic is still ok
+                if (seconds == (LONG_BUTTON_PRESS_DURATION - 1)) {
+                    ESP_LOGI("ISR", "Long button press duration detected\n");
                     char blinkArgs[2] = { 5, LED_ERROR };
                     xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
-                    //Long press on P2 is for full Reset, clearing provisioning memory:
+                    //Long press on WIFI_RESET_BUTTON is for clearing Wi-Fi provisioning memory:
                     ESP_LOGI("ISR", "Resetting Provisioning and Restarting Device!");
                     esp_wifi_restore();
                     vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
@@ -313,10 +318,13 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
+//TODO: consider using this as service name (service name = name in QR code payload; the MAC address components are randomized enough to avoide collisions
+//TODO: consider printing the entire QR-code payload properly formatted, on the serial console in a separate line for easy copy-pasting right after the pop was established, 
+//TODO: example; {"ver":"v1","name":"TWOMES-0DB978","pop":"810667973","transport":"ble"}
 void get_device_service_name(char *service_name, size_t max)
 {
     uint8_t eth_mac[6];
-    const char *ssid_prefix = "PROV_";
+    const char *ssid_prefix = SSID_PREFIX;
     esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
     snprintf(service_name, max, "%s%02X%02X%02X",
              ssid_prefix, eth_mac[3], eth_mac[4], eth_mac[5]);
@@ -391,7 +399,7 @@ void initialize_time(char *timezone)
     localtime_r(&now, &timeinfo);
     if (timeinfo.tm_year < (2016 - 1900))
     {
-        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+        ESP_LOGI(TAG, "Time is not set yet. Connecting to Wi-Fi and getting time over NTP.");
         obtain_time();
         // update 'now' variable with current time
         time(&now);
@@ -414,6 +422,8 @@ void post_http(char *url, char *data, char *authenticationToken)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
+    //TODO: use the SERVER and ENDPOINT defines
+    //TODO: remove port 8000? No longer used in docker config, at least...
     esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
     esp_http_client_set_header(client, "Content-Type", "text/plain");
     char *dataLenStr = malloc(sizeof(char) * 8);
@@ -450,7 +460,7 @@ esp_err_t store_bearer(char *bearer)
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The bearer has been written!\n");
+            ESP_LOGI(TAG, "The bearer was written!\n");
             ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
             break;
         default:
@@ -482,7 +492,7 @@ char *get_bearer()
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The bearer has been read!\n");
+            ESP_LOGI(TAG, "The bearer was read!\n");
             ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
@@ -564,6 +574,8 @@ void get_http(char *url)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_GET);
+    //TODO: use the SERVER and ENDPOINT defines
+    //TODO: remove port 8000? No longer used in docker config, at least...
     esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
     esp_err_t err = esp_http_client_perform(client);
     if (err != ESP_OK)
@@ -586,6 +598,8 @@ char *post_https(char *url, char *data, char *cert, char *authenticationToken)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
+    //TODO: use the SERVER and ENDPOINT defines
+    //TODO: remove port 8000? No longer used in docker config, at least...
     esp_http_client_set_header(client, "Host", "api.tst.energietransitiewindesheim.nl:8000");
     esp_http_client_set_header(client, "Content-Type", "text/plain");
     if (authenticationToken)
@@ -710,6 +724,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, char *pop, char *device_n
          *     - Wi-Fi password when scheme is wifi_prov_scheme_softap
          *     - simply ignored when scheme is wifi_prov_scheme_ble
          */
+        //TODO: consider using pop (which is secret anyway) as service_key for SoftAP
         const char *service_key = NULL;
 
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
@@ -779,7 +794,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, char *pop, char *device_n
         }
         else
         {
-            ESP_LOGI(TAG, "Already provisioned, not starting WiFi because connecting is disabled");
+            ESP_LOGI(TAG, "Already provisioned, not starting Wi-Fi because connecting is disabled");
         }
     }
     /* Wait for Wi-Fi connection */
@@ -791,11 +806,11 @@ void disable_wifi()
 {
     if (esp_wifi_stop() == ESP_OK)
     {
-        ESP_LOGI(TAG, "Disabled WiFi");
+        ESP_LOGI(TAG, "Disabled Wi-Fi");
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to disable WiFi");
+        ESP_LOGE(TAG, "Failed to disable Wi-Fi");
     }
 }
 
@@ -803,11 +818,11 @@ void enable_wifi()
 {
     if (esp_wifi_start() == ESP_OK)
     {
-        ESP_LOGI(TAG, "Enabled WiFi");
+        ESP_LOGI(TAG, "Enabled Wi-Fi");
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to enable WiFi");
+        ESP_LOGE(TAG, "Failed to enable Wi-Fi");
     }
 }
 
