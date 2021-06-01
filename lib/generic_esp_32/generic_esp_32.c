@@ -316,7 +316,7 @@ void wifi_init_sta(void)
 void get_device_service_name(char *service_name, size_t max)
 {
     uint8_t eth_mac[6];
-    const char *ssid_prefix = "PROV_";
+    const char *ssid_prefix = "SSID_PREFIX";
     esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
     snprintf(service_name, max, "%s%02X%02X%02X",
              ssid_prefix, eth_mac[3], eth_mac[4], eth_mac[5]);
@@ -498,7 +498,7 @@ char *get_bearer()
     return bearer;
 }
 
-void activate_device(char *url, uint32_t pop, char *cert)
+void activate_device(char *url, char *name, uint32_t pop, char *cert)
 {
     esp_err_t err;
     activation = true;
@@ -506,6 +506,12 @@ void activate_device(char *url, uint32_t pop, char *cert)
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
+    
+    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}";
+    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, name, pop);
+    char *qr_code_payload = malloc(qr_code_payload_size);
+    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, url, pop);
+    
     ESP_LOGI(TAG, "%s", device_activation_data);
     char *bearer = post_https(url, device_activation_data, cert, NULL);
     if (!bearer)

@@ -88,7 +88,8 @@ void app_main(void)
     //Starts provisioning if not provisioned, otherwise skips provisioning.
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
-    start_provisioning(config, popStr, "Generic-Test", true);
+    char *device_name = malloc(DEVICE_NAME_SIZE);
+    start_provisioning(config, popStr, get_device_service_name(device_name, DEVICE_NAME_SIZE), true);
 
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
