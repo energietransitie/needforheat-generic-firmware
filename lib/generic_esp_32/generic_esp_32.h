@@ -31,6 +31,9 @@
 #define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
 #define INPUT_BITMASK ((1ULL << BUTTON_BOOT))
 
+#define SSID_PREFIX "TWOMES-"
+#define DEVICE_NAME_SIZE 13 /*SSID_PREFIX will be appended with six hexadecimal digits derived from the last 48 bits of the MAC address */ 
+
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
@@ -64,7 +67,7 @@ void initialize_time(char* timezone);
 void post_http(char* url, char *data, char* authenticationToken);
 char* post_https(char* url, char *data, char* cert, char* authenticationToken);
 char* get_bearer();
-void activate_device(char* url, uint32_t pop, char* cert);
+void activate_device(char *url, char *name, uint32_t pop, char *cert);
 void get_http(char* url);
 
 void initialize_nvs();
