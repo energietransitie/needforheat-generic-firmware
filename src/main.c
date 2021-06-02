@@ -53,7 +53,7 @@ void app_main(void)
     //If set to true it will autonnect.
     start_provisioning(config, true);
 
-    //Initialize time with timezone Europe and city Amsterdam
+    //Initialize time with timezone UTC; building timezone is stored in central database
     initialize_time("UTC");
 
     //Gets time as epoch time.
