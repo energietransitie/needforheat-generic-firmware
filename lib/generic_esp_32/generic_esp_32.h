@@ -54,6 +54,8 @@ void buttonPressDuration(void *args);
 char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);
 void initialize();
+void create_pop();
+void prepare_device();
 void time_sync_notification_cb(struct timeval *tv);
 void prov_event_handler(void *arg, esp_event_base_t event_base,int32_t event_id, void *event_data);
 esp_err_t http_event_handler(esp_http_client_event_t *evt);
@@ -67,13 +69,13 @@ void initialize_time(char* timezone);
 void post_http(char* url, char *data, char* authenticationToken);
 char* post_https(char* url, char *data, char* cert, char* authenticationToken);
 char* get_bearer();
-void activate_device(char *url, char *name, uint32_t pop, char *cert);
+void activate_device(char *url, char *name, char *cert);
 void get_http(char* url);
 
 void initialize_nvs();
 
 wifi_prov_mgr_config_t initialize_provisioning();
-void start_provisioning(wifi_prov_mgr_config_t config, char* pop, char* device_name, bool connect);
+void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 void disable_wifi();
 void enable_wifi();
 #endif

@@ -10,6 +10,7 @@
         "esp_http_client.h": "c",
         "esp_netif.h": "c",
         "esp_tls.h": "c",
-        "generic_esp_32.h": "c"
+        "generic_esp_32.h": "c",
+        "*.ipp": "c"
     }
 }

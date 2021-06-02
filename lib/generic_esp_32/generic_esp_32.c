@@ -23,14 +23,15 @@ void sntp_sync_time(struct timeval *tv)
 #endif
 
 //Gpio ISR handler:
-static void IRAM_ATTR gpio_isr_handler(void *arg) {
+static void IRAM_ATTR gpio_isr_handler(void *arg)
+{
     uint32_t gpio_num = (uint32_t)arg;
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
-}//gpio_isr_handler
-
+} //gpio_isr_handler
 
 //Function to initialise the buttons and LEDs on the gateway, with interrupts on the buttons
-void initGPIO() {
+void initGPIO()
+{
     gpio_config_t io_conf;
     //CONFIGURE OUTPUTS:
     io_conf.intr_type = GPIO_INTR_DISABLE;
@@ -71,50 +72,57 @@ void time_sync_notification_cb(struct timeval *tv)
  * argument[0] = amount of blinks
  * argument[1] = pin to blink on (LED_STATUS or LED_ERROR)
  */
-void blink(void *args) {
+void blink(void *args)
+{
     uint8_t *arguments = (uint8_t *)args;
     uint8_t amount = arguments[0];
     uint8_t pin = arguments[1];
     uint8_t i;
-    for (i = 0; i < amount; i++) {
+    for (i = 0; i < amount; i++)
+    {
         gpio_set_level(pin, 1);
         vTaskDelay(200 / portTICK_PERIOD_MS);
         gpio_set_level(pin, 0);
         vTaskDelay(200 / portTICK_PERIOD_MS);
-    }//for(i<amount)
+    } //for(i<amount)
     //Delete the blink task after completion:
     vTaskDelete(NULL);
-}//void blink;
+} //void blink;
 
 /**
  * Check for input of buttons and the duration
  * if the press duration was more than 5 seconds, erase the flash memory to restart provisioning
  * otherwise, blink the status LED (and possibly run another task (sensor provisioning?))
 */
-void buttonPressDuration(void *args) {
+void buttonPressDuration(void *args)
+{
     uint32_t io_num;
     ESP_LOGI(TAG, "Button Press Duration is Here!");
-    while (1) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+    while (1)
+    {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
+        {
             uint8_t seconds = 0;
-            while (!gpio_get_level(BUTTON_BOOT)) {
+            while (!gpio_get_level(BUTTON_BOOT))
+            {
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
                 seconds++;
-                if (seconds == 9) {
+                if (seconds == 9)
+                {
                     ESP_LOGI("ISR", "Button held for over 10 seconds\n");
-                    char blinkArgs[2] = { 5, LED_ERROR };
+                    char blinkArgs[2] = {5, LED_ERROR};
                     xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
                     //Long press on P2 is for full Reset, clearing provisioning memory:
                     ESP_LOGI("ISR", "Resetting Provisioning and Restarting Device!");
                     esp_wifi_restore();
                     vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
-                    esp_restart();  //software restart, to get new provisioning. Sensors do NOT need to be paired again when gateway is reset (MAC address does not change) 
-                    break; //Exit loop
+                    esp_restart();                         //software restart, to get new provisioning. Sensors do NOT need to be paired again when gateway is reset (MAC address does not change)
+                    break;                                 //Exit loop
                 }
             }
-        } 
-    } 
-} 
+        }
+    }
+}
 
 char *get_types(char *stringf, int count)
 {
@@ -164,7 +172,6 @@ int variable_sprintf_size(char *string, int count, ...)
     int totalSize = strlen(string) * sizeof(char) + sizeof(char) * extraSize;
     return totalSize;
 }
-
 
 /* Event handler for catching system events */
 void prov_event_handler(void *arg, esp_event_base_t event_base,
@@ -311,6 +318,90 @@ void wifi_init_sta(void)
     /* Start Wi-Fi in station mode */
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
+}
+
+void create_pop()
+{
+    esp_err_t err;
+    uint32_t pop;
+    nvs_handle_t pop_handle;
+    err = nvs_open("twomes_storage", NVS_READWRITE, &pop_handle);
+    if (err)
+    {
+        ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        err = nvs_get_u32(pop_handle, "pop", &pop);
+        switch (err)
+        {
+        case ESP_OK:
+            ESP_LOGI(TAG, "The PoP has been initialized already!\n");
+            ESP_LOGI(TAG, "The PoP is: %u\n", pop);
+            break;
+        case ESP_ERR_NVS_NOT_FOUND:
+            ESP_LOGI(TAG, "The PoP is not initialized yet!");
+            ESP_LOGI(TAG, "Creating PoP");
+            pop = esp_random();
+            ESP_LOGI(TAG, "Attempting to store PoP: %d", pop);
+            err = nvs_set_u32(pop_handle, "pop", pop);
+            if (!err)
+            {
+                ESP_LOGI(TAG, "Succesfully wrote PoP: %u to NVS twomes_storage", pop);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "Failed to write PoP to NVS twomes_storage: %s", esp_err_to_name(err));
+            }
+            break;
+        default:
+            printf("Error (%s) reading!\n", esp_err_to_name(err));
+        }
+        nvs_close(pop_handle);
+    }
+    ESP_LOGI(TAG, "POP: %u", pop);
+}
+
+void get_pop(uint32_t *buf)
+{
+    esp_err_t err;
+    nvs_handle_t pop_handle;
+    err = nvs_open("twomes_storage", NVS_READWRITE, &pop_handle);
+    if (err)
+    {
+        ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        err = nvs_get_u32(pop_handle, "pop", buf);
+        switch (err)
+        {
+        case ESP_OK:
+            ESP_LOGI(TAG, "The PoP has succesfully been read!\n");
+            break;
+        default:
+            ESP_LOGE(TAG, "%s", esp_err_to_name(err));
+            break;
+        }
+    }
+}
+
+void prepare_device()
+{
+    create_pop();
+    uint32_t pop;
+    get_pop(&pop);
+    char *device_name = malloc(DEVICE_NAME_SIZE);
+    get_device_service_name(device_name, DEVICE_NAME_SIZE);
+
+    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}";
+    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, pop);
+    char *qr_code_payload = malloc(qr_code_payload_size);
+    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, pop);
+    ESP_LOGI(TAG, "QR Code Payload: ");
+    ESP_LOGI(TAG, "%s", qr_code_payload);
 }
 
 void get_device_service_name(char *service_name, size_t max)
@@ -498,15 +589,17 @@ char *get_bearer()
     return bearer;
 }
 
-void activate_device(char *url, char *name, uint32_t pop, char *cert)
+void activate_device(char *url, char *name, char *cert)
 {
     esp_err_t err;
+    uint32_t pop;
+    get_pop(&pop);
     activation = true;
     char *device_activation_plain = "{ \"proof_of_presence_id\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
-    
+
     ESP_LOGI(TAG, "%s", device_activation_data);
     char *bearer = post_https(url, device_activation_data, cert, NULL);
     if (!bearer)
@@ -531,7 +624,8 @@ void activate_device(char *url, char *name, uint32_t pop, char *cert)
             {
             case '\"':
                 count++;
-                if(count == 4){
+                if (count == 4)
+                {
                     *bearer_trimmed = '\0';
                     done = true;
                 }
@@ -669,7 +763,7 @@ wifi_prov_mgr_config_t initialize_provisioning()
     return config;
 }
 
-void start_provisioning(wifi_prov_mgr_config_t config, char *pop, char *device_name, bool connect)
+void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
 {
     /* Initialize provisioning manager with the
      * configuration parameters set above */
@@ -689,8 +783,8 @@ void start_provisioning(wifi_prov_mgr_config_t config, char *pop, char *device_n
          *     - Wi-Fi SSID when scheme is wifi_prov_scheme_softap
          *     - device name when scheme is wifi_prov_scheme_ble
          */
-        char *service_name = device_name;
-
+        char *service_name = malloc(DEVICE_NAME_SIZE);
+        get_device_service_name(service_name, DEVICE_NAME_SIZE);
         /* What is the security level that we want (0 or 1):
          *      - WIFI_PROV_SECURITY_0 is simply plain text communication.
          *      - WIFI_PROV_SECURITY_1 is secure communication which consists of secure handshake
@@ -703,8 +797,12 @@ void start_provisioning(wifi_prov_mgr_config_t config, char *pop, char *device_n
          *      - this should be a string with length > 0
          *      - NULL if not used
          */
-        char *pop_str = pop;
-        ESP_LOGI(TAG, "Pop: %s", pop_str);
+        uint32_t pop;
+        get_pop(&pop);
+        int msgSize = variable_sprintf_size("%u", 1, pop);
+        char *pop_str = malloc(msgSize);
+        //Inputting variables into the plain json string from above(msgPlain).
+        snprintf(pop_str, msgSize, "%u", pop);
 
         /* What is the service key (could be NULL)
          * This translates to :

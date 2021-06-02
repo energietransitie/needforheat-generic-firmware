@@ -41,66 +41,13 @@ void app_main(void)
     /* Initialize TCP/IP */
     ESP_ERROR_CHECK(esp_netif_init());
 
-    uint32_t pop;
-    nvs_handle_t pop_handle;
-    err = nvs_open("twomes_storage", NVS_READWRITE, &pop_handle);
-    if (err)
-    {
-        ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
-        err = nvs_get_u32(pop_handle, "pop", &pop);
-        switch (err)
-        {
-        case ESP_OK:
-            ESP_LOGI(TAG, "The PoP has been initialized already!\n");
-            ESP_LOGI(TAG, "The PoP is: %u\n", pop);
-            break;
-        case ESP_ERR_NVS_NOT_FOUND:
-            ESP_LOGI(TAG, "The PoP is not initialized yet!");
-            ESP_LOGI(TAG, "Creating PoP");
-            pop = esp_random();
-            ESP_LOGI(TAG, "Attempting to store PoP: %d", pop);
-            err = nvs_set_u32(pop_handle, "pop", pop);
-            if (!err)
-            {
-                ESP_LOGI(TAG, "Succesfully wrote PoP: %u to NVS twomes_storage", pop);
-            }
-            else
-            {
-                ESP_LOGE(TAG, "Failed to write PoP to NVS twomes_storage: %s", esp_err_to_name(err));
-            }
-            break;
-        default:
-            printf("Error (%s) reading!\n", esp_err_to_name(err));
-        }
-    }
-    ESP_LOGI(TAG, "POP: %u", pop);
-
-    int msgSize = variable_sprintf_size("%u", 1, pop);
-    //Allocating enough memory so inputting the variables into the string doesn't overflow
-    char *popStr = malloc(msgSize);
-    //Inputting variables into the plain json string from above(msgPlain).
-    snprintf(popStr, msgSize, "%u", pop);
+    prepare_device();
 
     wifi_prov_mgr_config_t config = initialize_provisioning();
     //Starts provisioning if not provisioned, otherwise skips provisioning.
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
-    char *device_name = malloc(DEVICE_NAME_SIZE);
-    ESP_LOGI(TAG, "Device Name Size: %d", DEVICE_NAME_SIZE);
-    get_device_service_name(device_name, DEVICE_NAME_SIZE);
-    ESP_LOGI(TAG, "Device Name: %s", device_name);
-
-    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}";
-    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, pop);
-    char *qr_code_payload = malloc(qr_code_payload_size);
-    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, pop);
-    ESP_LOGI(TAG, "QR Code Payload: ");
-    ESP_LOGI(TAG, "%s", qr_code_payload);
-    start_provisioning(config, popStr, device_name, true);
+    start_provisioning(config, true);
 
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
@@ -124,7 +71,7 @@ void app_main(void)
     else if (strcmp(bearer, "") == 0)
     {
         ESP_LOGI(TAG, "Bearer not found, activating device!");
-        activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, DEVICE_NAME, pop, rootCAR3);
+        activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, DEVICE_NAME, rootCAR3);
         bearer = get_bearer();
     }
     else if (!bearer)
