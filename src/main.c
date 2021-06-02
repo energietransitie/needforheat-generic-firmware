@@ -2,6 +2,7 @@
 #define LOCAL_SERVER "http://192.168.178.48:8000/device/measurements/fixed-interval"
 #define OFFICIAL_SERVER "https://api.tst.energietransitiewindesheim.nl/device/measurements/variable-interval"
 #define OFFICIAL_SERVER_DEVICE_ACTIVATION "https://api.tst.energietransitiewindesheim.nl/device/activate"
+#define DEVICE_NAME "Generic-Test"
 static const char *TAG = "Twomes Heartbeat Test Application ESP32";
 
 char *bearer;
@@ -89,7 +90,17 @@ void app_main(void)
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
     char *device_name = malloc(DEVICE_NAME_SIZE);
-    start_provisioning(config, popStr, get_device_service_name(device_name, DEVICE_NAME_SIZE), true);
+    ESP_LOGI(TAG, "Device Name Size: %d", DEVICE_NAME_SIZE);
+    get_device_service_name(device_name, DEVICE_NAME_SIZE);
+    ESP_LOGI(TAG, "Device Name: %s", device_name);
+
+    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}";
+    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, pop);
+    char *qr_code_payload = malloc(qr_code_payload_size);
+    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, pop);
+    ESP_LOGI(TAG, "QR Code Payload: ");
+    ESP_LOGI(TAG, "%s", qr_code_payload);
+    start_provisioning(config, popStr, device_name, true);
 
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
@@ -113,7 +124,7 @@ void app_main(void)
     else if (strcmp(bearer, "") == 0)
     {
         ESP_LOGI(TAG, "Bearer not found, activating device!");
-        activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, pop, rootCAR3);
+        activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, DEVICE_NAME, pop, rootCAR3);
         bearer = get_bearer();
     }
     else if (!bearer)

@@ -67,7 +67,7 @@ void initialize_time(char* timezone);
 void post_http(char* url, char *data, char* authenticationToken);
 char* post_https(char* url, char *data, char* cert, char* authenticationToken);
 char* get_bearer();
-void activate_device(char* url, uint32_t pop, char* cert);
+void activate_device(char *url, char *name, uint32_t pop, char *cert);
 void get_http(char* url);
 
 void initialize_nvs();
