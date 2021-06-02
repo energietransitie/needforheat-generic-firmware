@@ -507,16 +507,7 @@ void activate_device(char *url, char *name, uint32_t pop, char *cert)
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
     
-<<<<<<< HEAD
     ESP_LOGI(TAG, "%s", device_activation_data);
-=======
-    char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}\n\n";
-    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, name, pop);
-    char *qr_code_payload = malloc(qr_code_payload_size);
-    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, url, pop);
-    ESP_LOGI(TAG, "%s", qr_code_payload);
-    
->>>>>>> ee971adb9089f2b49fc6f4b91c2841d818794bf4
     char *bearer = post_https(url, device_activation_data, cert, NULL);
     if (!bearer)
     {
