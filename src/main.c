@@ -1,9 +1,12 @@
 #include <generic_esp_32.h>
-#define LOCAL_SERVER "http://192.168.178.48:8000/device/measurements/fixed-interval"
-#define OFFICIAL_SERVER "https://api.tst.energietransitiewindesheim.nl/device/measurements/variable-interval"
-#define OFFICIAL_SERVER_DEVICE_ACTIVATION "https://api.tst.energietransitiewindesheim.nl/device/activate"
+
 #define DEVICE_NAME "Generic-Test"
+#define HEARTBEAT_UPLOAD_INTERVAL = 3600000 //ms, so one hour
+#define HEARTBEAT_MEASUREMENT_INTERVAL = 600000 //ms, so 10 minutes; not yet in effect
 static const char *TAG = "Twomes Heartbeat Test Application ESP32";
+
+const char* device_activation_url = TWOMES_TEST_SERVER"/device/activate";
+const char* variable_interval_upload_url = TWOMES_TEST_SERVER"/device/measurements/variable-interval";
 
 char *bearer;
 const char *rootCAR3 = "-----BEGIN CERTIFICATE-----\n"
@@ -52,17 +55,11 @@ void app_main(void)
 
     //Initialize time with timezone Europe and city Amsterdam
     initialize_time("UTC");
-    //URL Do not forget to use https:// when using the https() function.
-    char *url = OFFICIAL_SERVER;
 
     //Gets time as epoch time.
     ESP_LOGI(TAG, "Getting time!");
     uint32_t now = time(NULL);
     ESP_LOGI(TAG, "Time is: %d", now);
-    //Creates data string replacing %d with the time integer.
-    char *dataPlain = "{\"deviceMac\":\"8C:AA:B5:85:A2:3D\",\"measurements\": [{\"property\":\"testy\",\"value\":\"hello_world\"}],\"time\":%d}";
-    char data[strlen(dataPlain)];
-    sprintf(data, dataPlain, now);
 
     char *bearer = get_bearer();
     if (strlen(bearer) > 1)
@@ -72,7 +69,7 @@ void app_main(void)
     else if (strcmp(bearer, "") == 0)
     {
         ESP_LOGI(TAG, "Bearer not found, activating device!");
-        activate_device(OFFICIAL_SERVER_DEVICE_ACTIVATION, DEVICE_NAME, rootCAR3);
+        activate_device(device_activation_url, DEVICE_NAME, rootCAR3);
         bearer = get_bearer();
     }
     else if (!bearer)
@@ -103,7 +100,7 @@ void app_main(void)
         snprintf(msg, msgSize, msg2Plain, now, measurementType, now);
         //Posting data over HTTP for local testing(will be https later), using url, msg and bearer token.
         ESP_LOGI(TAG, "Data: %s", msg);
-        post_https(url, msg, rootCAR3, bearer);
+        post_https(variable_interval_upload_url, msg, rootCAR3, bearer);
         vTaskDelay(1000);
         //Disconnect WiFi
         disable_wifi();

@@ -1,8 +1,5 @@
 #include "generic_esp_32.h"
 
-#define MAX_HTTP_OUTPUT_BUFFER 2048
-#define MAX_HTTP_RECV_BUFFER 512
-
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 bool activation = false;
 //Interrupt Queue Handler:
@@ -58,7 +55,7 @@ void initialize()
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(BUTTON_BOOT, gpio_isr_handler, (void *)BUTTON_BOOT);
+    gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
 }
 
 void time_sync_notification_cb(struct timeval *tv)
@@ -102,7 +99,7 @@ void buttonPressDuration(void *args)
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY))
         {
             uint8_t seconds = 0;
-            while (!gpio_get_level(BUTTON_BOOT))
+            while (!gpio_get_level(WIFI_RESET_BUTTON))
             {
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
                 seconds++;
@@ -111,7 +108,7 @@ void buttonPressDuration(void *args)
                     ESP_LOGI("ISR", "Button held for over 10 seconds\n");
                     char blinkArgs[2] = {5, LED_ERROR};
                     xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
-                    //Long press on P2 is for full Reset, clearing provisioning memory:
+                    //Long press on WIFI_RESET_BUTTON(BOOT on the esp32) is for clearing Wi-Fi provisioning memory:
                     ESP_LOGI("ISR", "Resetting Provisioning and Restarting Device!");
                     esp_wifi_restore();
                     vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
@@ -336,7 +333,7 @@ void create_pop()
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The PoP has been initialized already!\n");
+            ESP_LOGI(TAG, "The PoP was initialized already!\n");
             ESP_LOGI(TAG, "The PoP is: %u\n", pop);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
@@ -481,7 +478,7 @@ void initialize_time(char *timezone)
     localtime_r(&now, &timeinfo);
     if (timeinfo.tm_year < (2016 - 1900))
     {
-        ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+        ESP_LOGI(TAG, "Time is not set yet. Connecting to Wi-Fi and getting time over NTP.");
         obtain_time();
         // update 'now' variable with current time
         time(&now);
@@ -495,7 +492,7 @@ void initialize_time(char *timezone)
     ESP_LOGI(TAG, "The current UTC/date/time is: %s", strftime_buf);
 }
 
-void post_http(char *url, char *data, char *authenticationToken)
+void post_http(const char *url, char *data, char *authenticationToken)
 {
     esp_http_client_config_t config = {
         .url = url,
@@ -504,7 +501,7 @@ void post_http(char *url, char *data, char *authenticationToken)
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
+    esp_http_client_set_header(client, "Host", TWOMES_TEST_SERVER_HOSTNAME);
     esp_http_client_set_header(client, "Content-Type", "text/plain");
     char *dataLenStr = malloc(sizeof(char) * 8);
     itoa(strlen(data), dataLenStr, 10);
@@ -540,7 +537,7 @@ esp_err_t store_bearer(char *bearer)
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The bearer has been written!\n");
+            ESP_LOGI(TAG, "The bearer was written!\n");
             ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
             break;
         default:
@@ -572,7 +569,7 @@ char *get_bearer()
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The bearer has been read!\n");
+            ESP_LOGI(TAG, "The bearer was read!\n");
             ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
@@ -588,7 +585,7 @@ char *get_bearer()
     return bearer;
 }
 
-void activate_device(char *url, char *name,const char *cert)
+void activate_device(const char *url, char *name,const char *cert)
 {
     esp_err_t err;
     uint32_t pop;
@@ -649,7 +646,7 @@ void activate_device(char *url, char *name,const char *cert)
     }
 }
 
-void get_http(char *url)
+void get_http(const char *url)
 {
     esp_http_client_config_t config = {
         .url = url,
@@ -667,7 +664,7 @@ void get_http(char *url)
     esp_http_client_cleanup(client);
 }
 
-char *post_https(char *url, char *data,const char *cert, char *authenticationToken)
+char *post_https(const char *url, char *data,const char *cert, char *authenticationToken)
 {
     int content_length;
     int status_code = 0;
@@ -680,7 +677,7 @@ char *post_https(char *url, char *data,const char *cert, char *authenticationTok
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", "api.tst.energietransitiewindesheim.nl:8000");
+    esp_http_client_set_header(client, "Host", TWOMES_TEST_SERVER_HOSTNAME);
     esp_http_client_set_header(client, "Content-Type", "text/plain");
     if (authenticationToken)
     {
@@ -701,11 +698,15 @@ char *post_https(char *url, char *data,const char *cert, char *authenticationTok
     {
         status_code = esp_http_client_get_status_code(client);
         content_length = esp_http_client_get_content_length(client);
-        ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
-                 content_length);
-        response = malloc(sizeof(char) * content_length);
-        esp_http_client_read(client, response, content_length);
-        ESP_LOGE(TAG, "Response: %s", response);
+        if(content_length > 0){
+            ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
+                    content_length);
+            response = malloc(sizeof(char) * content_length);
+            esp_http_client_read(client, response, content_length);
+            ESP_LOGE(TAG, "Response: %s", response);
+        }else{
+            ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
+        }
     }
     esp_http_client_cleanup(client);
     if (response && status_code == 200)
@@ -877,7 +878,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         }
         else
         {
-            ESP_LOGI(TAG, "Already provisioned, not starting WiFi because connecting is disabled");
+            ESP_LOGI(TAG, "Already provisioned, not starting Wi-Fi because connecting is disabled");
         }
     }
     /* Wait for Wi-Fi connection */
@@ -889,11 +890,11 @@ void disable_wifi()
 {
     if (esp_wifi_stop() == ESP_OK)
     {
-        ESP_LOGI(TAG, "Disabled WiFi");
+        ESP_LOGI(TAG, "Disabled Wi-Fi");
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to disable WiFi");
+        ESP_LOGE(TAG, "Failed to disable Wi-Fi");
     }
 }
 
@@ -901,11 +902,11 @@ void enable_wifi()
 {
     if (esp_wifi_start() == ESP_OK)
     {
-        ESP_LOGI(TAG, "Enabled WiFi");
+        ESP_LOGI(TAG, "Enabled Wi-Fi");
     }
     else
     {
-        ESP_LOGE(TAG, "Failed to enable WiFi");
+        ESP_LOGE(TAG, "Failed to enable Wi-Fi");
     }
 }
 
