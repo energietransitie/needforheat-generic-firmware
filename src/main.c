@@ -1,8 +1,8 @@
 #include <generic_esp_32.h>
 
 #define DEVICE_NAME "Generic-Test"
-#define HEARTBEAT_UPLOAD_INTERVAL = 3600000 //ms, so one hour
-#define HEARTBEAT_MEASUREMENT_INTERVAL = 600000 //ms, so 10 minutes; not yet in effect
+#define HEARTBEAT_UPLOAD_INTERVAL 3600000 //ms, so one hour
+#define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
 static const char *TAG = "Twomes Heartbeat Test Application ESP32";
 
 const char* device_activation_url = TWOMES_TEST_SERVER"/device/activate";
@@ -77,34 +77,27 @@ void app_main(void)
         ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
     }
 
-    char *msg2Plain = "{\"upload_time\": \"%d\",\"property_measurements\":[    {"
-                      "\"property_name\": %s,"
-                      "\"measurements\": ["
-                       "{ \"timestamp\":\"%d\","
-                       "\"value\":\"1\"}"
-                      "]}]}";
+    // Example Message Check generic_esp_32.c upload_hearbeat function to see a real example of this being filled.
+    // char *msg_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[    {"
+    //                   "\"property_name\": %s,"
+    //                   "\"measurements\": ["
+    //                    "{ \"timestamp\":\"%d\","
+    //                    "\"value\":\"1\"}"
+    //                   "]}]}";
 
     /* Start main application now */
     while (1)
     {
+        
         enable_wifi();
-        vTaskDelay(1000);
-        char *measurementType = "\"heartbeat\"";
-        //Updates Epoch Time
-        now = time(NULL);
-        //Get size of the message after inputting variables.
-        int msgSize = variable_sprintf_size(msg2Plain, 3, now, measurementType, now);
-        //Allocating enough memory so inputting the variables into the string doesn't overflow
-        char *msg = malloc(msgSize);
-        //Inputting variables into the plain json string from above(msgPlain).
-        snprintf(msg, msgSize, msg2Plain, now, measurementType, now);
-        //Posting data over HTTP for local testing(will be https later), using url, msg and bearer token.
-        ESP_LOGI(TAG, "Data: %s", msg);
-        post_https(variable_interval_upload_url, msg, rootCAR3, bearer);
-        vTaskDelay(1000);
+        //Wait to make sure Wi-Fi is enabled.
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        upload_heartbeat(variable_interval_upload_url, rootCAR3, bearer);
+        //Wait to make sure uploading is finished.
+        vTaskDelay(500 / portTICK_PERIOD_MS);
         //Disconnect WiFi
         disable_wifi();
-        //Wait an hour
-        vTaskDelay(3600000 / portTICK_PERIOD_MS);
+        //Wait HEARTBEAT_UPLOAD_INTERVAL(currently 1 hour)
+        vTaskDelay(HEARTBEAT_UPLOAD_INTERVAL / portTICK_PERIOD_MS);
     }
 }

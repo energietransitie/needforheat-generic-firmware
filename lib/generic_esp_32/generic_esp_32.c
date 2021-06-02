@@ -492,6 +492,29 @@ void initialize_time(char *timezone)
     ESP_LOGI(TAG, "The current UTC/date/time is: %s", strftime_buf);
 }
 
+void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer)
+{
+    char *measurementType = "\"heartbeat\"";
+    //Updates Epoch Time
+    time_t now = time(NULL);
+    //Plain JSON request where values will be inserted.
+    char *msg_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[    {"
+                      "\"property_name\": %s,"
+                      "\"measurements\": ["
+                       "{ \"timestamp\":\"%d\","
+                       "\"value\":\"1\"}"
+                      "]}]}";
+    //Get size of the message after inputting variables.
+    int msgSize = variable_sprintf_size(msg_plain, 3, now, measurementType, now);
+    //Allocating enough memory so inputting the variables into the string doesn't overflow
+    char *msg = malloc(msgSize);
+    //Inputting variables into the plain json string from above(msgPlain).
+    snprintf(msg, msgSize, msg_plain, now, measurementType, now);
+    //Posting data over HTTPS, using url, msg and bearer token.
+    ESP_LOGI(TAG, "Data: %s", msg);
+    post_https(variable_interval_upload_url, msg, root_cert, bearer);
+}
+
 void post_http(const char *url, char *data, char *authenticationToken)
 {
     esp_http_client_config_t config = {
@@ -585,7 +608,7 @@ char *get_bearer()
     return bearer;
 }
 
-void activate_device(const char *url, char *name,const char *cert)
+void activate_device(const char *url, char *name, const char *cert)
 {
     esp_err_t err;
     uint32_t pop;
@@ -664,7 +687,7 @@ void get_http(const char *url)
     esp_http_client_cleanup(client);
 }
 
-char *post_https(const char *url, char *data,const char *cert, char *authenticationToken)
+char *post_https(const char *url, char *data, const char *cert, char *authenticationToken)
 {
     int content_length;
     int status_code = 0;
@@ -698,13 +721,16 @@ char *post_https(const char *url, char *data,const char *cert, char *authenticat
     {
         status_code = esp_http_client_get_status_code(client);
         content_length = esp_http_client_get_content_length(client);
-        if(content_length > 0){
+        if (content_length > 0)
+        {
             ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
-                    content_length);
+                     content_length);
             response = malloc(sizeof(char) * content_length);
             esp_http_client_read(client, response, content_length);
             ESP_LOGE(TAG, "Response: %s", response);
-        }else{
+        }
+        else
+        {
             ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
         }
     }

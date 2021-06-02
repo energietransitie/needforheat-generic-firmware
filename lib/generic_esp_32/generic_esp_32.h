@@ -76,6 +76,7 @@ void obtain_time(void);
 void initialize_time(char* timezone);
 void post_http(const char* url, char *data, char* authenticationToken);
 char* post_https(const char* url, char *data,const char* cert, char* authenticationToken);
+void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer);
 char* get_bearer();
 void activate_device(const char *url, char *name,const char *cert);
 void get_http(const char* url);
