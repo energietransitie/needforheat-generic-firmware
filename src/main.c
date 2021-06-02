@@ -41,9 +41,11 @@ void app_main(void)
     /* Initialize TCP/IP */
     ESP_ERROR_CHECK(esp_netif_init());
 
-    prepare_device();
-
     wifi_prov_mgr_config_t config = initialize_provisioning();
+
+    //Make sure to have this here otherwise the device names won't match because
+    //of config changes made by the above function call.
+    prepare_device();
     //Starts provisioning if not provisioned, otherwise skips provisioning.
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
