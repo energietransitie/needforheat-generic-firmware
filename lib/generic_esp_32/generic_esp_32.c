@@ -7,7 +7,6 @@ static const char *TAG = "Twomes Generic Firmware Library ESP32";
 bool activation = false;
 //Interrupt Queue Handler:
 static xQueueHandle gpio_evt_queue = NULL;
-// char *https_url = "192.168.178.75:4444/set/house/opentherm";
 
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
@@ -493,7 +492,7 @@ void initialize_time(char *timezone)
     tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "The current date/time in Amsterdam is: %s", strftime_buf);
+    ESP_LOGI(TAG, "The current UTC/date/time is: %s", strftime_buf);
 }
 
 void post_http(char *url, char *data, char *authenticationToken)
@@ -589,7 +588,7 @@ char *get_bearer()
     return bearer;
 }
 
-void activate_device(char *url, char *name, char *cert)
+void activate_device(char *url, char *name,const char *cert)
 {
     esp_err_t err;
     uint32_t pop;
@@ -668,7 +667,7 @@ void get_http(char *url)
     esp_http_client_cleanup(client);
 }
 
-char *post_https(char *url, char *data, char *cert, char *authenticationToken)
+char *post_https(char *url, char *data,const char *cert, char *authenticationToken)
 {
     int content_length;
     int status_code = 0;

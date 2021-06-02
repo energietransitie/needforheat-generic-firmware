@@ -67,9 +67,9 @@ void initialize_sntp(void);
 void obtain_time(void);
 void initialize_time(char* timezone);
 void post_http(char* url, char *data, char* authenticationToken);
-char* post_https(char* url, char *data, char* cert, char* authenticationToken);
+char* post_https(char* url, char *data,const char* cert, char* authenticationToken);
 char* get_bearer();
-void activate_device(char *url, char *name, char *cert);
+void activate_device(char *url, char *name,const char *cert);
 void get_http(char* url);
 
 void initialize_nvs();

@@ -35,7 +35,6 @@ const char *rootCAR3 = "-----BEGIN CERTIFICATE-----\n"
 
 void app_main(void)
 {
-    esp_err_t err;
     initialize_nvs();
     initialize();
     /* Initialize TCP/IP */
@@ -52,7 +51,7 @@ void app_main(void)
     start_provisioning(config, true);
 
     //Initialize time with timezone Europe and city Amsterdam
-    initialize_time("CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00");
+    initialize_time("UTC");
     //URL Do not forget to use https:// when using the https() function.
     char *url = OFFICIAL_SERVER;
 
