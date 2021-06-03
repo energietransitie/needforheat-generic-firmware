@@ -27,17 +27,21 @@ Different Twomes measurement devices may have various features in common, includ
 *	Connect the device with a USB cable to the PC.
 *	Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
 *	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by Windows. You may need to install a specific usb driver on your computer before you can upload firmware. For Windows, we included `CH341SER.exe` in the release; run this executable to in stall the device driver.
+*	If you used the device before, you shoud first [erase all persistenly stored data](#erasing-all-persistenly-stored-data)
 *	Open a comand prompt in that directory, change the directory to the BinariesAndDriver subfolder and enter:
 	```shell
 	esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
 	```
 *	This should automatically detect the USB port that the device is connected to.
-*	If not, then open the Device Manager in Windows (e.g., hold Windows Key, type X, then select Device Manager), go to View and click Show Hidden Devices. Then unfold `Ports (COM & LPT)`. You should find the device there, named `USB-Serial CH340 *(COM?)` with `?` being a single digit.  
+*	If not, then open the Device Manager (in Windows press the `Windows + X` key combination, then select Device Manager), go to View and click Show Hidden Devices. Then unfold `Ports (COM & LPT)`. You should find the device there, named `USB-Serial CH340 *(COM?)` with `?` being a single digit.  
 *	If the COM port is not automatically detected, then enter (while replacing `?` with the digit found in the previous step): 
 	```shell
 	esptool.py --chip esp32  --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
 	```
-Should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
+Should you encounter issues you may try to replace `esptool.py` in the above commands with
+```shell 
+python -m esptool
+````
 
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
@@ -49,12 +53,12 @@ TO BE DOCUMENTED
 	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
 
 ### Device Preparation step 3: Creating the device in the Twomes backend using device type and pop  
-The pop you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the pop you just established and the device's DeviceType.name as a parameter. If you are using the Twomes test server API, you shuold use a DeviceType.name from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
+The pop you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the pop you just established and the device's DeviceType.name as a parameter. If you are using the Twomes test server API, you should use a DeviceType.name from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
 
 ### Device Preparation step 4: Generating a QR-code
 The pop and the [DeviceType.name](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv) of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement device. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
 
-The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below. An example payload: `{"ver":"v1","name":"Generic-Test","pop":"810667973","transport":"ble"}`
+The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below.
 
 Payload information : 
 
@@ -74,7 +78,7 @@ As payload entry you can copy the string below, but you should at least replace 
 {"ver":"v1","name":"Generic-Test","pop":"810667973","transport":"ble"}  
 ```
 
-### Erasing Wi-Fi provisioning data via a long (>10 s) button press 
+### Erasing only Wi-Fi provisioning data
 To change the name and/or associated password of the Wi-Fi network that a device is connected to, users can hold down a specific button for more than 10 seconds. 
 
 On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board, this button is labeled  'BOOT'. You can find it just above the micro-USB port. 
@@ -92,7 +96,7 @@ Note that this procedure:
 
 Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile) memory and will NOT be erased when you upload new firmware. 
 
-### Erasing the Proof-of-Possession (pop) identifier (erases Wi-Fi provisioning data as well)
+### Erasing all persistenly stored data
 The Proof-of-Posession (pop) identifier is stored in persistent (non-volatile) memory. To erase the pop, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and the device session_token needed added as bearer token to upload measurement data to the server. Doing this does not reset the PoP nor the device session_token bearer token. . .
 *	Open a command prompt and enter:
 	```shell
