@@ -614,7 +614,7 @@ void activate_device(const char *url, char *name, const char *cert)
     uint32_t pop;
     get_pop(&pop);
     activation = true;
-    char *device_activation_plain = "{ \"proof_of_presence_id\":\"%u\"}";
+    char *device_activation_plain = "{ \"device_activation_token\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
