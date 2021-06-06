@@ -1,12 +1,12 @@
 #include <generic_esp_32.h>
 
 #define DEVICE_NAME "Generic-Test"
-#define HEARTBEAT_UPLOAD_INTERVAL 3600000 //ms, so one hour
+#define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
 #define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
 static const char *TAG = "Twomes Heartbeat Test Application ESP32";
 
-const char* device_activation_url = TWOMES_TEST_SERVER"/device/activate";
-const char* variable_interval_upload_url = TWOMES_TEST_SERVER"/device/measurements/variable-interval";
+const char *device_activation_url = TWOMES_TEST_SERVER "/device/activate";
+const char *variable_interval_upload_url = TWOMES_TEST_SERVER "/device/measurements/variable-interval";
 
 char *bearer;
 const char *rootCAR3 = "-----BEGIN CERTIFICATE-----\n"
@@ -52,7 +52,6 @@ void app_main(void)
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
     start_provisioning(config, true);
-
     //Initialize time with timezone UTC; building timezone is stored in central database
     initialize_time("UTC");
 
@@ -88,10 +87,11 @@ void app_main(void)
     /* Start main application now */
     while (1)
     {
-        
+
         enable_wifi();
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(500 / portTICK_PERIOD_MS);
+        //Upload heartbeat
         upload_heartbeat(variable_interval_upload_url, rootCAR3, bearer);
         //Wait to make sure uploading is finished.
         vTaskDelay(500 / portTICK_PERIOD_MS);

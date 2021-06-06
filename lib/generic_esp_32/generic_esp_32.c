@@ -8,7 +8,7 @@ static xQueueHandle gpio_evt_queue = NULL;
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
 static EventGroupHandle_t wifi_event_group;
-
+bool wifi_initialized = false;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv)
 {
@@ -386,7 +386,19 @@ void get_pop(uint32_t *buf)
 
 void prepare_device()
 {
-    create_pop();
+    if(wifi_initialized){
+        ESP_LOGI(TAG, "Wi-Fi has been enabled for true random PoP generation!");
+        create_pop();
+    }else{
+        ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random PoP generation, enabling Wi-Fi!");
+        enable_wifi();
+        while(!wifi_initialized){
+            ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        };
+        ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
+        disable_wifi();
+    }
     uint32_t pop;
     get_pop(&pop);
     char *device_name = malloc(DEVICE_NAME_SIZE);
@@ -398,6 +410,8 @@ void prepare_device()
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, pop);
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
+    free(qr_code_payload);
+    free(device_name);
 }
 
 void get_device_service_name(char *service_name, size_t max)
@@ -542,6 +556,11 @@ void post_http(const char *url, char *data, char *authenticationToken)
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
     }
     esp_http_client_cleanup(client);
+    free(dataLenStr);
+    free(data);
+    if(authenticationToken){
+        free(authenticationTokenString);
+    }
 }
 
 esp_err_t store_bearer(char *bearer)
@@ -614,7 +633,7 @@ void activate_device(const char *url, char *name, const char *cert)
     uint32_t pop;
     get_pop(&pop);
     activation = true;
-    char *device_activation_plain = "{ \"device_activation_token\":\"%u\"}";
+    char *device_activation_plain = "{ \"proof_of_presence_id\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
     char *device_activation_data = malloc(activation_data_size);
     snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
@@ -628,11 +647,8 @@ void activate_device(const char *url, char *name, const char *cert)
     else
     {
         ESP_LOGE(TAG, "Bearer after post is: %s", bearer);
-        char *bearer_extracted = malloc(strlen(bearer) * sizeof(char));
-        sscanf(bearer, "{ \"session_token\":\"%s\" }", bearer_extracted);
-        ESP_LOGE(TAG, "Bearer Extracted: %s", bearer_extracted);
-        int extracted_size = strlen(bearer_extracted) * sizeof(char);
-        char *bearer_trimmed = malloc(extracted_size);
+        int size = strlen(bearer) * sizeof(char);
+        char *bearer_trimmed = malloc(size);
         char c = *bearer;
         int count = 0;
         int length = 0;
@@ -641,22 +657,22 @@ void activate_device(const char *url, char *name, const char *cert)
         {
             switch (c)
             {
-            case '\"':
+            case '"':
                 count++;
-                if (count == 4)
+                if (count == 3)
                 {
                     *bearer_trimmed = '\0';
                     done = true;
                 }
                 break;
             default:
-                if (count == 3)
+                if (count == 2)
                 {
                     *bearer_trimmed++ = c;
                     length++;
                 }
             }
-
+            ESP_LOGI(TAG, "Loopsies! %c", c);
             c = *++bearer;
         }
         bearer_trimmed -= length;
@@ -702,10 +718,10 @@ char *post_https(const char *url, char *data, const char *cert, char *authentica
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     esp_http_client_set_header(client, "Host", TWOMES_TEST_SERVER_HOSTNAME);
     esp_http_client_set_header(client, "Content-Type", "text/plain");
+    char *authenticationTokenString = "";
     if (authenticationToken)
     {
         char *authenticationTokenStringPlain = "Bearer %s";
-        char *authenticationTokenString = "";
         int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
         authenticationTokenString = malloc(sizeof(char) * strCount);
         snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
@@ -734,6 +750,10 @@ char *post_https(const char *url, char *data, const char *cert, char *authentica
             ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
         }
     }
+    if(authenticationToken){
+        free(authenticationTokenString);
+    }
+    free(data);
     esp_http_client_cleanup(client);
     if (response && status_code == 200)
     {
@@ -754,6 +774,7 @@ wifi_prov_mgr_config_t initialize_provisioning()
 
     /* Initialize Wi-Fi including netif with default config */
     esp_netif_create_default_wifi_sta();
+    wifi_initialized = true;
 #ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
     esp_netif_create_default_wifi_ap();
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
@@ -917,6 +938,7 @@ void disable_wifi()
     if (esp_wifi_stop() == ESP_OK)
     {
         ESP_LOGI(TAG, "Disabled Wi-Fi");
+        wifi_initialized = false;
     }
     else
     {
@@ -929,6 +951,7 @@ void enable_wifi()
     if (esp_wifi_start() == ESP_OK)
     {
         ESP_LOGI(TAG, "Enabled Wi-Fi");
+        wifi_initialized = true;
     }
     else
     {
