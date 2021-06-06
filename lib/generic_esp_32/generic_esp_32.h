@@ -63,7 +63,7 @@ void blink(void *args);
 char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);
 void initialize();
-void create_pop();
+void create_dat();
 void prepare_device();
 void time_sync_notification_cb(struct timeval *tv);
 void prov_event_handler(void *arg, esp_event_base_t event_base,int32_t event_id, void *event_data);
