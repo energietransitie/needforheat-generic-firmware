@@ -2,12 +2,12 @@
 
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 bool activation = false;
-//Interrupt Queue Handler:
-static xQueueHandle gpio_evt_queue = NULL;
+
+static EventGroupHandle_t wifi_event_group;
 
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
-static EventGroupHandle_t wifi_event_group;
+
 bool wifi_initialized = false;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv)
@@ -17,6 +17,10 @@ void sntp_sync_time(struct timeval *tv)
     sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
 }
 #endif
+
+#ifndef CONFIG_TWOMES_CUSTOM_GPIO
+//Interrupt Queue Handler:
+static xQueueHandle gpio_evt_queue = NULL;
 
 //Gpio ISR handler:
 static void IRAM_ATTR gpio_isr_handler(void *arg)
@@ -44,46 +48,6 @@ void initGPIO()
     io_conf.pull_up_en = 1;
     gpio_config(&io_conf);
 }
-
-void initialize()
-{
-    /* Initialize the event loop */
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    wifi_event_group = xEventGroupCreate();
-    initGPIO();
-    //Attach interrupt handler to GPIO pins:
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
-    gpio_install_isr_service(0);
-    gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
-}
-
-void time_sync_notification_cb(struct timeval *tv)
-{
-    ESP_LOGI(TAG, "Notification of a time synchronization event");
-}
-
-/**Blink LEDs to test GPIO:
- * Pass two arguments in uint8_t array:
- * argument[0] = amount of blinks
- * argument[1] = pin to blink on (LED_STATUS or LED_ERROR)
- */
-void blink(void *args)
-{
-    uint8_t *arguments = (uint8_t *)args;
-    uint8_t amount = arguments[0];
-    uint8_t pin = arguments[1];
-    uint8_t i;
-    for (i = 0; i < amount; i++)
-    {
-        gpio_set_level(pin, 1);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
-        gpio_set_level(pin, 0);
-        vTaskDelay(200 / portTICK_PERIOD_MS);
-    } //for(i<amount)
-    //Delete the blink task after completion:
-    vTaskDelete(NULL);
-} //void blink;
 
 /**
  * Check for input of buttons and the duration
@@ -118,6 +82,50 @@ void buttonPressDuration(void *args)
             }
         }
     }
+}
+#endif
+
+/**Blink LEDs to test GPIO:
+ * Pass two arguments in uint8_t array:
+ * argument[0] = amount of blinks
+ * argument[1] = pin to blink on (LED_STATUS or LED_ERROR)
+ */
+void blink(void *args)
+{
+    uint8_t *arguments = (uint8_t *)args;
+    uint8_t amount = arguments[0];
+    uint8_t pin = arguments[1];
+    uint8_t i;
+    for (i = 0; i < amount; i++)
+    {
+        gpio_set_level(pin, 1);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+        gpio_set_level(pin, 0);
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+    } //for(i<amount)
+    //Delete the blink task after completion:
+    vTaskDelete(NULL);
+} //void blink;
+
+void initialize()
+{
+    /* Initialize the event loop */
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    wifi_event_group = xEventGroupCreate();
+    #ifndef CONFIG_TWOMES_CUSTOM_GPIO
+    initGPIO();
+    //Attach interrupt handler to GPIO pins:
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
+    #endif
+
+}
+
+void time_sync_notification_cb(struct timeval *tv)
+{
+    ESP_LOGI(TAG, "Notification of a time synchronization event");
 }
 
 char *get_types(char *stringf, int count)
@@ -775,9 +783,9 @@ wifi_prov_mgr_config_t initialize_provisioning()
     /* Initialize Wi-Fi including netif with default config */
     esp_netif_create_default_wifi_sta();
     wifi_initialized = true;
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
     esp_netif_create_default_wifi_ap();
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP */
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
@@ -785,12 +793,12 @@ wifi_prov_mgr_config_t initialize_provisioning()
     wifi_prov_mgr_config_t config = {
     /* What is the Provisioning Scheme that we want ?
          * wifi_prov_scheme_softap or wifi_prov_scheme_ble */
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
         .scheme = wifi_prov_scheme_ble,
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_BLE */
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
         .scheme = wifi_prov_scheme_softap,
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP */
 
     /* Any default scheme specific event handler that you would
          * like to choose. Since our example application requires
@@ -800,12 +808,12 @@ wifi_prov_mgr_config_t initialize_provisioning()
          * appropriate scheme specific event handler allows the manager
          * to take care of this automatically. This can be set to
          * WIFI_PROV_EVENT_HANDLER_NONE when using wifi_prov_scheme_softap*/
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
         .scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_BLE */
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
                                     .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP */
     };
     return config;
 }
@@ -858,7 +866,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
          */
         const char *service_key = NULL;
 
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
         /* This step is only useful when scheme is wifi_prov_scheme_ble. This will
          * set a custom 128 bit UUID which will be included in the BLE advertisement
          * and will correspond to the primary GATT service that provides provisioning
@@ -889,7 +897,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
             0x02,
         };
         wifi_prov_scheme_ble_set_service_uuid(custom_service_uuid);
-#endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
+#endif /* CONFIG_TWOMES_PROV_TRANSPORT_BLE */
 
         /* An optional endpoint that applications can create if they expect to
          * get some additional custom data during provisioning workflow.

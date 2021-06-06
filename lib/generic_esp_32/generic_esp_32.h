@@ -28,9 +28,6 @@
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
 
-#define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
-#define INPUT_BITMASK ((1ULL << WIFI_RESET_BUTTON))
-
 #define SSID_PREFIX "TWOMES-"
 #define DEVICE_NAME_SIZE 13 /*SSID_PREFIX will be appended with six hexadecimal digits derived from the last 48 bits of the MAC address */ 
 
@@ -42,11 +39,11 @@
 #define TWOMES_TEST_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
 #define TWOMES_TEST_SERVER "https://api.tst.energietransitiewindesheim.nl"
 
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_BLE */
 
-#ifdef CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
 #include <wifi_provisioning/scheme_softap.h>
 #endif /* CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP */
 
@@ -55,10 +52,14 @@ void sntp_sync_time(struct timeval *tv);
 #endif
 
 
-void initGPIO();
-void blink(void *args);
-void buttonPressDuration(void *args);
+#ifndef CONFIG_TWOMES_CUSTOM_GPIO
+#define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
+#define INPUT_BITMASK ((1ULL << WIFI_RESET_BUTTON))
 
+void initGPIO();
+void buttonPressDuration(void *args);
+#endif
+void blink(void *args);
 char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);
 void initialize();
