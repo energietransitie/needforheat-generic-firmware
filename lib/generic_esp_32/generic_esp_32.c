@@ -324,12 +324,12 @@ void wifi_init_sta(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-void create_pop()
+void create_dat()
 {
     esp_err_t err;
-    uint32_t pop;
-    nvs_handle_t pop_handle;
-    err = nvs_open("twomes_storage", NVS_READWRITE, &pop_handle);
+    uint32_t dat;
+    nvs_handle_t dat_handle;
+    err = nvs_open("twomes_storage", NVS_READWRITE, &dat_handle);
     if (err)
     {
         ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
@@ -337,41 +337,41 @@ void create_pop()
     else
     {
         ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
-        err = nvs_get_u32(pop_handle, "pop", &pop);
+        err = nvs_get_u32(dat_handle, "dat", &dat);
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The PoP was initialized already!\n");
-            ESP_LOGI(TAG, "The PoP is: %u\n", pop);
+            ESP_LOGI(TAG, "The dat was initialized already!\n");
+            ESP_LOGI(TAG, "The dat is: %u\n", dat);
             break;
         case ESP_ERR_NVS_NOT_FOUND:
-            ESP_LOGI(TAG, "The PoP is not initialized yet!");
-            ESP_LOGI(TAG, "Creating PoP");
-            pop = esp_random();
-            ESP_LOGI(TAG, "Attempting to store PoP: %d", pop);
-            err = nvs_set_u32(pop_handle, "pop", pop);
+            ESP_LOGI(TAG, "The dat is not initialized yet!");
+            ESP_LOGI(TAG, "Creating dat");
+            dat = esp_random();
+            ESP_LOGI(TAG, "Attempting to store dat: %d", dat);
+            err = nvs_set_u32(dat_handle, "dat", dat);
             if (!err)
             {
-                ESP_LOGI(TAG, "Succesfully wrote PoP: %u to NVS twomes_storage", pop);
+                ESP_LOGI(TAG, "Succesfully wrote dat: %u to NVS twomes_storage", dat);
             }
             else
             {
-                ESP_LOGE(TAG, "Failed to write PoP to NVS twomes_storage: %s", esp_err_to_name(err));
+                ESP_LOGE(TAG, "Failed to write dat to NVS twomes_storage: %s", esp_err_to_name(err));
             }
             break;
         default:
             printf("Error (%s) reading!\n", esp_err_to_name(err));
         }
-        nvs_close(pop_handle);
+        nvs_close(dat_handle);
     }
-    ESP_LOGI(TAG, "POP: %u", pop);
+    ESP_LOGI(TAG, "dat: %u", dat);
 }
 
-void get_pop(uint32_t *buf)
+void get_dat(uint32_t *buf)
 {
     esp_err_t err;
-    nvs_handle_t pop_handle;
-    err = nvs_open("twomes_storage", NVS_READWRITE, &pop_handle);
+    nvs_handle_t dat_handle;
+    err = nvs_open("twomes_storage", NVS_READWRITE, &dat_handle);
     if (err)
     {
         ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
@@ -379,11 +379,11 @@ void get_pop(uint32_t *buf)
     else
     {
         ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
-        err = nvs_get_u32(pop_handle, "pop", buf);
+        err = nvs_get_u32(dat_handle, "dat", buf);
         switch (err)
         {
         case ESP_OK:
-            ESP_LOGI(TAG, "The PoP has succesfully been read!\n");
+            ESP_LOGI(TAG, "The dat has succesfully been read!\n");
             break;
         default:
             ESP_LOGE(TAG, "%s", esp_err_to_name(err));
@@ -395,10 +395,10 @@ void get_pop(uint32_t *buf)
 void prepare_device()
 {
     if(wifi_initialized){
-        ESP_LOGI(TAG, "Wi-Fi has been enabled for true random PoP generation!");
-        create_pop();
+        ESP_LOGI(TAG, "Wi-Fi has been enabled for true random dat generation!");
+        create_dat();
     }else{
-        ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random PoP generation, enabling Wi-Fi!");
+        ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
         enable_wifi();
         while(!wifi_initialized){
             ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
@@ -407,15 +407,15 @@ void prepare_device()
         ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
         disable_wifi();
     }
-    uint32_t pop;
-    get_pop(&pop);
+    uint32_t dat;
+    get_dat(&dat);
     char *device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
 
-    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}";
-    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, pop);
+    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"dat\":\"%u\",\"transport\":\"ble\"}";
+    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
-    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, pop);
+    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
     free(qr_code_payload);
@@ -638,13 +638,13 @@ char *get_bearer()
 void activate_device(const char *url, char *name, const char *cert)
 {
     esp_err_t err;
-    uint32_t pop;
-    get_pop(&pop);
+    uint32_t dat;
+    get_dat(&dat);
     activation = true;
-    char *device_activation_plain = "{ \"proof_of_presence_id\":\"%u\"}";
-    int activation_data_size = variable_sprintf_size(device_activation_plain, 1, pop);
+    char *device_activation_plain = "{ \"activation_token\":\"%u\"}";
+    int activation_data_size = variable_sprintf_size(device_activation_plain, 1, dat);
     char *device_activation_data = malloc(activation_data_size);
-    snprintf(device_activation_data, activation_data_size, device_activation_plain, pop);
+    snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGI(TAG, "%s", device_activation_data);
     char *bearer = post_https(url, device_activation_data, cert, NULL);
@@ -843,7 +843,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         /* What is the security level that we want (0 or 1):
          *      - WIFI_PROV_SECURITY_0 is simply plain text communication.
          *      - WIFI_PROV_SECURITY_1 is secure communication which consists of secure handshake
-         *          using X25519 key exchange and proof of possession (pop) and AES-CTR
+         *          using X25519 key exchange and proof of possession (dat) and AES-CTR
          *          for encryption/decryption of messages.
          */
         wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
@@ -852,12 +852,12 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
          *      - this should be a string with length > 0
          *      - NULL if not used
          */
-        uint32_t pop;
-        get_pop(&pop);
-        int msgSize = variable_sprintf_size("%u", 1, pop);
-        char *pop_str = malloc(msgSize);
+        uint32_t dat;
+        get_dat(&dat);
+        int msgSize = variable_sprintf_size("%u", 1, dat);
+        char *dat_str = malloc(msgSize);
         //Inputting variables into the plain json string from above(msgPlain).
-        snprintf(pop_str, msgSize, "%u", pop);
+        snprintf(dat_str, msgSize, "%u", dat);
 
         /* What is the service key (could be NULL)
          * This translates to :
@@ -906,7 +906,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
          */
         // wifi_prov_mgr_endpoint_create("custom-data");
         /* Start provisioning service */
-        ESP_ERROR_CHECK(wifi_prov_mgr_start_provisioning(security, pop_str, service_name, service_key));
+        ESP_ERROR_CHECK(wifi_prov_mgr_start_provisioning(security, dat_str, service_name, service_key));
 
         /* The handler for the optional endpoint created above.
          * This call must be made after starting the provisioning, and only if the endpoint
