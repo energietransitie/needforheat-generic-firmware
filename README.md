@@ -46,17 +46,18 @@ python -m esptool
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
 
-### Device Preparation step 2: Establishing a unique Proof-of-Possession (pop)
+### Device Preparation step 2: Establishing a device name and device activation_token 
 * First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement device. 
 * Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
-* On the serial monitor window, you should see reset information, including the unique Proof-of-Possession id (indicated by `PoP`) that was just established:
-	`Twomes Heartbeat Test Application ESP32: The PoP is: 810667973`
+* On the serial monitor window, you should see reset information, including the full string for the QR-code (see step 3), which looks something like (albeit with `TWOMES-0D45DF` and `810667973` replaced by the values valid for your specific device):
+	* For a device that supports `ble` as transport type for Wi-Fi provisioning, something like `{"ver":"v1","name":"TWOMES-0D45DF","pop":"810667973","transport":"ble"}` 
+	* For a device that supports `softap` as transport type for Wi-Fi provisioning, something like `{"ver":"v1","name":“TWOMES-8E23A6","pop":“516319575","transport":"softap","security":"1","password":"516319575"}`
 
-### Device Preparation step 3: Creating the device in the Twomes backend using device type and pop  
-The pop you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the pop you just established and the device's DeviceType.name as a parameter. If you are using the Twomes test server API, you should use a DeviceType.name from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
+### Device Preparation step 3: Creating the device in the Twomes backend using device name and device activation_token   
+The device name and activation_token you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the `device_type` and the device `name` and `activation_token` you just established. If you are using the Twomes test server API, you should use a `device_type` from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
 
 ### Device Preparation step 4: Generating a QR-code
-The pop and the [DeviceType.name](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv) of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement device. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
+The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement device. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
 
 The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below.
 
@@ -65,18 +66,14 @@ Payload information :
 | Key       	| Detail                             	| Example                                  	| Required                                                            	|
 |-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
 | ver       	| Version of the QR code.            	| `v1`				               	| Yes                                                                 	|
-| name      	| DeviceType.name of the device 	| `Generic-Test`                             	| Yes                                                                 	|
-| pop       	| Proof-of-Possession id               	| `810667973`				   	| Yes								 	|
+| name      	| device.name	 		 	| `TWOMES-0D45DF`                             	| Yes                                                                 	|
+| pop       	| device.activation_token              	| `810667973`				   	| Yes								 	|
 | transport 	| Wi-Fi provisioning transport type 	| It can be `softap` or `ble`	               	| Yes                                                                 	|
 | security  	| Security for device communication 	| It can be `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
 | password  	| Password of SoftAP device.         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
-To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A Proof-of-Possession code might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs). Be sure to avoid leading and trailing spaces in the string values of the QR-code payload.
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
 
-As payload entry you can copy the string below, but you should at least replace the values `Generic-Test` and `810667973` by the values valid for your specific device.
-```shell
-{"ver":"v1","name":"Generic-Test","pop":"810667973","transport":"ble"}  
-```
 
 ### Erasing only Wi-Fi provisioning data
 To change the name and/or associated password of the Wi-Fi network that a device is connected to, users can hold down a specific button for more than 10 seconds. 
@@ -90,14 +87,14 @@ When you release the button after holding it down for more than 10 seconds, the 
 Before you can use the WarmteWachter app to reprovision Wi-Fi for the device, the current version of the Twomes WarmteWachter app and Twomes API require manual action in the database: make sure to empty the `building_id` column of your device in the backend database. For the test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/) by entering the value `[NULL]`, deleting the `activated_on` value for your device and pressing `SAVE`.
 
 Note that this procedure:
-* will NOT erase the Proof-of-Possession identifier;
+* will NOT erase nor change the device name, nor the device activation_token;
 * will NOT erase the bearer authorisation token needed to upload measurement data to the server;
-* will not cause a call on the /device/activate endpoit on the server. 
+* will not cause a call on the /device/activate endpoint on the server. 
 
 Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile) memory and will NOT be erased when you upload new firmware. 
 
 ### Erasing all persistenly stored data
-The Proof-of-Posession (pop) identifier is stored in persistent (non-volatile) memory. To erase the pop, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and the device session_token needed added as bearer token to upload measurement data to the server. Doing this does not reset the PoP nor the device session_token bearer token. . .
+The device activation_token is stored in persistent (non-volatile) memory. To erase the device activation_token, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and the device session_token needed added as bearer token to upload measurement data to the server.
 *	Open a command prompt and enter:
 	```shell
 	esptool.py erase_flash
