@@ -29,7 +29,7 @@
 #define LED_ERROR   GPIO_NUM_19
 
 #define SSID_PREFIX "TWOMES-"
-#define DEVICE_NAME_SIZE 13 /*SSID_PREFIX will be appended with six hexadecimal digits derived from the last 48 bits of the MAC address */ 
+#define DEVICE_NAME_SIZE 14 /*SSID_PREFIX will be appended with six hexadecimal digits derived from the last 48 bits of the MAC address */ 
 
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
