@@ -843,12 +843,12 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         /* What is the security level that we want (0 or 1):
          *      - WIFI_PROV_SECURITY_0 is simply plain text communication.
          *      - WIFI_PROV_SECURITY_1 is secure communication which consists of secure handshake
-         *          using X25519 key exchange and proof of possession (dat) and AES-CTR
+         *          using X25519 key exchange and device.activaton_token (dat) and AES-CTR
          *          for encryption/decryption of messages.
          */
         wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
 
-        /* Do we want a proof-of-possession (ignored if Security 0 is selected):
+        /* Do we want a device.activaton_token (ignored if Security 0 is selected):
          *      - this should be a string with length > 0
          *      - NULL if not used
          */
