@@ -411,11 +411,19 @@ void prepare_device()
     get_dat(&dat);
     char *device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
-
-    char *qr_code_payload_template = "{\"ver\":\"v1\",\"name\":\"%s\",\"dat\":\"%u\",\"transport\":\"ble\"}";
+    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+    char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}\n\n";
     int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
+    #endif
+    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+    char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\",\"security\":\"1\",\"password\":\"%s\"}\n\n";
+    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
+    char *qr_code_payload = malloc(qr_code_payload_size);
+    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
+    #endif
+    
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
     free(qr_code_payload);
@@ -864,7 +872,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
          *     - Wi-Fi password when scheme is wifi_prov_scheme_softap
          *     - simply ignored when scheme is wifi_prov_scheme_ble
          */
-        const char *service_key = NULL;
+        char *service_key = dat_str;
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
         /* This step is only useful when scheme is wifi_prov_scheme_ble. This will
