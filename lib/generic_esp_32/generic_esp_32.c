@@ -9,6 +9,7 @@ static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_EVENT = BIT0;
 
 bool wifi_initialized = false;
+bool wifi_autoconnect = true;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv)
 {
@@ -114,15 +115,14 @@ void initialize()
     /* Initialize the event loop */
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     wifi_event_group = xEventGroupCreate();
-    #ifndef CONFIG_TWOMES_CUSTOM_GPIO
+#ifndef CONFIG_TWOMES_CUSTOM_GPIO
     initGPIO();
     //Attach interrupt handler to GPIO pins:
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
     gpio_install_isr_service(0);
     gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
-    #endif
-
+#endif
 }
 
 void time_sync_notification_cb(struct timeval *tv)
@@ -232,7 +232,10 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
         ESP_LOGI(TAG, "Disconnected. Connecting to the AP again...");
-        esp_wifi_connect();
+        if (wifi_autoconnect)
+        {
+            esp_wifi_connect();
+        }
     }
 }
 
@@ -396,13 +399,17 @@ void get_dat(uint32_t *buf)
 
 void prepare_device()
 {
-    if(wifi_initialized){
+    if (wifi_initialized)
+    {
         ESP_LOGI(TAG, "Wi-Fi has been enabled for true random dat generation!");
         create_dat();
-    }else{
+    }
+    else
+    {
         ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
         enable_wifi();
-        while(!wifi_initialized){
+        while (!wifi_initialized)
+        {
             ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
             vTaskDelay(100 / portTICK_PERIOD_MS);
         };
@@ -413,19 +420,19 @@ void prepare_device()
     get_dat(&dat);
     char *device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
-    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
     char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}\n\n";
     int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
-    #endif
-    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+#endif
+#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
     char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\",\"security\":\"1\",\"password\":\"%s\"}\n\n";
     int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
-    #endif
-    
+#endif
+
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
     free(qr_code_payload);
@@ -524,7 +531,7 @@ void initialize_time(char *timezone)
     ESP_LOGI(TAG, "The current UTC/date/time is: %s", strftime_buf);
 }
 
-void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer)
+void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer)
 {
     char *measurementType = "\"heartbeat\"";
     //Updates Epoch Time
@@ -533,8 +540,8 @@ void upload_heartbeat(const char* variable_interval_upload_url, const char* root
     char *msg_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[    {"
                       "\"property_name\": %s,"
                       "\"measurements\": ["
-                       "{ \"timestamp\":\"%d\","
-                       "\"value\":\"1\"}"
+                      "{ \"timestamp\":\"%d\","
+                      "\"value\":\"1\"}"
                       "]}]}";
     //Get size of the message after inputting variables.
     int msgSize = variable_sprintf_size(msg_plain, 3, now, measurementType, now);
@@ -576,7 +583,8 @@ void post_http(const char *url, char *data, char *authenticationToken)
     esp_http_client_cleanup(client);
     free(dataLenStr);
     free(data);
-    if(authenticationToken){
+    if (authenticationToken)
+    {
         free(authenticationTokenString);
     }
 }
@@ -768,7 +776,8 @@ char *post_https(const char *url, char *data, const char *cert, char *authentica
             ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
         }
     }
-    if(authenticationToken){
+    if (authenticationToken)
+    {
         free(authenticationTokenString);
     }
     free(data);
@@ -977,20 +986,30 @@ void enable_wifi()
     }
 }
 
-void disconnect_wifi(){
+void disconnect_wifi()
+{
+    wifi_autoconnect = false;
     esp_err_t err = esp_wifi_disconnect();
-    if(err != ESP_OK){
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Failed to disconnect Wi-Fi: %s", esp_err_to_name(err));
-    }else{
+    }
+    else
+    {
         ESP_LOGI(TAG, "Disconnected Wi-Fi");
     }
 }
 
-void connect_wifi(){
+void connect_wifi()
+{
     esp_err_t err = esp_wifi_connect();
-    if(err != ESP_OK){
+    wifi_autoconnect = true;
+    if (err != ESP_OK)
+    {
         ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
-    }else{
+    }
+    else
+    {
         ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
     }
 }
