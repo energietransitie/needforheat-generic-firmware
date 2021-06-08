@@ -24,7 +24,7 @@
 #include <driver/gpio.h>
 
 #include <wifi_provisioning/manager.h>
-
+#define VERSION "V1.6.2"
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
 

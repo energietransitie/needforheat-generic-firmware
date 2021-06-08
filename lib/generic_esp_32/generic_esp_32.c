@@ -109,6 +109,8 @@ void blink(void *args)
 
 void initialize()
 {
+    ESP_LOGI(TAG, "Generic Firmware Version: %s", VERSION);
+
     /* Initialize the event loop */
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     wifi_event_group = xEventGroupCreate();

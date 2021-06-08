@@ -1,6 +1,5 @@
 #include <generic_esp_32.h>
 
-#define VERSION "V1.6.2"
 #define DEVICE_NAME "Generic-Test"
 #define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
 #define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
@@ -43,7 +42,6 @@ const char *rootCAR3 = "-----BEGIN CERTIFICATE-----\n"
 
 void app_main(void)
 {
-    ESP_LOGI(TAG, "Generic Firmware Version: %s", VERSION);
     initialize_nvs();
     initialize();
     /* Initialize TCP/IP */
