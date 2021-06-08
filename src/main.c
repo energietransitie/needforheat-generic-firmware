@@ -91,7 +91,6 @@ void app_main(void)
     /* Start main application now */
     while (1)
     {
-
         enable_wifi();
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(500 / portTICK_PERIOD_MS);
