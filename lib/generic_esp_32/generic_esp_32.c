@@ -967,6 +967,24 @@ void enable_wifi()
     }
 }
 
+void disconnect_wifi(){
+    esp_err_t err = esp_wifi_disconnect();
+    if(err != ESP_OK){
+        ESP_LOGE(TAG, "Failed to disconnect Wi-Fi: %s", esp_err_to_name(err));
+    }else{
+        ESP_LOGI(TAG, "Disconnected Wi-Fi");
+    }
+}
+
+void connect_wifi(){
+    esp_err_t err = esp_wifi_connect();
+    if(err != ESP_OK){
+        ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
+    }else{
+        ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
+    }
+}
+
 void initialize_nvs()
 {
     /* Initialize NVS partition */
