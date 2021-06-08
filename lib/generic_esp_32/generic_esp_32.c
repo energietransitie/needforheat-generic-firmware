@@ -231,9 +231,10 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
     {
-        ESP_LOGI(TAG, "Disconnected. Connecting to the AP again...");
+        ESP_LOGI(TAG, "Disconnected.");
         if (wifi_autoconnect)
         {
+            ESP_LOGI(TAG, " Connecting to the AP again...");
             esp_wifi_connect();
         }
     }
