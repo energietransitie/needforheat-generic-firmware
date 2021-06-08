@@ -63,14 +63,14 @@ The QR-code payload is a JSON string representing a dictionary with key value pa
 
 Payload information : 
 
-| Key       	| Detail                             	| Example                                  	| Required                                                            	|
+| Key       	| Value used                           	| Example                                  	| Required                                                            	|
 |-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
 | ver       	| Version of the QR code.            	| `v1`				               	| Yes                                                                 	|
 | name      	| device.name	 		 	| `TWOMES-0D45DF`                             	| Yes                                                                 	|
 | pop       	| device.activation_token              	| `810667973`				   	| Yes								 	|
-| transport 	| Wi-Fi provisioning transport type 	| It can be `softap` or `ble`	               	| Yes                                                                 	|
-| security  	| Security for device communication 	| It can be `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
-| password  	| Password of SoftAP device.         	| Password to connect with SoftAP device. 	| Optional                                                            	|
+| transport 	| Wi-Fi provisioning transport type 	| Either `softap` or `ble`	               	| Yes                                                                 	|
+| security  	| Security during Wi-Fi provisioning  	| Either `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
+| password  	| device.activation_token         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
 To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
 
