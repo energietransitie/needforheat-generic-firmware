@@ -584,42 +584,7 @@ void upload_heartbeat(const char *variable_interval_upload_url, const char *root
     snprintf(msg, msgSize, msg_plain, now, measurementType, now);
     //Posting data over HTTPS, using url, msg and bearer token.
     ESP_LOGI(TAG, "Data: %s", msg);
-    post_https(variable_interval_upload_url, msg, root_cert, bearer);
-}
-
-void post_http(const char *url, char *data, char *authenticationToken)
-{
-    esp_http_client_config_t config = {
-        .url = url,
-        .transport_type = HTTP_TRANSPORT_OVER_TCP,
-        .event_handler = http_event_handler};
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", TWOMES_TEST_SERVER_HOSTNAME);
-    esp_http_client_set_header(client, "Content-Type", "text/plain");
-    char *dataLenStr = malloc(sizeof(char) * 8);
-    itoa(strlen(data), dataLenStr, 10);
-    esp_http_client_set_header(client, "Content-Length", dataLenStr);
-    char *authenticationTokenStringPlain = "Bearer %s";
-    char *authenticationTokenString = "";
-    int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
-    authenticationTokenString = malloc(sizeof(char) * strCount);
-    snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
-    esp_http_client_set_header(client, "Authorization", authenticationTokenString);
-    esp_http_client_set_post_field(client, data, strlen(data));
-    esp_err_t err = esp_http_client_perform(client);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
-    }
-    esp_http_client_cleanup(client);
-    free(dataLenStr);
-    free(data);
-    if (authenticationToken)
-    {
-        free(authenticationTokenString);
-    }
+    post_https(variable_interval_upload_url, msg, root_cert, bearer, NULL, 0);
 }
 
 esp_err_t store_bearer(char *bearer)
@@ -708,7 +673,10 @@ void activate_device(const char *url, char *name, const char *cert)
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGI(TAG, "%s", device_activation_data);
-    char *bearer = post_https(url, device_activation_data, cert, NULL);
+    char *bearer = malloc(sizeof(char)*MAX_RESPONSE_LENGTH);
+    ESP_LOGI(TAG, "GOT HERE!"); 
+    post_https(url, device_activation_data, cert, NULL, bearer, MAX_RESPONSE_LENGTH);
+    ESP_LOGI(TAG, "Got Here!");
     if (!bearer)
     {
         ESP_LOGE(TAG, "Failed to activate device!");
@@ -754,25 +722,8 @@ void activate_device(const char *url, char *name, const char *cert)
     }
 }
 
-void get_http(const char *url)
-{
-    esp_http_client_config_t config = {
-        .url = url,
-        .transport_type = HTTP_TRANSPORT_OVER_TCP,
-        .event_handler = http_event_handler};
-    esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    esp_http_client_set_method(client, HTTP_METHOD_GET);
-    esp_http_client_set_header(client, "Host", "192.168.178.48:8000");
-    esp_err_t err = esp_http_client_perform(client);
-    if (err != ESP_OK)
-    {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
-    }
-    esp_http_client_cleanup(client);
-}
-
-char *post_https(const char *url, char *data, const char *cert, char *authenticationToken)
+int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char* response_buf, uint8_t resp_buf_size)
 {
     int content_length;
     int status_code = 0;
@@ -796,8 +747,10 @@ char *post_https(const char *url, char *data, const char *cert, char *authentica
         snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
         esp_http_client_set_header(client, "Authorization", authenticationTokenString);
     }
+    ESP_LOGI(TAG, "Got Here 1");
     esp_http_client_set_post_field(client, data, strlen(data));
     esp_err_t err = esp_http_client_perform(client);
+    ESP_LOGI(TAG, "Got Here 2");
     if (err != ESP_OK)
     {
         ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
@@ -825,14 +778,11 @@ char *post_https(const char *url, char *data, const char *cert, char *authentica
     }
     free(data);
     esp_http_client_cleanup(client);
-    if (response && status_code == 200)
+    if (response&&resp_buf_size)
     {
-        return response;
+        snprintf(response_buf, resp_buf_size, "%s", response);
     }
-    else
-    {
-        return NULL;
-    }
+    return status_code;
 }
 
 wifi_prov_mgr_config_t initialize_provisioning()

@@ -27,6 +27,7 @@
 #define VERSION "V1.6.2"
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
+#define MAX_RESPONSE_LENGTH 100
 
 #define SSID_PREFIX "TWOMES-"
 #define DEVICE_NAME_SIZE 14 /*SSID_PREFIX will be appended with six hexadecimal digits derived from the last 48 bits of the MAC address */ 
@@ -75,8 +76,7 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 void initialize_sntp(void);
 void obtain_time(void);
 void initialize_time(char* timezone);
-void post_http(const char* url, char *data, char* authenticationToken);
-char* post_https(const char* url, char *data,const char* cert, char* authenticationToken);
+int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char* response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer);
 char* get_bearer();
 const char* get_root_ca();

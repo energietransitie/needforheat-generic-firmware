@@ -36,6 +36,10 @@ void app_main(void)
     ESP_LOGI(TAG, "Time is: %d", now);
 
     char *bearer = get_bearer();
+    char *device_name;
+    device_name = malloc(DEVICE_NAME_SIZE);
+    get_device_service_name(device_name, DEVICE_NAME_SIZE);
+
     if (strlen(bearer) > 1)
     {
         ESP_LOGI(TAG, "Bearer read: %s", bearer);
@@ -44,7 +48,7 @@ void app_main(void)
     {
         rootCA = get_root_ca();
         ESP_LOGI(TAG, "Bearer not found, activating device!");
-        activate_device(device_activation_url, DEVICE_TYPE_NAME, rootCA);
+        activate_device(device_activation_url, device_name, rootCA);
         bearer = get_bearer();
     }
     else if (!bearer)
