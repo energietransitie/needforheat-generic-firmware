@@ -18,7 +18,6 @@
 #include <esp_sntp.h>
 #include <esp_netif.h>
 #include <nvs_flash.h>
-#include <esp_netif.h>
 #include <esp_tls.h>
 #include <esp_http_client.h>
 #include <driver/gpio.h>

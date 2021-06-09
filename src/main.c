@@ -39,6 +39,7 @@ void app_main(void)
     char *device_name;
     device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
+    rootCA = get_root_ca();
 
     if (strlen(bearer) > 1)
     {
@@ -46,7 +47,6 @@ void app_main(void)
     }
     else if (strcmp(bearer, "") == 0)
     {
-        rootCA = get_root_ca();
         ESP_LOGI(TAG, "Bearer not found, activating device!");
         activate_device(device_activation_url, device_name, rootCA);
         bearer = get_bearer();
