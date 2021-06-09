@@ -780,7 +780,10 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
     esp_http_client_cleanup(client);
     if (response&&resp_buf_size)
     {
-        snprintf(response_buf, resp_buf_size, "%s", response);
+        int missed = snprintf(response_buf, resp_buf_size, "%s", response);
+        if(missed > resp_buf_size){
+            ESP_LOGE(TAG, "Buffer was too small, full string was not written. Missed %d amount of character space!", missed-resp_buf_size);
+        }
     }
     return status_code;
 }
