@@ -209,3 +209,4 @@ This software is available under the [Apache 2.0 license](./LICENSE), Copyright 
 We use and gratefully aknowlegde the efforts of the makers of the following source code and libraries:
 
 * [ESP-IDF](https://github.com/espressif/esp-idf), Copyright (C) 2015-2019 Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
+* We are also grateful to Sjors Smit who supplied the code that allows us to reset the provisioning and for his useful input whilst developing this software.
