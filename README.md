@@ -193,7 +193,7 @@ Currently ready:
 
 To-do:
 
-* Using [ISRG Root X1 certificate](https://crt.sh/?id=3334561879) to check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
+* Using [ISRG Root X1 certificate](https://crt.sh/?id=9314791) and check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
 * Persistent buffering of measurement data using NVS
 * Heartbeats: timestamped measurement and persistent buffering of heartbeats every 10 minutes and hourly upload of all buffered heartbeats
 * Secure transport over TLS/SSL (ESP8266 as well)
