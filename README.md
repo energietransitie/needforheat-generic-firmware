@@ -74,7 +74,6 @@ Payload information :
 
 To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
 
-
 ### Erasing only Wi-Fi provisioning data
 To change the name and/or associated password of the Wi-Fi network that a device is connected to, users can hold down a specific button for more than 10 seconds. 
 
@@ -84,7 +83,10 @@ On measurement devices that will be deployed in the field, this button is typica
 
 When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can currently only observe this behaviour via a serial monitor. 
 
-Before you can use the WarmteWachter app to reprovision Wi-Fi for the device, the current version of the Twomes WarmteWachter app and Twomes API require manual action in the database: make sure to empty the `building_id` column of your device in the backend database. For the test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/) by entering the value `[NULL]`, deleting the `activated_on` value for your device and pressing `SAVE`.
+Before you can use the WarmteWachter app to reprovision Wi-Fi for the device, the current version of the Twomes WarmteWachter app and Twomes API require manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
+* empty the value in the `building_id` column by entering the value `[NULL]`; 
+* delete the value in the `activated_on` column;
+* click on `SAVE`.
 
 Note that this procedure:
 * will NOT erase nor change the device name, nor the device activation_token;
@@ -106,6 +108,11 @@ The device activation_token is stored in persistent (non-volatile) memory. To er
 After this command you can and should perform the full Twomes device provisioning flow (device peraration, device-app activation and device-backend activation anew).
 
 Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
+
+### Repurposing an existing device
+If you want to repurpose and existing device (e.g. use it in another home), after erasing all persistently stored data and performing the other required steps for device preparation, you must perform one  additional manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
+* after the value in the `name` column, add `-OLD`; 
+* click on `SAVE`.
 
 ## Developing 
 
@@ -186,7 +193,7 @@ Currently ready:
 
 To-do:
 
-* Using [ISRG Root X1 certificate](https://crt.sh/?id=3334561879) to check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
+* Using [ISRG Root X1 certificate](https://crt.sh/?id=9314791) and check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
 * Persistent buffering of measurement data using NVS
 * Heartbeats: timestamped measurement and persistent buffering of heartbeats every 10 minutes and hourly upload of all buffered heartbeats
 * Secure transport over TLS/SSL (ESP8266 as well)
@@ -195,10 +202,11 @@ To-do:
 Project is: in-progress
 
 ## License
-This software is available under the [Apache 2.0 license](./LICENSE.md), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
+This software is available under the [Apache 2.0 license](./LICENSE), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
 
 ## Credits
 
 We use and gratefully aknowlegde the efforts of the makers of the following source code and libraries:
 
 * [ESP-IDF](https://github.com/espressif/esp-idf), Copyright (C) 2015-2019 Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
+* We are also grateful to Sjors Smit who supplied the code that allows us to reset the provisioning and for his useful input whilst developing this software.
