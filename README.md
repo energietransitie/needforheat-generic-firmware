@@ -1,4 +1,4 @@
-# Generic firmware for ESP-based Twomes measurement devices
+# Generic firmware for Twomes measurement devices based on ESP
 This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 or ESP8266 SoC.
 
 ## Table of contents
@@ -21,7 +21,7 @@ Different Twomes measurement devices may have various features in common, includ
 *	a PC with a USB port;
 *	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt;
 *	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility;
-*	[Arduino IDE](https://www.arduino.cc/en/software) or [PlatformIO plugin](https://platformio.org/install/ide?install=vscode) for [Visual Studio Code](https://code.visualstudio.com/download) installed.
+*	A serial monitor utility, such as [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), or (if you're also developing) the serial monitor utility in your IDE.
 
 ### Device Preparation step 1/a: Uploading Firmware to ESP32
 *	Connect the device with a USB cable to the PC.
@@ -47,11 +47,15 @@ python -m esptool
 TO BE DOCUMENTED
 
 ### Device Preparation step 2: Establishing a device name and device activation_token 
-* First, you should open a serial monitor (using Arduino IDE or PlatformIO) with baud rate 115200 to monitor the serial port connected to the Twomes measurement device. 
+* First, you should open your serial monitor utility.
+	*  For [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), use the following destination settings (be sure to `Save` them to `Load` them conveniently later):
+		* Connection type: `Serial`
+		* Speed: `115200`
+		* Serial line: `COM?` (replace `?` with the number of the COM-port your device is connected to, e.g., `COM5`). 
 * Then, if your device is powered up (and running), briefly press the reset button. On the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), this button is labeled 'RST' and can be found if you look 90 degrees clockwise from the micro-USB connector.
-* On the serial monitor window, you should see reset information, including the full string for the QR-code (see step 3), which looks something like (albeit with `TWOMES-0D45DF` and `810667973` replaced by the values valid for your specific device):
-	* For a device that supports `ble` as transport type for Wi-Fi provisioning, something like `{"ver":"v1","name":"TWOMES-0D45DF","pop":"810667973","transport":"ble"}` 
-	* For a device that supports `softap` as transport type for Wi-Fi provisioning, something like `{"ver":"v1","name":“TWOMES-8E23A6","pop":“516319575","transport":"softap","security":"1","password":"516319575"}`
+* On the serial monitor window, you should see reset information, including the full string for the QR-code (see step 3), which for a device that supports as transport type for Wi-Fi provisioning:
+	* `ble`, looks something like<br>`{"ver":"v1","name":"TWOMES-0D45DF","pop":"810667973","transport":"ble"}` 
+	* `softap`, looks something like<br>`{"ver":"v1","name":“TWOMES-8E23A6","pop":“516319575","transport":"softap","security":"1","password":"516319575"}`
 
 ### Device Preparation step 3: Creating the device in the Twomes backend using device name and device activation_token   
 The device name and activation_token you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the `device_type` and the device `name` and `activation_token` you just established. If you are using the Twomes test server API, you should use a `device_type` from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
