@@ -430,7 +430,7 @@ void get_dat(uint32_t *buf)
     }
 }
 
-void prepare_device()
+void prepare_device(const char *device_type_name)
 {
     if (wifi_initialized)
     {
@@ -469,6 +469,15 @@ void prepare_device()
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
     free(qr_code_payload);
+
+    char *post_device_payload_template = "\n\n{\"name\":\"%s\",\"device_type\":\"%s\",\"activation_token\":\"%s\"}\n\n";
+    int post_device_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
+    char *post_device_payload = malloc(qr_code_payload_size);
+    snprintf(post_device_payload, post_device_payload_size, post_device_payload_template, device_name, device_type_name, dat);
+
+    ESP_LOGI(TAG, "POST /device payload: ");
+    ESP_LOGI(TAG, "%s", post_device_payload);
+    free(post_device_payload);
     free(device_name);
 }
 
