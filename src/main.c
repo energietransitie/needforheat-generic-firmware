@@ -1,8 +1,8 @@
 #include <generic_esp_32.h>
 
-const char*device_type_name = "Generic-Test"
 #define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
 #define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
+const char*device_type_name = "Generic-Test";
 static const char *TAG = "Twomes ESP32 generic test device";
 
 const char *device_activation_url = TWOMES_TEST_SERVER "/device/activate";
