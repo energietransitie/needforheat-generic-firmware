@@ -1,6 +1,6 @@
 #include <generic_esp_32.h>
 
-#define DEVICE_TYPE_NAME "Generic-Test"
+const char*device_type_name = "Generic-Test"
 #define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
 #define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
 static const char *TAG = "Twomes ESP32 generic test device";
@@ -22,11 +22,13 @@ void app_main(void)
 
     //Make sure to have this here otherwise the device names won't match because
     //of config changes made by the above function call.
-    prepare_device();
+    prepare_device(device_type_name);
+
     //Starts provisioning if not provisioned, otherwise skips provisioning.
     //If set to false it will not autoconnect after provisioning.
     //If set to true it will autonnect.
     start_provisioning(config, true);
+
     //Initialize time with timezone UTC; building timezone is stored in central database
     initialize_time("UTC");
 

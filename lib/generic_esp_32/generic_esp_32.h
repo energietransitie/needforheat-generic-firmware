@@ -64,7 +64,7 @@ char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);
 void initialize();
 void create_dat();
-void prepare_device();
+void prepare_device(const char *device_type_name);
 void time_sync_notification_cb(struct timeval *tv);
 void prov_event_handler(void *arg, esp_event_base_t event_base,int32_t event_id, void *event_data);
 esp_err_t http_event_handler(esp_http_client_event_t *evt);
