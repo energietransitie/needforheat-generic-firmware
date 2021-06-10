@@ -696,14 +696,14 @@ void activate_device(const char *url, char *name, const char *cert)
             {
             case '"':
                 count++;
-                if (count == 3)
+                if (count == 4)
                 {
                     *bearer_trimmed = '\0';
                     done = true;
                 }
                 break;
             default:
-                if (count == 2)
+                if (count == 3)
                 {
                     *bearer_trimmed++ = c;
                     length++;
