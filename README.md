@@ -21,7 +21,7 @@ Different Twomes measurement devices may have various features in common, includ
 *	a PC with a USB port;
 *	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt;
 *	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility;
-*	A serial monitor utility, such as [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), or (if you're also developing) the serial monitor utility in your IDE.
+*	[PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), a serial monitor utility. (If your you're also developing, you may use the serial monitor utility in your IDE, instead).
 
 ### Device Preparation step 1/a: Uploading Firmware to ESP32
 *	Connect the device with a USB cable to the PC.
