@@ -19,7 +19,7 @@ Different Twomes measurement devices may have various features in common, includ
 *	a device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) or an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html);
 *	a USB to micro-USB cable;
 *	a PC with a USB port;
-*	[Python version 3.8 or above](https://docs.python.org/3/using/windows.html) installed, make sure to add the path to the Python executable to your PATH variable so you can use Python commands from the command prompt;
+*	[Python v3.8 or above](https://www.python.org/downloads/) installed, and make sure to select `Add Python <version number> to PATH` so you can use the Python commands we document below from a command prompt;
 *	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility;
 *	[PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), a serial monitor utility. (If your you're also developing, you may use the serial monitor utility in your IDE, instead).
 
