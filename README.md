@@ -42,6 +42,10 @@ Should you encounter issues you may try to replace `esptool.py` in the above com
 ```shell 
 python -m esptool
 ````
+or
+```shell 
+py -m esptool
+````
 
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
 TO BE DOCUMENTED
@@ -111,7 +115,7 @@ The device activation_token is stored in persistent (non-volatile) memory. To er
 	```
 After this command you can and should perform the full Twomes device provisioning flow (device peraration, device-app activation and device-backend activation anew).
 
-Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool`.
+Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool` or `py -m esptool`
 
 ### Repurposing an existing device
 If you want to repurpose and existing device (e.g. use it in another home), after erasing all persistently stored data and performing the other required steps for device preparation, you must perform one  additional manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
@@ -121,14 +125,12 @@ If you want to repurpose and existing device (e.g. use it in another home), afte
 ## Developing 
 
 ### Prerequisites
-
 Prerequisites for deploying, plus:
 *	[Visual Studio Code](https://code.visualstudio.com/download) installed
 *	[PlatformIO for Visual Studio Code](https://platformio.org/install/ide?install=vscode) installed
 *	This GitHub repository cloned
 
 ### Usage  
-
 Open the project in PlatformIO:
   1. In the top-left corner, select File -> Open Folder.
   2. Select the folder where you cloned or extracted the repository.
@@ -144,18 +146,15 @@ NOTE: The first time might take a while because PlatformIO needs to install and 
   11. To provision the device with Wi-Fi connectivity, use an app that supports Espressif Unified Provisioning. A list can be found below. 
 
 ### Provisioning
-
 Use the [Twomes WarmteWachter app](https://github.com/energietransitie/twomes-app-warmtewachter) to test the full Twomes device provisioning flow, which is based on using Espressif Unified Provisioning. 
 
 Alternatively, you may use test apps that only support Wi-Fi provisioning using Espressif Unified Provisioning; these can be found at:
-  
 * [Android Unified Provisioning app for BLE](https://play.google.com/store/apps/details?id=com.espressif.provble&hl=en&gl=US)
 * [Android Unified Provisioning app for SoftAP](https://play.google.com/store/apps/details?id=com.espressif.provsoftap&hl=en&gl=US)
 * [Apple Unified Provisioning app for BLE](https://apps.apple.com/us/app/esp-ble-provisioning/id1473590141)
 * [Apple Unified Provisioning app for SoftAP](https://apps.apple.com/us/app/esp-softap-provisioning/id1474040630)
 
 ### Uploading measurements (example: uploading heartbeats) 
-
 The generic firmware includes source code for timestamped measurement `heartbeat` data, indicating to the Twomes backend the device is "alive", a behavior that is mandatory for each Twomes measurement device. The source code also includes code to upload heartbeat measurements via [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval), the endpoint you should use if you want to upload a series of measurement values that each have a timestamp. The JSON payload for the body such a request looks like this:
 ```
 {
@@ -174,7 +173,7 @@ The generic firmware includes source code for timestamped measurement `heartbeat
 }
 ```
 
-The [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval) endpointcurrently ignores measurements with empty `values` so we put a `1` there.
+The [POST /device/measurements/variable-interval](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_upload_variable_device_measurements_variable_interval) endpoint currently ignores measurements with empty `values` so we put a `1` there.
 
 You can use the source code for the timestamping and uploding of the `heartbeat` property as an example for the timestamping and uploading of the properties measured by your specific Twomes measureement device. 
 
@@ -190,14 +189,13 @@ Currently ready:
 
 * Unified Provisioning over Bluetooth Low Energy (BLE; ESP32 only) and SoftAP
 * Time synchronisation using NTP
-* Secure transport over TLS/SSL (ESP32 only)
+* Secure transport over TLS/SSL (ESP32 only), using the [ISRG Root X1 certificate](https://crt.sh/?id=9314791)
 * Heartbeats: hourly measurement and upload of timestamped measurment data with property `heartbeat`
 * Long button press to erase only Wi-Fi provisioning data 
 * Example code
 
 To-do:
 
-* Using [ISRG Root X1 certificate](https://crt.sh/?id=9314791) and check energietransitiewindesheim.nl certificate to ensure working beyond 29-Sep-2021 
 * Persistent buffering of measurement data using NVS
 * Heartbeats: timestamped measurement and persistent buffering of heartbeats every 10 minutes and hourly upload of all buffered heartbeats
 * Secure transport over TLS/SSL (ESP8266 as well)
@@ -209,8 +207,14 @@ Project is: in-progress
 This software is available under the [Apache 2.0 license](./LICENSE), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
 
 ## Credits
+This software is made by:
+* Kevin Jansen ·  [@KevinJan18](https://github.com/KevinJan18)
+
+Thanks also go to:
+* Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
+
+Product owner:
+* Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
 
 We use and gratefully aknowlegde the efforts of the makers of the following source code and libraries:
-
-* [ESP-IDF](https://github.com/espressif/esp-idf), Copyright (C) 2015-2019 Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
-* We are also grateful to Sjors Smit who supplied the code that allows us to reset the provisioning and for his useful input whilst developing this software.
+* [ESP-IDF](https://github.com/espressif/esp-idf), by Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
