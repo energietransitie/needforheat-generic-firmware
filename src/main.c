@@ -69,16 +69,18 @@ void app_main(void)
     /* Start main application now */
     while (1)
     {
+        ESP_LOGI(TAG, "Free Heap Main Start: %d", esp_get_free_heap_size());
         enable_wifi();
         //Wait to make sure Wi-Fi is enabled.
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         //Upload heartbeat
         upload_heartbeat(variable_interval_upload_url, rootCA, bearer);
         //Wait to make sure uploading is finished.
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        //Disconnect WiFi
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // Disconnect WiFi
         disable_wifi();
+        ESP_LOGI(TAG, "Free Heap Main End: %d", esp_get_free_heap_size());
         //Wait HEARTBEAT_UPLOAD_INTERVAL(currently 1 hour)
-        vTaskDelay(HEARTBEAT_UPLOAD_INTERVAL / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }

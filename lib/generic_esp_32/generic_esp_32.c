@@ -9,36 +9,36 @@ static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_EVENT = BIT0;
 
 const char *isrgrootx1 = "-----BEGIN CERTIFICATE-----\n"
-                        "MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n"
-                        "TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\n"
-                        "cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4\n"
-                        "WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu\n"
-                        "ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY\n"
-                        "MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc\n"
-                        "h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+\n"
-                        "0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U\n"
-                        "A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW\n"
-                        "T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH\n"
-                        "B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC\n"
-                        "B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv\n"
-                        "KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn\n"
-                        "OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn\n"
-                        "jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw\n"
-                        "qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI\n"
-                        "rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV\n"
-                        "HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq\n"
-                        "hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL\n"
-                        "ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ\n"
-                        "3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK\n"
-                        "NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5\n"
-                        "ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur\n"
-                        "TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC\n"
-                        "jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc\n"
-                        "oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq\n"
-                        "4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA\n"
-                        "mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d\n"
-                        "emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=\n"
-                        "-----END CERTIFICATE-----\n";
+                         "MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n"
+                         "TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\n"
+                         "cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4\n"
+                         "WhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu\n"
+                         "ZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY\n"
+                         "MTCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBAK3oJHP0FDfzm54rVygc\n"
+                         "h77ct984kIxuPOZXoHj3dcKi/vVqbvYATyjb3miGbESTtrFj/RQSa78f0uoxmyF+\n"
+                         "0TM8ukj13Xnfs7j/EvEhmkvBioZxaUpmZmyPfjxwv60pIgbz5MDmgK7iS4+3mX6U\n"
+                         "A5/TR5d8mUgjU+g4rk8Kb4Mu0UlXjIB0ttov0DiNewNwIRt18jA8+o+u3dpjq+sW\n"
+                         "T8KOEUt+zwvo/7V3LvSye0rgTBIlDHCNAymg4VMk7BPZ7hm/ELNKjD+Jo2FR3qyH\n"
+                         "B5T0Y3HsLuJvW5iB4YlcNHlsdu87kGJ55tukmi8mxdAQ4Q7e2RCOFvu396j3x+UC\n"
+                         "B5iPNgiV5+I3lg02dZ77DnKxHZu8A/lJBdiB3QW0KtZB6awBdpUKD9jf1b0SHzUv\n"
+                         "KBds0pjBqAlkd25HN7rOrFleaJ1/ctaJxQZBKT5ZPt0m9STJEadao0xAH0ahmbWn\n"
+                         "OlFuhjuefXKnEgV4We0+UXgVCwOPjdAvBbI+e0ocS3MFEvzG6uBQE3xDk3SzynTn\n"
+                         "jh8BCNAw1FtxNrQHusEwMFxIt4I7mKZ9YIqioymCzLq9gwQbooMDQaHWBfEbwrbw\n"
+                         "qHyGO0aoSCqI3Haadr8faqU9GY/rOPNk3sgrDQoo//fb4hVC1CLQJ13hef4Y53CI\n"
+                         "rU7m2Ys6xt0nUW7/vGT1M0NPAgMBAAGjQjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNV\n"
+                         "HRMBAf8EBTADAQH/MB0GA1UdDgQWBBR5tFnme7bl5AFzgAiIyBpY9umbbjANBgkq\n"
+                         "hkiG9w0BAQsFAAOCAgEAVR9YqbyyqFDQDLHYGmkgJykIrGF1XIpu+ILlaS/V9lZL\n"
+                         "ubhzEFnTIZd+50xx+7LSYK05qAvqFyFWhfFQDlnrzuBZ6brJFe+GnY+EgPbk6ZGQ\n"
+                         "3BebYhtF8GaV0nxvwuo77x/Py9auJ/GpsMiu/X1+mvoiBOv/2X/qkSsisRcOj/KK\n"
+                         "NFtY2PwByVS5uCbMiogziUwthDyC3+6WVwW6LLv3xLfHTjuCvjHIInNzktHCgKQ5\n"
+                         "ORAzI4JMPJ+GslWYHb4phowim57iaztXOoJwTdwJx4nLCgdNbOhdjsnvzqvHu7Ur\n"
+                         "TkXWStAmzOVyyghqpZXjFaH3pO3JLF+l+/+sKAIuvtd7u+Nxe5AW0wdeRlN8NwdC\n"
+                         "jNPElpzVmbUq4JUagEiuTDkHzsxHpFKVK7q4+63SM1N95R1NbdWhscdCb+ZAJzVc\n"
+                         "oyi3B43njTOQ5yOf+1CceWxG1bQVs5ZufpsMljq4Ui0/1lvh+wjChP4kqKOJ2qxq\n"
+                         "4RgqsahDYVvTH9w7jXbyLeiNdd8XM2w9U/t7y0Ff/9yi0GE44Za4rF2LN9d11TPA\n"
+                         "mRGunUHBcnWEvgJBQl9nJEiU0Zsnvgc/ubhPgXRR4Xq37Z0j4r7g1SgEEzwxA57d\n"
+                         "emyPxgcYxn/eR44/KJ4EBs+lVDR3veyJm+kXQ99b21/+jh5Xos1AnX5iItreGCc=\n"
+                         "-----END CERTIFICATE-----\n";
 
 bool wifi_initialized = false;
 bool wifi_autoconnect = true;
@@ -665,14 +665,14 @@ const char *get_root_ca()
     // Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates
     // based on https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
     // we use the ISRG Root X1 certificate found at https://letsencrypt.org/certs/isrgrootx1.pem
-    // this certificate was translated to ESP32 code 
+    // this certificate was translated to ESP32 code
     // by adding " at the befinning each line and \n" at the end of each line in the code
     return isrgrootx1;
 }
 
 void activate_device(const char *url, char *name, const char *cert)
 {
-    esp_err_t err;
+    esp_err_t err = 0;
     uint32_t dat;
     get_dat(&dat);
     activation = true;
@@ -682,8 +682,8 @@ void activate_device(const char *url, char *name, const char *cert)
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGI(TAG, "%s", device_activation_data);
-    char *bearer = malloc(sizeof(char)*MAX_RESPONSE_LENGTH);
-    ESP_LOGI(TAG, "GOT HERE!"); 
+    char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH);
+    ESP_LOGI(TAG, "GOT HERE!");
     post_https(url, device_activation_data, cert, NULL, bearer, MAX_RESPONSE_LENGTH);
     ESP_LOGI(TAG, "Got Here!");
     if (!bearer)
@@ -693,36 +693,15 @@ void activate_device(const char *url, char *name, const char *cert)
     else
     {
         ESP_LOGE(TAG, "Bearer after post is: %s", bearer);
-        int size = strlen(bearer) * sizeof(char);
-        char *bearer_trimmed = malloc(size);
-        char c = *bearer;
-        int count = 0;
-        int length = 0;
-        bool done = false;
-        while (!done)
-        {
-            switch (c)
-            {
-            case '"':
-                count++;
-                if (count == 4)
-                {
-                    *bearer_trimmed = '\0';
-                    done = true;
-                }
-                break;
-            default:
-                if (count == 3)
-                {
-                    *bearer_trimmed++ = c;
-                    length++;
-                }
-            }
-            ESP_LOGI(TAG, "Loopsies! %c", c);
-            c = *++bearer;
-        }
-        bearer_trimmed -= length;
-        ESP_LOGI(TAG, "Bearer Trimmed: %s", bearer_trimmed);
+        char *bearer_trimmed = malloc(sizeof(char) * strlen(bearer));
+        // sscanf(bearer, "\":\"%s", bearer_trimmed);
+        bearer_trimmed = strchr(bearer, ':');
+        ESP_LOGI(TAG, "Bearer trimmed: %s", bearer_trimmed);
+        bearer_trimmed = strchr(bearer_trimmed, '\"');
+        bearer_trimmed++;
+        char *filter_quote = strchr(bearer_trimmed, '\"');
+        *filter_quote = '\0';
+        ESP_LOGI(TAG, "Final Bearer! %s", bearer_trimmed);
         err = store_bearer(bearer_trimmed);
         if (err != ESP_OK)
         {
@@ -731,8 +710,7 @@ void activate_device(const char *url, char *name, const char *cert)
     }
 }
 
-
-int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char* response_buf, uint8_t resp_buf_size)
+int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char *response_buf, uint8_t resp_buf_size)
 {
     int content_length;
     int status_code = 0;
@@ -741,7 +719,8 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
         .url = url,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
         .cert_pem = cert,
-        .event_handler = http_event_handler};
+        .event_handler = http_event_handler,
+        .is_async = false};
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
@@ -756,29 +735,36 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
         snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
         esp_http_client_set_header(client, "Authorization", authenticationTokenString);
     }
-    ESP_LOGI(TAG, "Got Here 1");
     esp_http_client_set_post_field(client, data, strlen(data));
-    esp_err_t err = esp_http_client_perform(client);
-    ESP_LOGI(TAG, "Got Here 2");
+    esp_err_t err = esp_http_client_open(client, strlen(data));
     if (err != ESP_OK)
     {
-        ESP_LOGE(TAG, "Failed to open HTTP connection: %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to open HTTP connection %s", esp_err_to_name(err));
     }
     else
     {
-        status_code = esp_http_client_get_status_code(client);
-        content_length = esp_http_client_get_content_length(client);
-        if (content_length > 0)
+        esp_err_t err = esp_http_client_perform(client);
+        if (err != ESP_OK)
         {
-            ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
-                     content_length);
-            response = malloc(sizeof(char) * content_length);
-            esp_http_client_read(client, response, content_length);
-            ESP_LOGE(TAG, "Response: %s", response);
+            ESP_LOGE(TAG, "Failed to send HTTP POST request: %s", esp_err_to_name(err));
         }
         else
         {
-            ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
+            status_code = esp_http_client_get_status_code(client);
+            content_length = esp_http_client_get_content_length(client);
+            if (content_length > 0)
+            {
+                ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
+                         content_length);
+                response = malloc(sizeof(char) * content_length);
+                esp_http_client_read(client, response, content_length);
+                ESP_LOGE(TAG, "Response: %s", response);
+                esp_http_client_close(client);
+            }
+            else
+            {
+                ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
+            }
         }
     }
     if (authenticationToken)
@@ -787,11 +773,12 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
     }
     free(data);
     esp_http_client_cleanup(client);
-    if (response&&resp_buf_size)
+    if (response && resp_buf_size)
     {
         int missed = snprintf(response_buf, resp_buf_size, "%s", response);
-        if(missed > resp_buf_size){
-            ESP_LOGE(TAG, "Buffer was too small, full string was not written. Missed %d amount of character space!", missed-resp_buf_size);
+        if (missed > resp_buf_size)
+        {
+            ESP_LOGE(TAG, "Buffer was too small, full string was not written. Missed %d amount of character space!", missed - resp_buf_size);
         }
     }
     return status_code;
