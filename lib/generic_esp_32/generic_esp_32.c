@@ -211,6 +211,9 @@ int variable_sprintf_size(char *string, int count, ...)
         case 's':
             extraSize += snprintf(snBuf, 0, "%s", va_arg(list, char *));
             break;
+        case 'f':
+            extraSize += snprintf(snBuf, 0, "%f", va_arg(list, double));
+            break;
         }
     }
     int totalSize = strlen(string) * sizeof(char) + sizeof(char) * extraSize;
@@ -564,12 +567,12 @@ void timesync_task(void *data)
     {
         //Wait for next measurement
         ESP_LOGI("Main", TIMESYNC_INTERVAL_TXT);
-        vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS)  / portTICK_PERIOD_MS);
+        vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
         timesync();
     }
 }
 
-void initialize_timezone(char* timezone)
+void initialize_timezone(char *timezone)
 {
     // Set timezone
     setenv("TZ", timezone, 0);
@@ -642,7 +645,7 @@ void heartbeat_task(void *data)
     ESP_LOGI("Main", "Heartbeat task started");
     while (1)
     {
-    bearer = get_bearer();
+        bearer = get_bearer();
         if (strlen(bearer) > 1)
         {
             ESP_LOGI(TAG, "Bearer read: %s", bearer);
@@ -657,8 +660,7 @@ void heartbeat_task(void *data)
         {
             ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
         }
-     
-        
+
         //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
         enable_wifi();
         //Wait to make sure Wi-Fi is enabled.
@@ -672,7 +674,7 @@ void heartbeat_task(void *data)
         disable_wifi();
         //Wait for next measurement
         ESP_LOGI("Main", HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
-        vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS)  / portTICK_PERIOD_MS);
+        vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
     }
 }
 
@@ -779,8 +781,6 @@ void activate_device(const char *url, char *name, const char *cert)
     //Disconnect WiFi
     //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
     disable_wifi();
-
-
 
     ESP_LOGI(TAG, "Return from devicae activation endpoint!");
     if (!bearer)
