@@ -115,7 +115,7 @@ The device activation_token is stored in persistent (non-volatile) memory. To er
 	```
 After this command you can and should perform the full Twomes device provisioning flow (device peraration, device-app activation and device-backend activation anew).
 
-Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool` or `esptool.py`
+Again, should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
 ### Repurposing an existing device
 If you want to repurpose and existing device (e.g. use it in another home), after erasing all persistently stored data and performing the other required steps for device preparation, you must perform one  additional manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
