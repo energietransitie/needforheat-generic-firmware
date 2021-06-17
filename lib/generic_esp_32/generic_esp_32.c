@@ -616,6 +616,12 @@ void timesync()
     ESP_LOGI(TAG, "UTC/date/time is: %s", strftime_buf);
 }
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+void start_presence_detection(){
+    xTaskCreatePinnedToCore(&presence_detection_loop, "presence_detection_task", 4096, NULL, 1, NULL, 1);
+}
+#endif
+
 void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer)
 {
     char *measurementType = "\"heartbeat\"";

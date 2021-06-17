@@ -23,6 +23,11 @@
 #include <driver/gpio.h>
 
 #include <wifi_provisioning/manager.h>
+
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#include "presence_detection.h"
+#endif
+
 #define VERSION "V1.7.3"
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
@@ -94,6 +99,9 @@ char* get_bearer();
 const char* get_root_ca();
 void activate_device(const char *url, char *name,const char *cert);
 void get_http(const char* url);
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+void start_presence_detection();
+#endif
 
 void initialize_nvs();
 
