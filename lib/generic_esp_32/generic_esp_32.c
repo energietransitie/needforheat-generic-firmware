@@ -1,12 +1,18 @@
 #include "generic_esp_32.h"
 
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
+
 bool activation = false;
 
 static EventGroupHandle_t wifi_event_group;
 
+const char *heartbeat_upload_url = TWOMES_TEST_SERVER "/device/measurements/variable-interval";
+const char *device_activation_url = TWOMES_TEST_SERVER "/device/activate";
+
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
+
+char *bearer;
 
 const char *isrgrootx1 = "-----BEGIN CERTIFICATE-----\n"
                          "MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n"
@@ -140,7 +146,7 @@ void blink(void *args)
     vTaskDelete(NULL);
 } //void blink;
 
-void initialize()
+void initialize_generic_firmware()
 {
     ESP_LOGI(TAG, "Generic Firmware Version: %s", VERSION);
 
@@ -454,13 +460,13 @@ void prepare_device(const char *device_type_name)
     char *device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
-    char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\"}\n\n";
+    char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}\n\n";
     int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
 #endif
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
-    char *qr_code_payload_template = "\n\n{\"ver\":\"v1\",\"name\":\"%s\",\"pop\":\"%u\",\"transport\":\"ble\",\"security\":\"1\",\"password\":\"%s\"}\n\n";
+    char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\",\n\"security\":\"1\",\n\"password\":\"%s\"\n}\n\n";
     int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
     char *qr_code_payload = malloc(qr_code_payload_size);
     snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
@@ -470,7 +476,7 @@ void prepare_device(const char *device_type_name)
     ESP_LOGI(TAG, "%s", qr_code_payload);
     free(qr_code_payload);
 
-    char *post_device_payload_template = "\n\n{\"name\":\"%s\",\"device_type\":\"%s\",\"activation_token\":\"%u\"}\n\n";
+    char *post_device_payload_template = "\n\n{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}\n\n";
     int post_device_payload_size = variable_sprintf_size(post_device_payload_template, 3, device_name, device_type_name, dat);
     char *post_device_payload = malloc(post_device_payload_size);
     snprintf(post_device_payload, post_device_payload_size, post_device_payload_template, device_name, device_type_name, dat);
@@ -551,26 +557,60 @@ void obtain_time(void)
     localtime_r(&now, &timeinfo);
 }
 
-void initialize_time(char *timezone)
+void timesync_task(void *data)
+{
+    ESP_LOGI("Main", "Timesync task started");
+    while (1)
+    {
+        //Wait for next measurement
+        ESP_LOGI("Main", TIMESYNC_INTERVAL_TXT);
+        vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS)  / portTICK_PERIOD_MS);
+        timesync();
+    }
+}
+
+void initialize_timezone(char* timezone)
+{
+    // Set timezone
+    setenv("TZ", timezone, 0);
+    tzset();
+}
+
+void timesync()
 {
     time_t now;
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    if (timeinfo.tm_year < (2016 - 1900))
-    {
-        ESP_LOGI(TAG, "Time is not set yet. Connecting to Wi-Fi and getting time over NTP.");
-        obtain_time();
-        // update 'now' variable with current time
-        time(&now);
-    }
+    ESP_LOGI(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
+    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+    enable_wifi();
+
+    //Wait to make sure Wi-Fi is enabled.
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+
+    //obtain time via NTP
+    obtain_time();
+
+    // update 'now' variable with current time
+    time(&now);
+
+    //Wait to make sure everyting is finished.
+    vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+
+    //Disconnect WiFi
+    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+    disable_wifi();
+
+    // log time as Unix time.
+    uint32_t unix_time = time(NULL);
+    ESP_LOGI(TAG, "Unix Time is: %d", unix_time);
+
+    // log time as UTC time.
     char strftime_buf[64];
-    // Set timezone
-    setenv("TZ", timezone, 0);
-    tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "The current UTC/date/time is: %s", strftime_buf);
+    ESP_LOGI(TAG, "UTC/date/time is: %s", strftime_buf);
 }
 
 void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer)
@@ -594,6 +634,46 @@ void upload_heartbeat(const char *variable_interval_upload_url, const char *root
     //Posting data over HTTPS, using url, msg and bearer token.
     ESP_LOGI(TAG, "Data: %s", msg);
     post_https(variable_interval_upload_url, msg, root_cert, bearer, NULL, 0);
+    //TODO: should we call free(msg);
+}
+
+void heartbeat_task(void *data)
+{
+    ESP_LOGI("Main", "Heartbeat task started");
+    while (1)
+    {
+    bearer = get_bearer();
+        if (strlen(bearer) > 1)
+        {
+            ESP_LOGI(TAG, "Bearer read: %s", bearer);
+        }
+
+        else if (strcmp(bearer, "") == 0)
+        {
+            ESP_LOGI(TAG, "Bearer not found, activate device first!");
+        }
+
+        else if (!bearer)
+        {
+            ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
+        }
+     
+        
+        //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+        enable_wifi();
+        //Wait to make sure Wi-Fi is enabled.
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        //Upload heartbeat
+        upload_heartbeat(heartbeat_upload_url, isrgrootx1, bearer);
+        //Wait to make sure uploading is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+        //Disconnect WiFi
+        //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+        disable_wifi();
+        //Wait for next measurement
+        ESP_LOGI("Main", HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
+        vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS)  / portTICK_PERIOD_MS);
+    }
 }
 
 esp_err_t store_bearer(char *bearer)
@@ -683,9 +763,26 @@ void activate_device(const char *url, char *name, const char *cert)
 
     ESP_LOGI(TAG, "%s", device_activation_data);
     char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH);
-    ESP_LOGI(TAG, "GOT HERE!");
+    ESP_LOGI(TAG, "Posting on device activation endpoint");
+
+    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+    enable_wifi();
+
+    //Wait to make sure Wi-Fi is enabled.
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+
     post_https(url, device_activation_data, cert, NULL, bearer, MAX_RESPONSE_LENGTH);
-    ESP_LOGI(TAG, "Got Here!");
+
+    //Wait to make sure everyting is finished.
+    vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+
+    //Disconnect WiFi
+    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+    disable_wifi();
+
+
+
+    ESP_LOGI(TAG, "Return from devicae activation endpoint!");
     if (!bearer)
     {
         ESP_LOGE(TAG, "Failed to activate device!");
@@ -820,7 +917,7 @@ wifi_prov_mgr_config_t initialize_provisioning()
          * to take care of this automatically. This can be set to
          * WIFI_PROV_EVENT_HANDLER_NONE when using wifi_prov_scheme_softap*/
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
-        .scheme_event_handler = WIFI_PROV_SCHEME_BLE_EVENT_HANDLER_FREE_BTDM
+        .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
 #endif /* CONFIG_TWOMES_PROV_TRANSPORT_BLE */
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
                                     .scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE
@@ -1018,5 +1115,57 @@ void initialize_nvs()
 
         /* Retry nvs_flash_init */
         ESP_ERROR_CHECK(nvs_flash_init());
+    }
+}
+
+// Function:    initialise_wifi()
+// Params:      N/A
+// Returns:     N/A
+// Description: used to intialize Wi-Fi for HTTPS
+void twomes_device_provisioning(const char *device_type_name)
+{
+    initialize_nvs();
+    initialize_generic_firmware();
+    /* initialize TCP/IP */
+    ESP_ERROR_CHECK(esp_netif_init());
+
+    wifi_prov_mgr_config_t config = initialize_provisioning();
+
+    // make sure to have this here otherwise the device names won't match because
+    // of config changes made by the above function call.
+    prepare_device(device_type_name);
+
+    // starts provisioning if not provisioned, otherwise skips provisioning.
+    // if set to false it will not autoconnect after provisioning.
+    // if set to true it will autonnect.
+    start_provisioning(config, true);
+
+    // initialize time with timezone UTC; building timezone is stored in central database
+    initialize_timezone("UTC");
+    timesync();
+
+    // get bearer token and rootCA
+    bearer = get_bearer();
+
+    if (strlen(bearer) > 1)
+    {
+        ESP_LOGI(TAG, "Bearer read: %s", bearer);
+    }
+
+    else if (strcmp(bearer, "") == 0)
+    {
+        ESP_LOGI(TAG, "Bearer not found, activating device!");
+        // get device name
+        char *device_name;
+        device_name = malloc(DEVICE_NAME_SIZE);
+        get_device_service_name(device_name, DEVICE_NAME_SIZE);
+        activate_device(device_activation_url, device_name, isrgrootx1);
+        bearer = get_bearer();
+        free(device_name);
+    }
+
+    else if (!bearer)
+    {
+        ESP_LOGE(TAG, "Something went wrong while reading the bearer!");
     }
 }

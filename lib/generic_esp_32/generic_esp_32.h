@@ -34,7 +34,17 @@
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
 
-#define LONG_BUTTON_PRESS_DURATION 10
+#define LONG_BUTTON_PRESS_DURATION 10 // seconds
+
+#define HTTPS_PRE_WAIT_MS (1.5 * 1000)  //   milliseconds ( 1 s * 1000 ms/s)
+#define HTTPS_POST_WAIT_MS (1 * 1000) //   milliseconds ( 1 s * 1000 ms/s)
+
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)   
+#define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
+#define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
+
+#define TIMESYNC_INTERVAL_MS (6 * 60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
+#define TIMESYNC_INTERVAL_TXT "Wating 6 hours minutes before next NTP timesync"
 
 #define TWOMES_TEST_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
 #define TWOMES_TEST_SERVER "https://api.tst.energietransitiewindesheim.nl"
@@ -62,7 +72,7 @@ void buttonPressDuration(void *args);
 void blink(void *args);
 char* get_types(char* stringf, int count);
 int variable_sprintf_size(char* string, int count, ...);
-void initialize();
+void initialize_generic_firmware();
 void create_dat();
 void prepare_device(const char *device_type_name);
 void time_sync_notification_cb(struct timeval *tv);
@@ -74,9 +84,12 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
                                    uint8_t **outbuf, ssize_t *outlen, void *priv_data);
 void initialize_sntp(void);
 void obtain_time(void);
-void initialize_time(char* timezone);
+void timesync_task(void *data);
+void timesync();
+void initialize_timezone(char* timezone);
 int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char* response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer);
+void heartbeat_task(void *data);
 char* get_bearer();
 const char* get_root_ca();
 void activate_device(const char *url, char *name,const char *cert);
@@ -86,6 +99,7 @@ void initialize_nvs();
 
 wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
+void twomes_device_provisioning(const char *device_type_name);
 void disable_wifi();
 void enable_wifi();
 void disconnect_wifi();
