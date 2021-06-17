@@ -28,7 +28,7 @@
 #include "presence_detection.h"
 #endif
 
-#define VERSION "V1.7.3"
+#define VERSION "V2.0.0"
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
 #define MAX_RESPONSE_LENGTH 100
