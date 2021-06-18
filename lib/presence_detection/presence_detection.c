@@ -26,8 +26,9 @@ esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param
 
 esp_gatt_if_t interface;
 
-esp_bd_addr_t phone = {0xf0, 0x67, 0x28, 0xbd, 0x63, 0xa2};
+esp_bd_addr_t phone = {0xf0, 0x67, 0x28, 0xbd, 0xa1, 0xa2};
 esp_bd_addr_t phone2 = {0xac, 0x5f, 0xea, 0x6b, 0x3a, 0x6b};
+
 esp_bd_addr_t presence_addr_list[2] = {};
 int presence_addr_list_count = 2;
 presence_data result_list[2];
@@ -92,7 +93,16 @@ esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param
         memcpy(result.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
         ESP_LOGI(TAG, "Got cb address %x%x%x%x%x%x", result.addr[0], result.addr[1], result.addr[2], result.addr[3],
                  result.addr[4], result.addr[5]);
-        result.isHome = true;
+        if (strlen((const char *)param->read_rmt_name.rmt_name) == 0)
+        {
+            ESP_LOGI(TAG, "CB Did not find device, name empty!");
+            result.isHome = false;
+        }
+        else
+        {
+            ESP_LOGI(TAG, "CB found device, name not empty: %s!", param->read_rmt_name.rmt_name);
+            result.isHome = true;
+        }
         result.timeMeasured = time(NULL);
         result_list[requesting_number] = result;
         if (stopped)
@@ -269,7 +279,6 @@ void upload_presence_detection_data()
     }
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     disable_wifi();
-
 }
 
 //Our presence detection loop
@@ -328,7 +337,6 @@ void presence_detection_loop(void)
                 ESP_LOGI(TAG, "Got another address %x%x%x%x%x%x", res.addr[0], res.addr[1], res.addr[2], res.addr[3], res.addr[4], res.addr[5]);
                 res.isHome = false;
                 res.timeMeasured = time(NULL);
-
                 result_list[requesting_number++] = res;
                 ESP_LOGI(TAG, "Could not find number: %d", requesting_number - 1);
             }
@@ -342,10 +350,10 @@ void presence_detection_loop(void)
                 res.isHome = false;
                 res.timeMeasured = time(NULL);
                 result_list[requesting_number] = res;
-                timeout_count = 0;
                 upload_presence_detection_data();
                 ESP_LOGI(TAG, "Stopping Requesting Early!");
             }
+            timeout_count = 0;
         }
         //Stopping requesting because we have scanned all devices, giving the last one time
         //to respond which is why we set stopped, not uploading until last result is in.
