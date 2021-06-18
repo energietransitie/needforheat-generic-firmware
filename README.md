@@ -1,6 +1,8 @@
 # Generic firmware for Twomes measurement devices based on ESP
 This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 or ESP8266 SoC.
 
+See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
+
 ## Table of contents
 * [General info](#general-info)
 * [Deploying](#deploying)
@@ -183,8 +185,7 @@ Also note that we don't use the [POST /device/measurements/fixed-interval](https
 
 ### Other Things To Keep In Mind
 * Check the platformio.ini file in the cloned folder, look at the board_upload.flash_size, board_upload.maximum_size and board_build.partitions to check if they are right for your hardware.
-* You have to manually add presence detection bluetooth adresses in the presence_detection.c file at the top. Add them to the presence_addr_list and change presence_addr_count to be correct with what you added if you want it to work.
-* Later on it should be possible to upload the MAC adresses over HTTPS. To use this we should implement an API call that allows us to receive the MAC adresses and you should write a function that adds them to the MAC adress list. It would also be possible to write a function that changes the size of the list but my suggestion to start with would be to just make a list of 20 addresses to be the default.
+
 ## Features
 Currently ready:
 
