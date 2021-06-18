@@ -26,9 +26,8 @@ esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param
 
 esp_gatt_if_t interface;
 
-esp_bd_addr_t phone = {0xf0, 0x67, 0x28, 0xbd, 0xa1, 0xa2};
-esp_bd_addr_t phone2 = {0xac, 0x5f, 0xea, 0x6b, 0x3a, 0x6b};
-
+esp_bd_addr_t phone = {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f};
+esp_bd_addr_t phone2 = {0x7a, 0x8b, 0x9c, 0xad, 0xae, 0xba};
 esp_bd_addr_t presence_addr_list[2] = {};
 int presence_addr_list_count = 2;
 presence_data result_list[2];

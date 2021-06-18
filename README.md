@@ -1,6 +1,8 @@
 # Generic firmware for Twomes measurement devices based on ESP
 This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 or ESP8266 SoC.
 
+See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
+
 ## Table of contents
 * [General info](#general-info)
 * [Deploying](#deploying)
@@ -30,21 +32,21 @@ Different Twomes measurement devices may have various features in common, includ
 *	If you used the device before, you shoud first [erase all persistenly stored data](#erasing-all-persistenly-stored-data)
 *	Open a comand prompt in that directory, change the directory to the BinariesAndDriver subfolder and enter:
 	```shell
-	esptool.py --chip esp32  --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
+	py -m esptool --chip esp32 --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 ota_data_initial.bin 0x10000 firmware.bin  
 	```
 *	This should automatically detect the USB port that the device is connected to.
 *	If not, then open the Device Manager (in Windows press the `Windows + X` key combination, then select Device Manager), go to View and click Show Hidden Devices. Then unfold `Ports (COM & LPT)`. You should find the device there, named `USB-Serial CH340 *(COM?)` with `?` being a single digit.  
 *	If the COM port is not automatically detected, then enter (while replacing `?` with the digit found in the previous step): 
 	```shell
-	esptool.py --chip esp32  --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader_dio_40m.bin 0x8000 partitions.bin 0xe000 boot_app0.bin 0x10000 firmware.bin  
+	py -m esptool --chip esp32 --port "COM?" --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 ota_data_initial.bin 0x10000 firmware.bin
 	```
-Should you encounter issues you may try to replace `esptool.py` in the above commands with
+Should you encounter issues you may try to replace `py -m esptool` in the above commands with
 ```shell 
 python -m esptool
 ````
 or
 ```shell 
-py -m esptool
+esptool.py
 ````
 
 ### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
@@ -107,15 +109,15 @@ Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile
 The device activation_token is stored in persistent (non-volatile) memory. To erase the device activation_token, use the commands below. Note that these commands erase the entire persistent (non-volatile) memory and hence, this command also erases the Wi-Fi provisioning data and the device session_token needed added as bearer token to upload measurement data to the server.
 *	Open a command prompt and enter:
 	```shell
-	esptool.py erase_flash
+	py -m esptool erase_flash
 	```
 *	If the port is not detected automatically, enter (while replacing `?`  with the digit found earlier):
 	```shell
-	esptool.py erase_flash --port "COM?" 
+	py -m esptool erase_flash --port "COM?" 
 	```
 After this command you can and should perform the full Twomes device provisioning flow (device peraration, device-app activation and device-backend activation anew).
 
-Again, should you encounter issues you may try to replace `esptool.py` in the above commands with `python -m esptool` or `py -m esptool`
+Again, should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
 ### Repurposing an existing device
 If you want to repurpose and existing device (e.g. use it in another home), after erasing all persistently stored data and performing the other required steps for device preparation, you must perform one  additional manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
@@ -193,18 +195,19 @@ Currently ready:
 * Heartbeats: hourly measurement and upload of timestamped measurment data with property `heartbeat`
 * Long button press to erase only Wi-Fi provisioning data 
 * Example code
+* Presence Detection (needs static Bluetooth addresses for presence detection compile time)
 
 To-do:
 
-* Persistent buffering of measurement data using NVS
-* Heartbeats: timestamped measurement and persistent buffering of heartbeats every 10 minutes and hourly upload of all buffered heartbeats
+* Persistent buffering of measurement data
+* Presence Detection (static Bluetooth addresses to track provided during device provisioning)
 * Secure transport over TLS/SSL (ESP8266 as well)
 
 ## Status
 Project is: in-progress
 
 ## License
-This software is available under the [Apache 2.0 license](./LICENSE), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
+This software is available under the [Apache 2.0 license](./LICENSE.md), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
 
 ## Credits
 This software is made by:
