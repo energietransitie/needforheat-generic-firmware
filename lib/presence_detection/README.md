@@ -33,8 +33,8 @@ So, ultimately, we chose the approach using targeted Bluetooth name requests to 
 In addition to [prerequisites of Twomes measurment devices in general](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/README.md#prerequisites), in the current version of the firmware, before [developing](#developing) and [deploying](#deploying), you need to obtain the static Bluetooth MAC addresses of the smartphones of the inhabitants of the home whose preence you want to detect. Currently, there is no automated support for this. Instructions:
 * on English Android devices, go to `Settings` > `System` (skip on some models) > `About Phone` > `Status`; the value can be read under `Bluetooth-adres` (at least, on Android 10);
 * on Dutch Android devices, go to `Instellingen` > `Systeem` (skip on some models) > `Info telefoon` > `Status`; the value can be read under `Bluetooth address` (at least, on Android 10);
-* on English iPhones, go to `Settings` > `General` > `About`; the value can be read under `Bluetooth` ((at least, on iOS 12);
-* on Dutch iPhones, go to `Instellingen` > `Algemeen` > `Info`; the value can be read under `Bluetooth` ((at least, on iOS 12).
+* on English iPhones, go to `Settings` > `General` > `About`; the value can be read under `Bluetooth` (at least, on iOS 12);
+* on Dutch iPhones, go to `Instellingen` > `Algemeen` > `Info`; the value can be read under `Bluetooth` (at least, on iOS 12).
 
 On all devices, the static Bluetooth MAC address is represented on the screen something like `1A:2B:C3:D4:5E:6F`, i.e. as six groups of two hexadecial upper case digits, concatenated by colons. When in doubt: the letter `O` is never part of such an address; you're reading the digit `0`.
 
@@ -45,10 +45,15 @@ Deployment of binary releases can be done in the same way as other [Twomes measu
 
 ## Developing
 See [Twomes measurment devices](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/README.md#developing).
-In addition, To enable presence detection library, before compiling the sources, make sure you have an uncommented lide in the `CMakeLists.txt file`  that reads 
+
+In addition, in the current version you have to make changes the source code.
+
+To enable presence detection library, before compiling the sources, make sure you have an uncommented lide in the `CMakeLists.txt file` that reads 
 ````shell
 add_compile_definitions(CONFIG_TWOMES_PRESENCE_DETECTION)
 ```` 
+
+You also have add the static Bluetooth addresses in the file `presence_detection.c` file. Change the entries in the `presence_addr_list`, add or remove entries if needed and be sure to change the value of `change presence_addr_count` correspondingly.
 
 ## Features
 List of features ready and TODOs for future development. Ready:
@@ -57,11 +62,11 @@ List of features ready and TODOs for future development. Ready:
 
 To-do:
 * repair bug that causes false positives for presence detection of some devices (notably the first device in the list);
-* provisioning of the account-specific list of static Bluetooth addresses during device preparation phase in the lab via a file on non-volatile device storage (most likely, SPIFFS);
+* provisioning of the account-specific list of static Bluetooth addresses during device preparation phase in the lab via a file on non-volatile device storage (most likely, SPIFFS), which is read by the firware at startup;
 * provisioning of the account-specific list of static Bluetooth addresses during device provisioning phase in the home via an API-call.  
 
 ## Status
-Project is: _in progress_?
+Project is: _in progress_
 
 ## License
 See [Twomes measurment devices](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/README.md#license).
@@ -69,4 +74,4 @@ See [Twomes measurment devices](https://github.com/energietransitie/twomes-gener
 ## Credits
 See [Twomes measurment devices](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/README.md#credits).
 
-This work was inspired by the [monitor](https://github.com/andrewjfreyer/monito) framework for fraspberry Pi, by Andrew J Freyer.
+This work was inspired by the [monitor](https://github.com/andrewjfreyer/monito) framework which runs on Raspberry Pi, by Andrew J Freyer.
