@@ -13,7 +13,7 @@ This library can be used to enable presence detection of occupants in a home in 
 
 ## General info
 Presence detection of home occupants helps the Twomes research project in three ways:
-1. Humans exhale CO₂ and are one of the primary sources of CO₂ in a room or house. Presence detection data provides additional insights in the variations that cause the CO₂-concentration in a room or house to rise. This additional data is expected to increase the precision of algorithms that aim to establish the contribution of volunatry ventilation to heatloss.
+1. Humans exhale CO₂ and are one of the primary sources of CO₂ in a room or house. Presence detection data provides additional insights in the variations that cause the CO₂-concentration in a room or house to rise. This additional data is expected to increase the precision of algorithms that aim to establish the contribution of volunatary ventilation to heat losses, based on measured CO₂-concentrations with the [Twomes CO₂ meter device](https://github.com/energietransitie/twomes-co_2-meter).
 2. Detecting persence in combination with thermostat programs, setpoints or indoor temperatures allow for the detection of inefficient heating behaviour and/or settings, such as heating a home when no one is present (soon).
 3. Humans produce heat (the average Dutch citizen produces about 80 W when sleeping and about 100 W when awake). When present in the home, this heat contributes (a little) to the heating balance of the home. Data about the presence of absence of inhabitabts helps to improve the heating balance (a bit), compared to just taking the average sleeping, presence and absence patterns of Dutch citizens.
 
