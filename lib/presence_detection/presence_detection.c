@@ -15,7 +15,7 @@
 #define PRESENCE_NAME_REQ_TIMEOUT 5
 #define TIMER_DIVIDER 80
 #define MEASURING_INTERVAL 300
-#define ADDR_LEN 12
+#define ADDR_LEN 17 // 6 * 2 hex digits + 5 colons
 #define RSSI_PRESENT 900
 #define RSSI_ABSENT -899
 
@@ -88,9 +88,9 @@ void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     switch (event)
     {
     case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
+        timeout_count = 0;
         ESP_LOGI(TAG, "Read Remote Name!");
         ESP_LOGI(TAG, "Name: %s", param->read_rmt_name.rmt_name);
-        timeout_count = 0;
         if (strlen((const char *)param->read_rmt_name.rmt_name) > 0)
         {
             ESP_LOGI(TAG, "CB found device, name not empty: %s!", param->read_rmt_name.rmt_name);
@@ -213,8 +213,8 @@ void presence_addr_to_string(presence_data data, char *buffer, int buffer_size)
 {
     esp_bd_addr_t addr;
     memcpy(addr, data.addr, sizeof(esp_bd_addr_t));
-    ESP_LOGI(TAG, "Converting address %X%X%X%X%X%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-    snprintf(buffer, buffer_size, "%X%X%X%X%X%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    ESP_LOGI(TAG, "Converting address %X:%X:%X:%X:%X:%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    snprintf(buffer, buffer_size, "%X:%X:%X:%X:%X:%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     ESP_LOGI(TAG, "Converted addr: %s", buffer);
 }
 
@@ -336,7 +336,7 @@ void store_measurement(bool isHome)
 {
     presence_data res;
     memcpy(res.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
-    ESP_LOGI(TAG, "Storing measurement address: %X%X%X%X%X%X with isHome: %d", res.addr[0], res.addr[1], res.addr[2], res.addr[3],
+    ESP_LOGI(TAG, "Storing measurement address: %X:%X:%X:%X:%X:%X with isHome: %d", res.addr[0], res.addr[1], res.addr[2], res.addr[3],
              res.addr[4], res.addr[5], isHome);
     res.isHome = isHome;
     res.timeMeasured = time_measuring_start_timestamp;
