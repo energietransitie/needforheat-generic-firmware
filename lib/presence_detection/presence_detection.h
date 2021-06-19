@@ -27,7 +27,7 @@
 #include "esp_bt_device.h"
 #include "driver/gpio.h"
 #include "driver/timer.h"
-
+#define PRESENCE_DATA_SIZE 11
 typedef struct
 {
     esp_bd_addr_t addr;
@@ -37,12 +37,15 @@ typedef struct
 
 void initialize_bluetooth();
 void send_name_request(esp_bd_addr_t mac_addr);
+void store_measurement(bool isHome);
 void initialize_presence_detection();
-esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
+void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
 void initialize_timer(timer_group_t group, timer_idx_t timer, bool auto_reload, int timer_interval);
 void presence_detection_loop();
+void reset_results();
 void upload_presence_detection_data();
 char *result_to_string(presence_data data);
+char *results_to_rssi_list();
 void presence_addr_to_string(presence_data data, char *buffer, int buffer_size);
 void stop_requesting();
 void start_requesting();

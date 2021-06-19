@@ -16,18 +16,23 @@
 #define TIMER_DIVIDER 80
 #define MEASURING_INTERVAL 300
 #define ADDR_LEN 12
+#define RSSI_PRESENT 900
+#define RSSI_ABSENT -899
 
 const char *rootCA;
 char *bearer;
 
 const char *variable_interval_upload_url = TWOMES_TEST_SERVER "/device/measurements/variable-interval";
 
-esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param);
-
 esp_gatt_if_t interface;
 
-esp_bd_addr_t phone = {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f};
-esp_bd_addr_t phone2 = {0x7a, 0x8b, 0x9c, 0xad, 0xae, 0xba};
+// esp_bd_addr_t phone = {0x1a, 0x2b, 0x3c, 0x4d, 0x5e, 0x6f};
+// esp_bd_addr_t phone2 = {0x7a, 0x8b, 0x9c, 0xad, 0xae, 0xba};
+
+// esp_bd_addr_t phone = {0xf0, 0x67, 0x28, 0xbd, 0x63, 0xa2};
+esp_bd_addr_t phone = {0xf0, 0x67, 0x28, 0xbd, 0xa1, 0xa2}; //Wrong
+// esp_bd_addr_t phone2 = {0xac, 0x5f, 0xea, 0x6b, 0x3a, 0x6b};
+esp_bd_addr_t phone2 = {0xac, 0x5f, 0xea, 0x6b, 0x1a, 0x6b}; //Wrong
 esp_bd_addr_t presence_addr_list[2] = {};
 int presence_addr_list_count = 2;
 presence_data result_list[2];
@@ -36,6 +41,7 @@ int requesting_number = -1;
 bool requesting = false;
 int timeout_count = 0;
 int measuring_interval_count = 0;
+uint32_t time_measuring_start_timestamp;
 bool stopped = false;
 bool found_after_stopped = false;
 
@@ -81,32 +87,21 @@ void initialize_timer(timer_group_t group, timer_idx_t timer, bool auto_reload, 
 //Callback mostly just for our name requests, it starts the next name request if there is another device that needs to be detected
 //It also inserts its result into the result_list The 1 second delay is needed so that the measurements go well. If you do not
 //do this then it will not always detect the device properly and thus make a measuring error.
-esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
+void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 {
     switch (event)
     {
     case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
         ESP_LOGI(TAG, "Read Remote Name!");
         ESP_LOGI(TAG, "Name: %s", param->read_rmt_name.rmt_name);
-        presence_data result;
-        memcpy(result.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
-        ESP_LOGI(TAG, "Got cb address %x%x%x%x%x%x", result.addr[0], result.addr[1], result.addr[2], result.addr[3],
-                 result.addr[4], result.addr[5]);
-        if (strlen((const char *)param->read_rmt_name.rmt_name) == 0)
-        {
-            ESP_LOGI(TAG, "CB Did not find device, name empty!");
-            result.isHome = false;
-        }
-        else
+        if (strlen((const char *)param->read_rmt_name.rmt_name) > 0)
         {
             ESP_LOGI(TAG, "CB found device, name not empty: %s!", param->read_rmt_name.rmt_name);
-            result.isHome = true;
-        }
-        result.timeMeasured = time(NULL);
-        result_list[requesting_number] = result;
-        if (stopped)
-        {
-            found_after_stopped = true;
+            store_measurement(true);
+            if (stopped)
+            {
+                found_after_stopped = true;
+            }
         }
         if (requesting && requesting_number <= (presence_addr_list_count - 1))
         {
@@ -119,7 +114,6 @@ esp_err_t gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param
         ESP_LOGI(TAG, "Got Other GAP Event: %d!", event);
         break;
     }
-    return ESP_OK;
 }
 
 //Initializes presence_detection
@@ -199,16 +193,23 @@ void initialize_bluetooth()
 //This function starts the requesting by setting the right variables.
 void start_requesting()
 {
+    time_measuring_start_timestamp = time(NULL);
     measuring_interval_count = 0;
     requesting = true;
     requesting_number = 0;
     send_name_request(presence_addr_list[requesting_number]);
 }
+
+void reset_results(){
+     memset(result_list, 0, sizeof(result_list));
+}
+
 //Stops our requesting of names to the devices. This is called when we have sent out requests to all devices.
 void stop_requesting()
 {
     requesting = false;
 }
+
 //This function takes the bluetooth address of a presence_data result and turns it into a string
 //Which goes into the given buffer and does not write more than the buffer_size which in general is ADDR_LEN + 1.
 //The +1 is for the null-terminator which snprintf inserts automatically if there is space for it.
@@ -248,6 +249,52 @@ char *result_to_string(presence_data data)
     strcat(presence_string_properties, property_buf);
     return presence_string_properties;
 }
+
+char *results_to_rssi_list()
+{
+    char *property_string_plain = "{\"property_name\": \"%s\","
+                                  "\"measurements\": ["
+                                  "{ \"timestamp\":\"%d\","
+                                  "\"value\":\"%s\"}";
+
+    //Max size of RSSI(4 characters) + size of ',' and '\0'(2 characters) * addr list count gives us our maximum string size.
+    int rssi_string_size = variable_sprintf_size("%d", 1, RSSI_ABSENT) + sizeof(char) * 2;
+    char *rssi_string = malloc(rssi_string_size * presence_addr_list_count);
+    ESP_LOGI(TAG, "RSSI String Size: %d", rssi_string_size);
+    char *rssi_partial = malloc(rssi_string_size);
+    if (result_list[0].isHome)
+    {
+        snprintf(rssi_partial, rssi_string_size, "%d,", 900);
+    }
+    else if (result_list[0].isHome == 0)
+    {
+        snprintf(rssi_partial, rssi_string_size, "%d,", -899);
+    }
+    strcpy(rssi_string, rssi_partial);
+    for (int i = 1; i < presence_addr_list_count; i++)
+    {
+        if (result_list[i].isHome)
+        {
+            snprintf(rssi_partial, rssi_string_size, "%d", 900);
+        }
+        else if (result_list[i].isHome == 0)
+        {
+            snprintf(rssi_partial, rssi_string_size, "%d", -899);
+        }
+        if (i != presence_addr_list_count - 1)
+        {
+            strcat(rssi_partial, ",");
+        }
+        strcat(rssi_string, rssi_partial);
+    }
+    ESP_LOGI(TAG, "RSSI Result: %s", rssi_string);
+    int property_string_size = variable_sprintf_size(property_string_plain, 3, "listRSSI", time_measuring_start_timestamp,
+                                                     rssi_string);
+    char *property_string = malloc(property_string_size);
+    snprintf(property_string, property_string_size, property_string_plain, "listRSSI", time_measuring_start_timestamp, rssi_string);
+    ESP_LOGI(TAG, "Property String Result: %s", property_string);
+    return property_string;
+}
 //Uploads our data via the post_https of the generic firmware
 void upload_presence_detection_data()
 {
@@ -258,6 +305,8 @@ void upload_presence_detection_data()
                                       "]}]}";
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    int msg_multiple_string_size;
+    char *msg_multiple_string;
     for (int i = 0; i < presence_addr_list_count; i++)
     {
         char *result_str = result_to_string(result_list[i]);
@@ -266,8 +315,8 @@ void upload_presence_detection_data()
         char *multiple_property_measurements = malloc(multiple_property_measurements_size);
         strcpy(multiple_property_measurements, result_str);
 
-        int msg_multiple_string_size = strlen(msg_multiple_string_plain) + sizeof(uint32_t) + multiple_property_measurements_size;
-        char *msg_multiple_string = malloc(msg_multiple_string_size);
+        msg_multiple_string_size = strlen(msg_multiple_string_plain) + sizeof(uint32_t) + multiple_property_measurements_size;
+        msg_multiple_string = malloc(msg_multiple_string_size);
         snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), multiple_property_measurements);
         ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -276,8 +325,26 @@ void upload_presence_detection_data()
         free(multiple_property_measurements);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    char *rssi_property_string = results_to_rssi_list();
+    msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
+    msg_multiple_string = malloc(msg_multiple_string_size);
+    snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
+    ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
+    post_https(variable_interval_upload_url, msg_multiple_string, rootCA, bearer, NULL, 0);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     disable_wifi();
+    reset_results();
+}
+
+void store_measurement(bool isHome)
+{
+    presence_data res;
+    memcpy(res.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
+    ESP_LOGI(TAG, "Storing measurement address: %X%X%X%X%X%X with isHome: %d", res.addr[0], res.addr[1], res.addr[2], res.addr[3],
+             res.addr[4], res.addr[5], isHome);
+    res.isHome = isHome;
+    res.timeMeasured = time_measuring_start_timestamp;
+    result_list[requesting_number] = res;
 }
 
 //Our presence detection loop
@@ -300,19 +367,15 @@ void presence_detection_loop(void)
         //We have stopped scanning and were waiting for the last response which now timedout
         if (stopped && timeout_count >= PRESENCE_NAME_REQ_TIMEOUT)
         {
-            presence_data res;
-            memcpy(res.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
-            ESP_LOGI(TAG, "Got final address %x%x%x%x%x%x", res.addr[0], res.addr[1], res.addr[2], res.addr[3], res.addr[4], res.addr[5]);
+            ESP_LOGI(TAG, "Timedout final %d", requesting_number);
             if (found_after_stopped)
             {
-                res.isHome = true;
+                store_measurement(true);
             }
             else
             {
-                res.isHome = false;
+                store_measurement(false);
             }
-            res.timeMeasured = time(NULL);
-            result_list[requesting_number] = res;
             stopped = false;
             timeout_count = 0;
             requesting_number = 0;
@@ -331,24 +394,17 @@ void presence_detection_loop(void)
             //We still have another device to scan
             if (requesting_number < (presence_addr_list_count - 1))
             {
-                presence_data res;
-                memcpy(res.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
-                ESP_LOGI(TAG, "Got another address %x%x%x%x%x%x", res.addr[0], res.addr[1], res.addr[2], res.addr[3], res.addr[4], res.addr[5]);
-                res.isHome = false;
-                res.timeMeasured = time(NULL);
-                result_list[requesting_number++] = res;
+                ESP_LOGI(TAG, "Timedout_not_end %d", requesting_number);
+                store_measurement(false);
+                requesting_number++;
                 ESP_LOGI(TAG, "Could not find number: %d", requesting_number - 1);
             }
             //No more devices to scan
             else
             {
+                ESP_LOGI(TAG, "Timedout_end %d", requesting_number);
                 stop_requesting();
-                presence_data res;
-                memcpy(res.addr, presence_addr_list[requesting_number], sizeof(esp_bd_addr_t));
-                ESP_LOGI(TAG, "Got no address %x%x%x%x%x%x", res.addr[0], res.addr[1], res.addr[2], res.addr[3], res.addr[4], res.addr[5]);
-                res.isHome = false;
-                res.timeMeasured = time(NULL);
-                result_list[requesting_number] = res;
+                store_measurement(false);
                 upload_presence_detection_data();
                 ESP_LOGI(TAG, "Stopping Requesting Early!");
             }

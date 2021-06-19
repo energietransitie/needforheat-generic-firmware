@@ -11,7 +11,15 @@
         "esp_netif.h": "c",
         "esp_tls.h": "c",
         "generic_esp_32.h": "c",
-        "*.ipp": "c"
+        "*.ipp": "c",
+        "presence_detection.h": "c",
+        "task.h": "c",
+        "esp_gattc_api.h": "c",
+        "esp_gatts_api.h": "c",
+        "esp_gatt_defs.h": "c",
+        "esp_bt_device.h": "c",
+        "esp_bt_defs.h": "c",
+        "esp_gatt_common_api.h": "c"
     },
     "idf.port": "/dev/ttyUSB0",
     "idf.adapterTargetName": "esp32",
