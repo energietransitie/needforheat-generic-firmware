@@ -213,8 +213,8 @@ void presence_addr_to_string(presence_data data, char *buffer, int buffer_size)
 {
     esp_bd_addr_t addr;
     memcpy(addr, data.addr, sizeof(esp_bd_addr_t));
-    ESP_LOGI(TAG, "Converting address %x%x%x%x%x%x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
-    snprintf(buffer, buffer_size, "%x%x%x%x%x%x", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    ESP_LOGI(TAG, "Converting address %X%X%X%X%X%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+    snprintf(buffer, buffer_size, "%X%X%X%X%X%X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
     ESP_LOGI(TAG, "Converted addr: %s", buffer);
 }
 
