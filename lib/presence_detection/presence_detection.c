@@ -90,6 +90,7 @@ void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
         ESP_LOGI(TAG, "Read Remote Name!");
         ESP_LOGI(TAG, "Name: %s", param->read_rmt_name.rmt_name);
+        timeout_count = 0;
         if (strlen((const char *)param->read_rmt_name.rmt_name) > 0)
         {
             ESP_LOGI(TAG, "CB found device, name not empty: %s!", param->read_rmt_name.rmt_name);
@@ -104,7 +105,6 @@ void gap_callback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
             vTaskDelay(1000 / portTICK_PERIOD_MS);
             send_name_request(presence_addr_list[++requesting_number]);
         }
-        timeout_count = 0;
         break;
     default:
         ESP_LOGI(TAG, "Got Other GAP Event: %d!", event);
