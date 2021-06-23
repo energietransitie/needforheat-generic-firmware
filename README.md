@@ -3,6 +3,8 @@ This repository contains the generic firmware, with features common to various T
 
 See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
 
+![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
+
 ## Table of contents
 * [General info](#general-info)
 * [Deploying](#deploying)
