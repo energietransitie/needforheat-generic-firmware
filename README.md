@@ -30,9 +30,9 @@ Different Twomes measurement devices may have various features in common, includ
 ### Device Preparation step 1/a: Uploading Firmware to ESP32
 *	Connect the device with a USB cable to the PC.
 *	Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
-*	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by Windows. You may need to install a specific usb driver on your computer before you can upload firmware. For Windows, we included `CH341SER.exe` in the release; run this executable to in stall the device driver.
+*	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by Windows. You may need to install a specific usb driver on your computer before you can upload firmware. For Windows, we included `CH341SER.exe` in the  driver subfolder of the release; run this executable to install the device driver.
 *	If you used the device before, you shoud first [erase all persistenly stored data](#erasing-all-persistenly-stored-data)
-*	Open a comand prompt in that directory, change the directory to the BinariesAndDriver subfolder and enter:
+*	Open a comand prompt in that directory, change the directory to the binaries subfolder and enter:
 	```shell
 	py -m esptool --chip esp32 --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 ota_data_initial.bin 0x10000 firmware.bin  
 	```
