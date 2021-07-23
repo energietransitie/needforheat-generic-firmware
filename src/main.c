@@ -3,7 +3,11 @@
 #define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
 #define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 const char*device_type_name = "Presence-Detector";
+#else
+const char*device_type_name = "Generic-Test";
+#endif
 
 static const char *TAG = "Twomes ESP32 generic test device";
 
@@ -18,7 +22,9 @@ void app_main(void)
     xTaskCreatePinnedToCore(&timesync_task, "timesync_task", 4096, NULL, 1, NULL, 1);
     //Temporary solution
     vTaskDelay(3000 / portTICK_PERIOD_MS);
+    #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
     start_presence_detection();
+    #endif
     while(1) {
         vTaskDelay(1000/ portTICK_PERIOD_MS);
     }
