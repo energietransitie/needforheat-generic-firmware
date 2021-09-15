@@ -220,6 +220,7 @@ void presence_addr_to_string(presence_data data, char *buffer, int buffer_size)
 
 //This function turns one detection result(presence_data) into a string which can be inserted into another string
 //In the function upload_presence_detection_data() to make the data string for the POST request.
+/*
 char *result_to_string(presence_data data)
 {
     char *property_string_plain_addr = "{\"property_name\": \"%s\","
@@ -245,6 +246,7 @@ char *result_to_string(presence_data data)
     strcat(presence_string_properties, property_buf);
     return presence_string_properties;
 }
+*/
 
 char *results_to_rssi_list()
 {
@@ -303,6 +305,7 @@ void upload_presence_detection_data()
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     int msg_multiple_string_size;
     char *msg_multiple_string;
+    /*
     for (int i = 0; i < presence_addr_list_count; i++)
     {
         char *result_str = result_to_string(result_list[i]);
@@ -321,6 +324,7 @@ void upload_presence_detection_data()
         free(multiple_property_measurements);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    */
     char *rssi_property_string = results_to_rssi_list();
     msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
     msg_multiple_string = malloc(msg_multiple_string_size);
