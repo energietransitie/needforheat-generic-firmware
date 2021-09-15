@@ -1,8 +1,5 @@
 #include <generic_esp_32.h>
 
-#define HEARTBEAT_UPLOAD_INTERVAL 3600000     //ms, so one hour
-#define HEARTBEAT_MEASUREMENT_INTERVAL 600000 //ms, so 10 minutes; not yet in effect
-
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 const char*device_type_name = "Presence-Detector";
 #else

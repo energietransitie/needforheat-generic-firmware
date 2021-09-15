@@ -44,11 +44,15 @@
 #define HTTPS_PRE_WAIT_MS (1.5 * 1000)  //   milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_POST_WAIT_MS (1 * 1000) //   milliseconds ( 1 s * 1000 ms/s)
 
-#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)   
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
+//#define HEARTBEAT_UPLOAD_INTERVAL_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s) // stress test value
+
+//#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s); not yet in effect
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 
-#define TIMESYNC_INTERVAL_MS (6 * 60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
+#define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
+//#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (1 min * 60 s/min * 1000 ms/s)  // stress test value 
 #define TIMESYNC_INTERVAL_TXT "Wating 6 hours minutes before next NTP timesync"
 
 #define TWOMES_TEST_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"

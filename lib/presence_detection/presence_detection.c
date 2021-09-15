@@ -14,7 +14,6 @@
 #define PRESENCE_ADDR_LIST_START_SIZE 10
 #define PRESENCE_NAME_REQ_TIMEOUT 5
 #define TIMER_DIVIDER 80
-#define MEASURING_INTERVAL 300
 #define ADDR_LEN 17 // 6 * 2 hex digits + 5 colons
 #define RSSI_PRESENT 900
 #define RSSI_ABSENT -899
@@ -384,7 +383,7 @@ void presence_detection_loop(void)
             upload_presence_detection_data();
         }
         //Starting a measurement when we reach the specified timer interval
-        if (measuring_interval_count >= MEASURING_INTERVAL)
+        if (measuring_interval_count >= PRESENCE_MEASUREMENT_INTERVAL_S)
         {
             start_requesting();
         }
