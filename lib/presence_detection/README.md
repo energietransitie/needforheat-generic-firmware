@@ -31,8 +31,8 @@ So, ultimately, we chose the approach using targeted Bluetooth name requests to 
 
 ## Prerequisites
 In addition to [prerequisites of Twomes measurement devices in general](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/README.md#prerequisites), in the current version of the firmware, before [developing](#developing) and [deploying](#deploying), you need to obtain the static Bluetooth MAC addresses of the smartphones of the inhabitants of the home whose presence you want to detect. Currently, there is no automated support for this. Instructions:
-* on English Android devices, go to `Settings` > `System` (skip on some models) > `About Phone` > `Status`; the value can be read under `Bluetooth-adres` (at least, on Android 10);
-* on Dutch Android devices, go to `Instellingen` > `Systeem` (skip on some models) > `Info telefoon` > `Status`; the value can be read under `Bluetooth address` (at least, on Android 10);
+* on English Android devices, go to `Settings` > `System` (skip on some models) > `About Phone` > `Status`; the value can be read under `Bluetooth address` (at least, on Android 10);
+* on Dutch Android devices, go to `Instellingen` > `Systeem` (skip on some models) > `Info telefoon` > `Status`; the value can be read under `Bluetooth-adres` (at least, on Android 10);
 * on English iPhones, go to `Settings` > `General` > `About`; the value can be read under `Bluetooth` and copied via press-and-hold on the entry (at least, on iOS 12);
 * on Dutch iPhones, go to `Instellingen` > `Algemeen` > `Info`; the value can be read under `Bluetooth` and copied via press-and-hold on the entry (at least, on iOS 12).
 
