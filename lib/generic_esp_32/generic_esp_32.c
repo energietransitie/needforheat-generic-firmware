@@ -383,7 +383,7 @@ void create_dat()
     }
     else
     {
-        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_get_u32(dat_handle, "dat", &dat);
         switch (err)
         {
@@ -425,7 +425,7 @@ void get_dat(uint32_t *buf)
     }
     else
     {
-        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_get_u32(dat_handle, "dat", buf);
         switch (err)
         {
@@ -524,7 +524,7 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 
 void initialize_sntp(void)
 {
-    ESP_LOGI(TAG, "Initializing SNTP");
+    ESP_LOGI(TAG, "SNTP: setting operating mode");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
     sntp_setservername(0, "pool.ntp.org");
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
@@ -536,15 +536,20 @@ void initialize_sntp(void)
 
 void obtain_time(void)
 {
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-
+    ESP_LOGI(TAG, "Initializing SNTP");
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
      */
 
-    initialize_sntp();
+    if ( sntp_enabled() ) {
+        ESP_LOGI(TAG, "SNTP already initialized; no need to initialize again");
+    } else {
+        ESP_ERROR_CHECK(nvs_flash_init());
+        ESP_ERROR_CHECK(esp_netif_init());
+        initialize_sntp();
+        ESP_LOGI(TAG, "SNTP Initialized");
+    }
 
     // wait for time to be set
     time_t now = 0;
@@ -622,7 +627,7 @@ void start_presence_detection(){
 }
 #endif
 
-void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer)
+void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer, int hbcounter)
 {
     char *measurementType = "\"heartbeat\"";
     //Updates Epoch Time
@@ -632,14 +637,14 @@ void upload_heartbeat(const char *variable_interval_upload_url, const char *root
                       "\"property_name\": %s,"
                       "\"measurements\": ["
                       "{ \"timestamp\":\"%d\","
-                      "\"value\":\"1\"}"
+                      "\"value\":\"%d\"}"
                       "]}]}";
     //Get size of the message after inputting variables.
-    int msgSize = variable_sprintf_size(msg_plain, 3, now, measurementType, now);
+    int msgSize = variable_sprintf_size(msg_plain, 4, now, measurementType, now, hbcounter);
     //Allocating enough memory so inputting the variables into the string doesn't overflow
     char *msg = malloc(msgSize);
     //Inputting variables into the plain json string from above(msgPlain).
-    snprintf(msg, msgSize, msg_plain, now, measurementType, now);
+    snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
     //Posting data over HTTPS, using url, msg and bearer token.
     ESP_LOGI(TAG, "Data: %s", msg);
     post_https(variable_interval_upload_url, msg, root_cert, bearer, NULL, 0);
@@ -649,7 +654,7 @@ void upload_heartbeat(const char *variable_interval_upload_url, const char *root
 void heartbeat_task(void *data)
 {
     ESP_LOGI("Main", "Heartbeat task started");
-    while (1)
+    for (int heartbeatcounter = 1; true; heartbeatcounter++)
     {
         bearer = get_bearer();
         if (strlen(bearer) > 1)
@@ -672,7 +677,7 @@ void heartbeat_task(void *data)
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
         //Upload heartbeat
-        upload_heartbeat(heartbeat_upload_url, isrgrootx1, bearer);
+        upload_heartbeat(heartbeat_upload_url, isrgrootx1, bearer, heartbeatcounter);
         //Wait to make sure uploading is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         //Disconnect WiFi
@@ -695,7 +700,7 @@ esp_err_t store_bearer(char *bearer)
     }
     else
     {
-        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_set_str(bearer_handle, "bearer", bearer);
         switch (err)
         {
@@ -724,7 +729,7 @@ char *get_bearer()
     }
     else
     {
-        ESP_LOGE(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
         size_t bearer_size;
         nvs_get_str(bearer_handle, "bearer", NULL, &bearer_size);
         bearer = malloc(bearer_size);
@@ -857,11 +862,18 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
             content_length = esp_http_client_get_content_length(client);
             if (content_length > 0)
             {
-                ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
-                         content_length);
                 response = malloc(sizeof(char) * content_length);
                 esp_http_client_read(client, response, content_length);
-                ESP_LOGE(TAG, "Response: %s", response);
+                if (status_code != 200) {
+                    ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
+                            content_length);
+                    ESP_LOGE(TAG, "Response: %s", response);
+                }
+                else {
+                    ESP_LOGI(TAG, "Status Code: %d Response Length: %d", status_code,
+                            content_length);
+                    ESP_LOGI(TAG, "Response: %s", response);
+                }
                 esp_http_client_close(client);
             }
             else

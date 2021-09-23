@@ -25,8 +25,8 @@ const char *variable_interval_upload_url = TWOMES_TEST_SERVER "/device/measureme
 
 esp_gatt_if_t interface;
 
-esp_bd_addr_t phone = {0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F};
-esp_bd_addr_t phone2 = {0x7A, 0x8B, 0x9C, 0xAD, 0xAE, 0xBA};
+esp_bd_addr_t phone = {0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F}; //example address
+esp_bd_addr_t phone2 = {0x7A, 0x8B, 0x9C, 0xAD, 0xAE, 0xBA}; //example address
 
 esp_bd_addr_t presence_addr_list[2] = {};
 int presence_addr_list_count = 2;

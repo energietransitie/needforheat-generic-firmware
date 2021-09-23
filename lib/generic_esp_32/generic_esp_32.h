@@ -44,16 +44,16 @@
 #define HTTPS_PRE_WAIT_MS (1.5 * 1000)  //   milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_POST_WAIT_MS (1 * 1000) //   milliseconds ( 1 s * 1000 ms/s)
 
-#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
-//#define HEARTBEAT_UPLOAD_INTERVAL_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s) // stress test value
+//#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s) // stress test value
+#define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 30 seconds for next heartbeat"
 
 //#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s); not yet in effect
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
-#define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 
-#define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
-//#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (1 min * 60 s/min * 1000 ms/s)  // stress test value 
-#define TIMESYNC_INTERVAL_TXT "Wating 6 hours minutes before next NTP timesync"
+//#define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
+#define TIMESYNC_INTERVAL_MS (4 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
+#define TIMESYNC_INTERVAL_TXT "Wating 4 minutes before next NTP timesync"
 
 #define TWOMES_TEST_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
 #define TWOMES_TEST_SERVER "https://api.tst.energietransitiewindesheim.nl"
@@ -97,7 +97,7 @@ void timesync_task(void *data);
 void timesync();
 void initialize_timezone(char* timezone);
 int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char* response_buf, uint8_t resp_buf_size);
-void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer);
+void upload_heartbeat(const char* variable_interval_upload_url, const char* root_cert, char* bearer, int hbcounter);
 void heartbeat_task(void *data);
 char* get_bearer();
 const char* get_root_ca();
