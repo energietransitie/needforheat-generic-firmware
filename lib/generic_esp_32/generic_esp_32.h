@@ -41,9 +41,13 @@
 
 #define LONG_BUTTON_PRESS_DURATION 10 // seconds
 
-#define HTTPS_PRE_WAIT_MS (1.5 * 1000)  //   milliseconds ( 1 s * 1000 ms/s)
-#define HTTPS_POST_WAIT_MS (1 * 1000) //   milliseconds ( 1 s * 1000 ms/s)
+#define HTTPS_PRE_WAIT_MS (1.5 * 1000) // milliseconds ( 1,5 s * 1000 ms/s)
+#define HTTPS_RETRY_WAIT_MS (1 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
+#define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_UPLOAD_RETRIES 5 // number of retries inclusing initial try  
+#define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
+#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 10 s * 1000 ms/s)
+#define MAX_WAIT_802_11_TXT "15 seconds"
 
 //#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s) // stress test value
@@ -114,8 +118,8 @@ void initialize_nvs();
 wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 void twomes_device_provisioning(const char *device_type_name);
-void disable_wifi();
-void enable_wifi();
+void disable_wifi(char *taskString);
+bool enable_wifi(char *taskString);
 void disconnect_wifi();
 void connect_wifi();
 #endif

@@ -292,45 +292,32 @@ char *results_to_rssi_list()
 //Uploads our data via the post_https of the generic firmware
 void upload_presence_detection_data()
 {
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    enable_wifi();
-    char *msg_multiple_string_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[ "
-                                      "%s"
-                                      "]}]}";
+    if (enable_wifi("upload_presence_detection_data")) {
+        //Wait to make sure Wi-Fi is enabled.
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        char *msg_multiple_string_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[ "
+                                        "%s"
+                                        "]}]}";
 
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    int msg_multiple_string_size;
-    char *msg_multiple_string;
-    /*
-    for (int i = 0; i < presence_addr_list_count; i++)
-    {
-        char *result_str = result_to_string(result_list[i]);
-        int result_len = strlen(result_str) + 1;
-        int multiple_property_measurements_size = result_len;
-        char *multiple_property_measurements = malloc(multiple_property_measurements_size);
-        strcpy(multiple_property_measurements, result_str);
-
-        msg_multiple_string_size = strlen(msg_multiple_string_plain) + sizeof(uint32_t) + multiple_property_measurements_size;
-        msg_multiple_string = malloc(msg_multiple_string_size);
-        snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), multiple_property_measurements);
+        int msg_multiple_string_size;
+        char *msg_multiple_string;
+        char *rssi_property_string = results_to_rssi_list();
+        msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
+        msg_multiple_string = malloc(msg_multiple_string_size); //TODO: checked: malloc() is balanced by free()
+        snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
         ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        post_https(variable_interval_upload_url, msg_multiple_string, NULL, 0);
-        ESP_LOGI(TAG, "Waiting for next upload");
-        free(multiple_property_measurements);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        post_https(VARIABLE_UPLOAD_ENDPOINT, msg_multiple_string, NULL, 0);
+        free(msg_multiple_string);
+        reset_results();
+
+        //Wait to make sure everyting is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+
+        disable_wifi("upload_presence_detection_data");
+    } else {
+        ESP_LOGE(TAG, "Failed to connect to network to post presence data");
     }
-    */
-    char *rssi_property_string = results_to_rssi_list();
-    msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
-    msg_multiple_string = malloc(msg_multiple_string_size); //TODO: checked: malloc() is balanced by free()
-    snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
-    ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
-    post_https(VARIABLE_UPLOAD_ENDPOINT, msg_multiple_string, NULL, 0);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    disable_wifi();
-    free(msg_multiple_string);
-    reset_results();
+
 }
 
 void store_measurement(bool isHome)

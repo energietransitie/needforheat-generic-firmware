@@ -9,6 +9,8 @@ static EventGroupHandle_t wifi_event_group;
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
 
+xSemaphoreHandle wireless_802_11_mutex;
+
 char *bearer;
 
 // Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates
@@ -152,6 +154,8 @@ void blink(void *args)
 void initialize_generic_firmware()
 {
     ESP_LOGI(TAG, "Generic Firmware Version: %s", VERSION);
+
+    wireless_802_11_mutex = xSemaphoreCreateMutex();
 
     /* Initialize the event loop */
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -444,6 +448,7 @@ void get_dat(uint32_t *buf)
 
 void prepare_device(const char *device_type_name)
 {
+    uint32_t dat;
     if (wifi_initialized)
     {
         ESP_LOGI(TAG, "Wi-Fi has been enabled for true random dat generation!");
@@ -452,31 +457,34 @@ void prepare_device(const char *device_type_name)
     else
     {
         ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
-        enable_wifi();
-        while (!wifi_initialized)
-        {
-            ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
-            vTaskDelay(100 / portTICK_PERIOD_MS);
-        };
-        ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
-        disable_wifi();
+        if (enable_wifi("prepare_device")) {
+            while (!wifi_initialized)
+            {
+                ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+            };
+            get_dat(&dat); //device access token  created with true random generation
+            ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
+            disable_wifi("prepare_device");
+        } else {
+            get_dat(&dat); //device access token  created with pseudo random generation
+            disable_wifi("prepare_device");
+        }
     }
-    uint32_t dat;
-    get_dat(&dat);
     char *device_name = malloc(DEVICE_NAME_SIZE);
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
-    char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}\n\n";
-    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
-    char *qr_code_payload = malloc(qr_code_payload_size);
-    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
-#endif
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
-    char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\",\n\"security\":\"1\",\n\"password\":\"%s\"\n}\n\n";
-    int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
-    char *qr_code_payload = malloc(qr_code_payload_size);
-    snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
-#endif
+    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+        char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}\n\n";
+        int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
+        char *qr_code_payload = malloc(qr_code_payload_size);
+        snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
+    #endif
+    #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+        char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\",\n\"security\":\"1\",\n\"password\":\"%s\"\n}\n\n";
+        int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
+        char *qr_code_payload = malloc(qr_code_payload_size);
+        snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
+    #endif
 
     ESP_LOGI(TAG, "QR Code Payload: ");
     ESP_LOGI(TAG, "%s", qr_code_payload);
@@ -558,11 +566,10 @@ void obtain_time(void)
     time_t now = 0;
     struct tm timeinfo = {0};
     int retry = 0;
-    const int retry_count = 10;
-    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < NTP_RETRIES)
     {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, NTP_RETRIES);
+        vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
     }
     time(&now);
     localtime_r(&now, &timeinfo);
@@ -594,24 +601,24 @@ void timesync()
     time(&now);
     localtime_r(&now, &timeinfo);
     ESP_LOGI(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
-    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-    enable_wifi();
+    if (enable_wifi("timesync")) {
+        //Wait to make sure Wi-Fi is enabled.
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 
-    //Wait to make sure Wi-Fi is enabled.
-    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        //obtain time via NTP
+        obtain_time();
 
-    //obtain time via NTP
-    obtain_time();
+        // update 'now' variable with current time
+        time(&now);
 
-    // update 'now' variable with current time
-    time(&now);
+        //Wait to make sure everyting is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
 
-    //Wait to make sure everyting is finished.
-    vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-
-    //Disconnect WiFi
-    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-    disable_wifi();
+        //Disconnect WiFi
+        disable_wifi("timesync");
+    } else {
+        ESP_LOGE(TAG, "Failed to connect to network for timesync");
+    }
 
     // log time as Unix time.
     uint32_t unix_time = time(NULL);
@@ -659,19 +666,20 @@ void heartbeat_task(void *data)
     ESP_LOGI("Main", "Heartbeat task started");
     for (int heartbeatcounter = 1; true; heartbeatcounter++)
     {
-        //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-        enable_wifi();
-        //Wait to make sure Wi-Fi is enabled.
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        //Upload heartbeat
-        upload_heartbeat(heartbeatcounter);
-        //Wait to make sure uploading is finished.
-        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-        //Disconnect WiFi
-        //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-        disable_wifi();
+        if (enable_wifi("heartbeat_task")) {
+            //Wait to make sure Wi-Fi is enabled.
+            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+            //Upload heartbeat
+            upload_heartbeat(heartbeatcounter);
+            //Wait to make sure uploading is finished.
+            vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+            //Disconnect WiFi
+            disable_wifi("heartbeat_task");
+        } else {
+            ESP_LOGE(TAG, "Skipped a heartbeat");
+        }
         //Wait for next measurement
-        ESP_LOGI("Main", HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
+        ESP_LOGI(TAG, HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
         vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
     }
 }
@@ -755,21 +763,22 @@ void activate_device(char *name)
     char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balance by free()
     ESP_LOGI(TAG, "Posting on device activation endpoint");
 
-    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-    enable_wifi();
+    if (enable_wifi("activate_device")) {
+        //Wait to make sure Wi-Fi is enabled.
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 
-    //Wait to make sure Wi-Fi is enabled.
-    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, bearer, MAX_RESPONSE_LENGTH);
+        free(device_activation_data);
 
-    post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, bearer, MAX_RESPONSE_LENGTH);
-    free(device_activation_data);
+        //Wait to make sure everyting is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
 
-    //Wait to make sure everyting is finished.
-    vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-
-    //Disconnect Wi-Fi
-    //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
-    disable_wifi();
+        //Disconnect Wi-Fi
+        //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
+        disable_wifi("activate_device");
+    } else {
+        ESP_LOGE(TAG, "Failed to post activation data!");
+    }
 
     ESP_LOGI(TAG, "Return from device activation endpoint!");
     if (!bearer)
@@ -856,7 +865,7 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
     while (err != ESP_OK && ++retry < retry_count)
     {
         ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d)", esp_err_to_name(err), retry, retry_count);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+        vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
     }
 
     if (err == ESP_OK)
@@ -1081,7 +1090,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
 }
 
-void disable_wifi()
+void disable_wifi(char *taskString)
 {
     if (esp_wifi_stop() == ESP_OK)
     {
@@ -1092,22 +1101,28 @@ void disable_wifi()
     {
         ESP_LOGE(TAG, "Failed to disable Wi-Fi");
     }
+    ESP_LOGI(TAG, "%s will release the 802_11 resource now", taskString);
+    xSemaphoreGive(wireless_802_11_mutex);
 }
 
-void enable_wifi()
+bool enable_wifi(char *taskString)
 {
-    if (esp_wifi_start() == ESP_OK)
-    {
-        ESP_LOGI(TAG, "Enabled Wi-Fi");
-        wifi_initialized = true;
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Failed to enable Wi-Fi");
+    if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
+        ESP_LOGI(TAG, "%s got access to 802_11 resource", taskString);
+        if (esp_wifi_start() == ESP_OK) {
+            ESP_LOGI(TAG, "Enabled Wi-Fi");
+            wifi_initialized = true;
+        } else {
+            ESP_LOGE(TAG, "Failed to enable Wi-Fi");
+        }
+        return true;
+    } else {
+        ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
+         return false;
     }
 }
 
-void disconnect_wifi()
+void disconnect_wifi(char * taskString)
 {
     wifi_autoconnect = false;
     esp_err_t err = esp_wifi_disconnect();
@@ -1174,7 +1189,7 @@ void twomes_device_provisioning(const char *device_type_name)
 
     // initialize time with timezone UTC; building timezone is stored in central database
     initialize_timezone("UTC");
-    timesync();
+    timesync("twomes_device_provisioning");
 
     // get bearer token
     bearer = get_bearer();
