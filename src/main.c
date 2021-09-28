@@ -7,12 +7,12 @@ const char*device_type_name = "Generic-Test";
 #endif
 
 static const char *TAG = "Twomes ESP32 generic test device";
-
-char *bearer;
-const char *rootCA;
+//xSemaphoreHandle wireless_802_11; //TODO: check whether this needs to be defined elsewhere
 
 void app_main(void)
 {
+    //wireless_802_11 = xSemaphoreCreateMutex();
+
     twomes_device_provisioning(device_type_name);
 
     ESP_LOGI(TAG, "Starting heartbeat task");

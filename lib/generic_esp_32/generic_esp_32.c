@@ -6,9 +6,6 @@ bool activation = false;
 
 static EventGroupHandle_t wifi_event_group;
 
-const char *heartbeat_upload_url = TWOMES_TEST_SERVER "/device/measurements/variable-interval";
-const char *device_activation_url = TWOMES_TEST_SERVER "/device/activate";
-
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
 
@@ -499,7 +496,7 @@ void get_device_service_name(char *service_name, size_t max)
              ssid_prefix, eth_mac[3], eth_mac[4], eth_mac[5]);
 }
 
-/* Handler for the optional provisioning endpoint registered by the application.
+/* Handler for the optional provisioning activate_device_endpoint registered by the application.
  * The data format can be chosen by applications. Here, we are using plain ascii text.
  * Applications can choose to use other formats like protobuf, JSON, XML, etc.
  */
@@ -627,7 +624,7 @@ void start_presence_detection(){
 }
 #endif
 
-void upload_heartbeat(const char *variable_interval_upload_url, const char *root_cert, char *bearer, int hbcounter)
+void upload_heartbeat(int hbcounter)
 {
     char *measurementType = "\"heartbeat\"";
     //Updates Epoch Time
@@ -642,13 +639,13 @@ void upload_heartbeat(const char *variable_interval_upload_url, const char *root
     //Get size of the message after inputting variables.
     int msgSize = variable_sprintf_size(msg_plain, 4, now, measurementType, now, hbcounter);
     //Allocating enough memory so inputting the variables into the string doesn't overflow
-    char *msg = malloc(msgSize);
+    char *msg = malloc(msgSize); //DONE: malloc() is balanced by free
     //Inputting variables into the plain json string from above(msgPlain).
     snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
-    //Posting data over HTTPS, using url, msg and bearer token.
+    //Posting data over HTTPS, using activate_device_endpoint, msg and bearer token.
     ESP_LOGI(TAG, "Data: %s", msg);
-    post_https(variable_interval_upload_url, msg, root_cert, bearer, NULL, 0);
-    //TODO: should we call free(msg);
+    post_https(VARIABLE_UPLOAD_ENDPOINT, msg, NULL, 0);
+    free(msg);
 }
 
 void heartbeat_task(void *data)
@@ -656,28 +653,12 @@ void heartbeat_task(void *data)
     ESP_LOGI("Main", "Heartbeat task started");
     for (int heartbeatcounter = 1; true; heartbeatcounter++)
     {
-        bearer = get_bearer();
-        if (strlen(bearer) > 1)
-        {
-            ESP_LOGI(TAG, "Bearer read: %s", bearer);
-        }
-
-        else if (strcmp(bearer, "") == 0)
-        {
-            ESP_LOGI(TAG, "Bearer not found, activate device first!");
-        }
-
-        else if (!bearer)
-        {
-            ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
-        }
-
         //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
         enable_wifi();
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
         //Upload heartbeat
-        upload_heartbeat(heartbeat_upload_url, isrgrootx1, bearer, heartbeatcounter);
+        upload_heartbeat(heartbeatcounter);
         //Wait to make sure uploading is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         //Disconnect WiFi
@@ -732,7 +713,7 @@ char *get_bearer()
         ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
         size_t bearer_size;
         nvs_get_str(bearer_handle, "bearer", NULL, &bearer_size);
-        bearer = malloc(bearer_size);
+        bearer = malloc(bearer_size); //DONE: checked that this malloc() is balanced by free() after each call get_bearer()
         err = nvs_get_str(bearer_handle, "bearer", bearer, &bearer_size);
         switch (err)
         {
@@ -763,7 +744,7 @@ const char *get_root_ca()
     return isrgrootx1;
 }
 
-void activate_device(const char *url, char *name, const char *cert)
+void activate_device(char *name)
 {
     esp_err_t err = 0;
     uint32_t dat;
@@ -771,11 +752,11 @@ void activate_device(const char *url, char *name, const char *cert)
     activation = true;
     char *device_activation_plain = "{ \"activation_token\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, dat);
-    char *device_activation_data = malloc(activation_data_size);
+    char *device_activation_data = malloc(activation_data_size); //DONE: check whether malloc() is balanced by free()
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGI(TAG, "%s", device_activation_data);
-    char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH);
+    char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balance by free()
     ESP_LOGI(TAG, "Posting on device activation endpoint");
 
     //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
@@ -784,7 +765,8 @@ void activate_device(const char *url, char *name, const char *cert)
     //Wait to make sure Wi-Fi is enabled.
     vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 
-    post_https(url, device_activation_data, cert, NULL, bearer, MAX_RESPONSE_LENGTH);
+    post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, bearer, MAX_RESPONSE_LENGTH);
+    free(device_activation_data);
 
     //Wait to make sure everyting is finished.
     vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
@@ -793,7 +775,7 @@ void activate_device(const char *url, char *name, const char *cert)
     //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
     disable_wifi();
 
-    ESP_LOGI(TAG, "Return from devicae activation endpoint!");
+    ESP_LOGI(TAG, "Return from device activation endpoint!");
     if (!bearer)
     {
         ESP_LOGE(TAG, "Failed to activate device!");
@@ -801,7 +783,7 @@ void activate_device(const char *url, char *name, const char *cert)
     else
     {
         ESP_LOGE(TAG, "Bearer after post is: %s", bearer);
-        char *bearer_trimmed = malloc(sizeof(char) * strlen(bearer));
+        char *bearer_trimmed = malloc(sizeof(char) * strlen(bearer)); //DONE: checked: malloc() is balanced by free()
         // sscanf(bearer, "\":\"%s", bearer_trimmed);
         bearer_trimmed = strchr(bearer, ':');
         ESP_LOGI(TAG, "Bearer trimmed: %s", bearer_trimmed);
@@ -815,46 +797,79 @@ void activate_device(const char *url, char *name, const char *cert)
         {
             ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
         }
+        free(bearer);
+        free(bearer_trimmed);
     }
 }
 
-int post_https(const char *url, char *data, const char *cert, char *authenticationToken, char *response_buf, uint8_t resp_buf_size)
+int post_https(const char *endpoint, char *data, char *response_buf, uint8_t resp_buf_size)
 {
+    int retry = 0;
+    const int retry_count = HTTPS_UPLOAD_RETRIES;
     int content_length;
     int status_code = 0;
     char *response = NULL;
+    char *urlString = "";
+
+    if (endpoint)
+    {
+        char *urlPlain = TWOMES_SERVER "%s";
+        int strCount = snprintf(urlString, 0, urlPlain, endpoint) + 1;
+        urlString = malloc(sizeof(char) * strCount); //DONE: checked this malloc() is balanced by free()
+        snprintf(urlString, strCount * sizeof(char), urlPlain, endpoint);
+    }
+
     esp_http_client_config_t config = {
-        .url = url,
+        .url = urlString,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
-        .cert_pem = cert,
+        .cert_pem = isrgrootx1,
         .event_handler = http_event_handler,
         .is_async = false};
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
     esp_http_client_set_method(client, HTTP_METHOD_POST);
-    esp_http_client_set_header(client, "Host", TWOMES_TEST_SERVER_HOSTNAME);
+    esp_http_client_set_header(client, "Host", TWOMES_SERVER_HOSTNAME);
     esp_http_client_set_header(client, "Content-Type", "text/plain");
+
+    char *authenticationToken = get_bearer();
+    if (strlen(authenticationToken) > 1)
+    {
+        ESP_LOGI(TAG, "Bearer read: %s", authenticationToken);
+    }
+    else if (strcmp(authenticationToken, "") == 0)
+    {
+        ESP_LOGI(TAG, "Bearer not found, activate device first!");
+    }
+    else if (!authenticationToken)
+    {
+        ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
+    }
+
+
     char *authenticationTokenString = "";
     if (authenticationToken)
     {
         char *authenticationTokenStringPlain = "Bearer %s";
         int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
-        authenticationTokenString = malloc(sizeof(char) * strCount);
+        authenticationTokenString = malloc(sizeof(char) * strCount); 
         snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
         esp_http_client_set_header(client, "Authorization", authenticationTokenString);
     }
+
     esp_http_client_set_post_field(client, data, strlen(data));
     esp_err_t err = esp_http_client_open(client, strlen(data));
-    if (err != ESP_OK)
+    while (err != ESP_OK && ++retry < retry_count)
     {
-        ESP_LOGE(TAG, "Failed to open HTTP connection %s", esp_err_to_name(err));
+        ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d)", esp_err_to_name(err), retry, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
-    else
+
+    if (err == ESP_OK)
     {
         esp_err_t err = esp_http_client_perform(client);
         if (err != ESP_OK)
         {
-            ESP_LOGE(TAG, "Failed to send HTTP POST request: %s", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to send HTTPS POST request: %s", esp_err_to_name(err));
         }
         else
         {
@@ -885,8 +900,12 @@ int post_https(const char *url, char *data, const char *cert, char *authenticati
     if (authenticationToken)
     {
         free(authenticationTokenString);
+        free(authenticationToken);
     }
-    free(data);
+        if (endpoint)
+    {
+        free(urlString);
+    }
     esp_http_client_cleanup(client);
     if (response && resp_buf_size)
     {
@@ -1162,7 +1181,7 @@ void twomes_device_provisioning(const char *device_type_name)
     initialize_timezone("UTC");
     timesync();
 
-    // get bearer token and rootCA
+    // get bearer token
     bearer = get_bearer();
 
     if (strlen(bearer) > 1)
@@ -1177,7 +1196,7 @@ void twomes_device_provisioning(const char *device_type_name)
         char *device_name;
         device_name = malloc(DEVICE_NAME_SIZE);
         get_device_service_name(device_name, DEVICE_NAME_SIZE);
-        activate_device(device_activation_url, device_name, isrgrootx1);
+        activate_device(device_name);
         bearer = get_bearer();
         free(device_name);
     }
@@ -1186,4 +1205,6 @@ void twomes_device_provisioning(const char *device_type_name)
     {
         ESP_LOGE(TAG, "Something went wrong while reading the bearer!");
     }
+
+    free(bearer);
 }

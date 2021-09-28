@@ -18,10 +18,7 @@
 #define RSSI_PRESENT 900
 #define RSSI_ABSENT -899
 
-const char *rootCA;
 char *bearer;
-
-const char *variable_interval_upload_url = TWOMES_TEST_SERVER "/device/measurements/variable-interval";
 
 esp_gatt_if_t interface;
 
@@ -318,7 +315,7 @@ void upload_presence_detection_data()
         snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), multiple_property_measurements);
         ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
-        post_https(variable_interval_upload_url, msg_multiple_string, rootCA, bearer, NULL, 0);
+        post_https(variable_interval_upload_url, msg_multiple_string, NULL, 0);
         ESP_LOGI(TAG, "Waiting for next upload");
         free(multiple_property_measurements);
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -326,12 +323,13 @@ void upload_presence_detection_data()
     */
     char *rssi_property_string = results_to_rssi_list();
     msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
-    msg_multiple_string = malloc(msg_multiple_string_size);
+    msg_multiple_string = malloc(msg_multiple_string_size); //TODO: checked: malloc() is balanced by free()
     snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
     ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
-    post_https(variable_interval_upload_url, msg_multiple_string, rootCA, bearer, NULL, 0);
+    post_https(VARIABLE_UPLOAD_ENDPOINT, msg_multiple_string, NULL, 0);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     disable_wifi();
+    free(msg_multiple_string);
     reset_results();
 }
 
@@ -349,9 +347,7 @@ void store_measurement(bool isHome)
 //Our presence detection loop
 void presence_detection_loop(void)
 {
-    rootCA = get_root_ca();
     initialize_presence_detection();
-    bearer = get_bearer();
     // for (int i = 0; i < 10; i++)
     // {
     //     add_addr_to_target_list(phone);
