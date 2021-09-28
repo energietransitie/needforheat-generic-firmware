@@ -103,7 +103,6 @@ int post_https(const char *endpoint, char *data, char* response_buf, uint8_t res
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
 char* get_bearer();
-const char* get_root_ca();
 void activate_device(char *name);
 void get_http(const char* url);
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION

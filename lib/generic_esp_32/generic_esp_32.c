@@ -11,6 +11,12 @@ const int WIFI_CONNECTED_EVENT = BIT0;
 
 char *bearer;
 
+// Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates
+// based on https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
+// we use the ISRG Root X1 certificate found at https://letsencrypt.org/certs/isrgrootx1.pem
+// this certificate was translated to ESP32 code
+// by adding " at the befinning each line and \n" at the end of each line in the code
+
 const char *isrgrootx1 = "-----BEGIN CERTIFICATE-----\n"
                          "MIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\n"
                          "TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\n"
@@ -272,7 +278,7 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "Disconnected.");
         if (wifi_autoconnect)
         {
-            ESP_LOGI(TAG, " Connecting to the AP again...");
+            ESP_LOGI(TAG, "Connecting to the AP again...");
             esp_wifi_connect();
         }
     }
@@ -734,16 +740,6 @@ char *get_bearer()
     return bearer;
 }
 
-const char *get_root_ca()
-{
-    // Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates
-    // based on https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
-    // we use the ISRG Root X1 certificate found at https://letsencrypt.org/certs/isrgrootx1.pem
-    // this certificate was translated to ESP32 code
-    // by adding " at the befinning each line and \n" at the end of each line in the code
-    return isrgrootx1;
-}
-
 void activate_device(char *name)
 {
     esp_err_t err = 0;
@@ -771,7 +767,7 @@ void activate_device(char *name)
     //Wait to make sure everyting is finished.
     vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
 
-    //Disconnect WiFi
+    //Disconnect Wi-Fi
     //TODO: use thread safe counter (https://www.freertos.org/CreateCounting.html) to count #threads using wifi; only call enable_wifi() if counter is increased from 0 to 1 here.
     disable_wifi();
 
@@ -844,7 +840,6 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
     {
         ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
     }
-
 
     char *authenticationTokenString = "";
     if (authenticationToken)
