@@ -323,7 +323,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt)
             {
                 if (output_buffer == NULL)
                 {
-                    output_buffer = (char *)malloc(esp_http_client_get_content_length(evt->client));
+                    output_buffer = (char *)malloc(esp_http_client_get_content_length(evt->client)); //DONE: checked malloc() balance by free()
                     output_len = 0;
                     if (output_buffer == NULL)
                     {
@@ -471,18 +471,18 @@ void prepare_device(const char *device_type_name)
             disable_wifi("prepare_device");
         }
     }
-    char *device_name = malloc(DEVICE_NAME_SIZE);
+    char *device_name = malloc(DEVICE_NAME_SIZE); //DONE checked malloc() balanced by free()
     get_device_service_name(device_name, DEVICE_NAME_SIZE);
     #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
         char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}\n\n";
         int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat);
-        char *qr_code_payload = malloc(qr_code_payload_size);
+        char *qr_code_payload = malloc(qr_code_payload_size); //DONE checked malloc() balanced by free()
         snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat);
     #endif
     #ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
         char *qr_code_payload_template = "\n\n{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\",\n\"security\":\"1\",\n\"password\":\"%s\"\n}\n\n";
         int qr_code_payload_size = variable_sprintf_size(qr_code_payload_template, 2, device_name, dat, dat);
-        char *qr_code_payload = malloc(qr_code_payload_size);
+        char *qr_code_payload = malloc(qr_code_payload_size); //DONE checked malloc() balanced by free()
         snprintf(qr_code_payload, qr_code_payload_size, qr_code_payload_template, device_name, dat, dat);
     #endif
 
@@ -492,7 +492,7 @@ void prepare_device(const char *device_type_name)
 
     char *post_device_payload_template = "\n\n{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}\n\n";
     int post_device_payload_size = variable_sprintf_size(post_device_payload_template, 3, device_name, device_type_name, dat);
-    char *post_device_payload = malloc(post_device_payload_size);
+    char *post_device_payload = malloc(post_device_payload_size); //DONE checked malloc() balanced by free()
     snprintf(post_device_payload, post_device_payload_size, post_device_payload_template, device_name, device_type_name, dat);
 
     ESP_LOGI(TAG, "POST /device payload: ");
@@ -714,36 +714,39 @@ esp_err_t store_bearer(char *bearer)
 
 char *get_bearer()
 {
-    esp_err_t err;
-    char *bearer = NULL;
-    nvs_handle_t bearer_handle;
-    err = nvs_open("twomes_storage", NVS_READONLY, &bearer_handle);
-    if (err)
-    {
-        ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
-    }
-    else
-    {
-        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
-        size_t bearer_size;
-        nvs_get_str(bearer_handle, "bearer", NULL, &bearer_size);
-        bearer = malloc(bearer_size); //DONE: checked that this malloc() is balanced by free() after each call get_bearer()
-        err = nvs_get_str(bearer_handle, "bearer", bearer, &bearer_size);
-        switch (err)
+    if (bearer != NULL) {
+        ESP_LOGI(TAG, "Existing bearer read from memory: %s", bearer);
+    } else {
+        esp_err_t err;
+        nvs_handle_t bearer_handle;
+        err = nvs_open("twomes_storage", NVS_READONLY, &bearer_handle);
+        if (err)
         {
-        case ESP_OK:
-            ESP_LOGI(TAG, "The bearer was read!\n");
-            ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
-            break;
-        case ESP_ERR_NVS_NOT_FOUND:
-            ESP_LOGI(TAG, "The bearer has not been initialized yet!");
-            bearer = "";
-            break;
-        default:
-            bearer = NULL;
-            ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
         }
-        nvs_close(bearer_handle);
+        else
+        {
+            ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
+            size_t bearer_size;
+            nvs_get_str(bearer_handle, "bearer", NULL, &bearer_size);
+            bearer = malloc(bearer_size); //TODO: don't free(bearer); malloc() is used only once!
+            err = nvs_get_str(bearer_handle, "bearer", bearer, &bearer_size);
+            switch (err)
+            {
+            case ESP_OK:
+                ESP_LOGI(TAG, "The bearer was read!\n");
+                ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
+                break;
+            case ESP_ERR_NVS_NOT_FOUND:
+                ESP_LOGI(TAG, "The bearer has not been initialized yet!");
+                bearer = "";
+                break;
+            default:
+                bearer = NULL;
+                ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
+            }
+            nvs_close(bearer_handle);
+        }
     }
     return bearer;
 }
@@ -760,14 +763,14 @@ void activate_device(char *name)
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGI(TAG, "%s", device_activation_data);
-    char *bearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balance by free()
+    char *newbearer = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balance by free()
     ESP_LOGI(TAG, "Posting on device activation endpoint");
 
     if (enable_wifi("activate_device")) {
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 
-        post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, bearer, MAX_RESPONSE_LENGTH);
+        post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, newbearer, MAX_RESPONSE_LENGTH);
         free(device_activation_data);
 
         //Wait to make sure everyting is finished.
@@ -781,14 +784,14 @@ void activate_device(char *name)
     }
 
     ESP_LOGI(TAG, "Return from device activation endpoint!");
-    if (!bearer)
+    if (!newbearer)
     {
         ESP_LOGE(TAG, "Failed to activate device!");
     }
     else
     {
-        ESP_LOGE(TAG, "Bearer after post is: %s", bearer);
-        char *bearer_trimmed = malloc(sizeof(char) * strlen(bearer)); //DONE: checked: malloc() is balanced by free()
+        ESP_LOGE(TAG, "Bearer after post is: %s", newbearer);
+        char *bearer_trimmed = malloc(sizeof(char) * strlen(newbearer)); //DONE: checked: malloc() is balanced by free()
         // sscanf(bearer, "\":\"%s", bearer_trimmed);
         bearer_trimmed = strchr(bearer, ':');
         ESP_LOGI(TAG, "Bearer trimmed: %s", bearer_trimmed);
@@ -802,7 +805,7 @@ void activate_device(char *name)
         {
             ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
         }
-        free(bearer);
+        free(newbearer);
         free(bearer_trimmed);
     }
 }
@@ -811,10 +814,10 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
 {
     int retry = 0;
     const int retry_count = HTTPS_UPLOAD_RETRIES;
-    int content_length;
+    int content_length = 0;
     int status_code = 0;
     char *response = NULL;
-    char *urlString = "";
+    char *urlString = NULL;
 
     if (endpoint)
     {
@@ -861,11 +864,14 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
     }
 
     esp_http_client_set_post_field(client, data, strlen(data));
+    ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
     esp_err_t err = esp_http_client_open(client, strlen(data));
     while (err != ESP_OK && ++retry < retry_count)
     {
-        ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d)", esp_err_to_name(err), retry, retry_count);
+        ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), retry, retry_count, esp_log_system_timestamp());
         vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+        err = esp_http_client_open(client, strlen(data));
     }
 
     if (err == ESP_OK)
@@ -873,7 +879,7 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
         esp_err_t err = esp_http_client_perform(client);
         if (err != ESP_OK)
         {
-            ESP_LOGE(TAG, "Failed to send HTTPS POST request: %s", esp_err_to_name(err));
+            ESP_LOGE(TAG, "Failed to send HTTPS POST request: %s at at %s", esp_err_to_name(err), esp_log_system_timestamp());
         }
         else
         {
@@ -881,7 +887,7 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
             content_length = esp_http_client_get_content_length(client);
             if (content_length > 0)
             {
-                response = malloc(sizeof(char) * content_length);
+                response = malloc(sizeof(char) * content_length); //DONE: checked that malloc() is balanced by free()
                 esp_http_client_read(client, response, content_length);
                 if (status_code != 200) {
                     ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
@@ -900,11 +906,19 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
                 ESP_LOGE(TAG, "No proper response, response length: %d status_code: %d", content_length, status_code);
             }
         }
+    } else { //still not managed to upload data; then a reset is warranted, to avoid worse...
+        ESP_LOGI(TAG,"Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+        for (int i = 10; i >= 0; i--) {
+            ESP_LOGE(TAG, "Restarting in %d seconds...", i);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+        ESP_LOGE(TAG,"Restarting now.");
+        fflush(stdout);
+        esp_restart();    
     }
-    if (authenticationToken)
+   if (authenticationToken)
     {
         free(authenticationTokenString);
-        free(authenticationToken);
     }
         if (endpoint)
     {
@@ -918,6 +932,10 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
         {
             ESP_LOGE(TAG, "Buffer was too small, full string was not written. Missed %d amount of character space!", missed - resp_buf_size);
         }
+        if (content_length > 0) {
+            free(response);    
+        }
+        
     }
     return status_code;
 }
@@ -987,7 +1005,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
          *     - Wi-Fi SSID when scheme is wifi_prov_scheme_softap
          *     - device name when scheme is wifi_prov_scheme_ble
          */
-        char *service_name = malloc(DEVICE_NAME_SIZE);
+        char *service_name = malloc(DEVICE_NAME_SIZE); //TODO: check whether malloc() is balanced by free()
         get_device_service_name(service_name, DEVICE_NAME_SIZE);
         /* What is the security level that we want (0 or 1):
          *      - WIFI_PROV_SECURITY_0 is simply plain text communication.
@@ -1004,7 +1022,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         uint32_t dat;
         get_dat(&dat);
         int msgSize = variable_sprintf_size("%u", 1, dat);
-        char *dat_str = malloc(msgSize);
+        char *dat_str = malloc(msgSize); //TODO: check whether malloc() is balanced by free()
         //Inputting variables into the plain json string from above(msgPlain).
         snprintf(dat_str, msgSize, "%u", dat);
 
@@ -1086,8 +1104,12 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect)
         }
     }
     /* Wait for Wi-Fi connection */
-    if (connect)
+    if (connect) {
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
+    }
+    
+    // free(service_name); //TODO: perhaps free needed here
+    // free(dat_str); // TODO: perhaps free needed here
 }
 
 void disable_wifi(char *taskString)
@@ -1204,7 +1226,7 @@ void twomes_device_provisioning(const char *device_type_name)
         ESP_LOGI(TAG, "Bearer not found, activating device!");
         // get device name
         char *device_name;
-        device_name = malloc(DEVICE_NAME_SIZE);
+        device_name = malloc(DEVICE_NAME_SIZE); //DONE: checked malloc() is balanced by free()
         get_device_service_name(device_name, DEVICE_NAME_SIZE);
         activate_device(device_name);
         bearer = get_bearer();
@@ -1215,6 +1237,4 @@ void twomes_device_provisioning(const char *device_type_name)
     {
         ESP_LOGE(TAG, "Something went wrong while reading the bearer!");
     }
-
-    free(bearer);
 }

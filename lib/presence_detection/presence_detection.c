@@ -253,9 +253,9 @@ char *results_to_rssi_list()
 
     //Max size of RSSI(4 characters) + size of ',' and '\0'(2 characters) * addr list count gives us our maximum string size.
     int rssi_string_size = variable_sprintf_size("%d", 1, RSSI_ABSENT) + sizeof(char) * 2;
-    char *rssi_string = malloc(rssi_string_size * presence_addr_list_count);
+    char *rssi_string = malloc(rssi_string_size * presence_addr_list_count); //DONE check whether this malloc() is balanced by free()
     ESP_LOGI(TAG, "RSSI String Size: %d", rssi_string_size);
-    char *rssi_partial = malloc(rssi_string_size);
+    char *rssi_partial = malloc(rssi_string_size); //DONE check whether this malloc() is balanced by free()
     if (result_list[0].isHome)
     {
         snprintf(rssi_partial, rssi_string_size, "%d,", 900);
@@ -284,8 +284,10 @@ char *results_to_rssi_list()
     ESP_LOGI(TAG, "RSSI Result: %s", rssi_string);
     int property_string_size = variable_sprintf_size(property_string_plain, 3, "listRSSI", time_measuring_start_timestamp,
                                                      rssi_string);
-    char *property_string = malloc(property_string_size);
+    char *property_string = malloc(property_string_size); //DONE checked that this malloc() is balanced by free()
     snprintf(property_string, property_string_size, property_string_plain, "listRSSI", time_measuring_start_timestamp, rssi_string);
+    free(rssi_string);
+    free(rssi_partial);
     ESP_LOGI(TAG, "Property String Result: %s", property_string);
     return property_string;
 }
@@ -301,12 +303,13 @@ void upload_presence_detection_data()
 
         int msg_multiple_string_size;
         char *msg_multiple_string;
-        char *rssi_property_string = results_to_rssi_list();
+        char *rssi_property_string = results_to_rssi_list(); //DONE: checked malloc() is balanced by free()
         msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
-        msg_multiple_string = malloc(msg_multiple_string_size); //TODO: checked: malloc() is balanced by free()
+        msg_multiple_string = malloc(msg_multiple_string_size); //DONE: checked: malloc() is balanced by free()
         snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
         ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
         post_https(VARIABLE_UPLOAD_ENDPOINT, msg_multiple_string, NULL, 0);
+        free(rssi_property_string);
         free(msg_multiple_string);
         reset_results();
 

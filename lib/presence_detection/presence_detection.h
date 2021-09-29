@@ -1,8 +1,11 @@
 #ifndef PRESENCE_DETECTION_H
 #define PRESENCE_DETECTION_H
 
-//#define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60 * 60) // seconds (1 hr 60 min/hr * 60 s/min)
-#define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60) // seconds ( 1 min * 60 s/min);  stress test value
+#ifdef CONFIG_TWOMES_STRESS_TEST
+#define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60) // seconds ( 1 min * 60 s/min)
+#else
+#define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60 * 60) // seconds (1 hr 60 min/hr * 60 s/min)
+#endif
 
 #include <generic_esp_32.h>
 #include <stdio.h>
