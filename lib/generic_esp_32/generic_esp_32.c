@@ -9,8 +9,6 @@ static EventGroupHandle_t wifi_event_group;
 /* Signal Wi-Fi events on this event-group */
 const int WIFI_CONNECTED_EVENT = BIT0;
 
-xSemaphoreHandle wireless_802_11_mutex;
-
 char *bearer;
 
 // Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates

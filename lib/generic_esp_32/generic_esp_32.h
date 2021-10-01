@@ -46,21 +46,24 @@
 #define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try  
 #define NTP_RETRIES 15 // // number of retries for timesync inclusing initial try
-#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
-#define MAX_WAIT_802_11_TXT "15 seconds"
+
 
 #ifdef CONFIG_TWOMES_STRESS_TEST
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s) // stress test value
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 15 seconds for next heartbeat"
-#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
+#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (2 min * 60 s/min * 1000 ms/s)  // stress test value 
 #define TIMESYNC_INTERVAL_TXT "Wating 2 minutes before next NTP timesync"
+#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
+#define MAX_WAIT_802_11_TXT "15 seconds"
 #else
-#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
-#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
+#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (1 * 60 * 60 * 1000) // milliseconds (1 hr 10 min/hr * 60 s/min * 1000 ms/s)
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (1 * 60 * 60 * 1000) // milliseconds (1 hr * 10 min/hr * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
 #define TIMESYNC_INTERVAL_TXT "Wating 6 hours before next NTP timesync"
+#define MAX_WAIT_802_11_MS (2 * 60  * 1000) // milliseconds (2 min * 60 s/min * 1000 ms/s)  // stress test value
+#define MAX_WAIT_802_11_TXT "2 minuten"
 #endif
 
 
@@ -94,6 +97,8 @@ void sntp_sync_time(struct timeval *tv);
 #ifndef CONFIG_TWOMES_CUSTOM_GPIO
 #define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
 #define INPUT_BITMASK ((1ULL << WIFI_RESET_BUTTON))
+
+xSemaphoreHandle wireless_802_11_mutex;
 
 void initGPIO();
 void buttonPressDuration(void *args);
