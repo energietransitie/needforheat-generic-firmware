@@ -3,8 +3,10 @@
 
 #ifdef CONFIG_TWOMES_STRESS_TEST
 #define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60) // seconds ( 1 min * 60 s/min)
+#define PRESENCE_INTERVAL_TXT "Wating 1 minute before next presence scan"
 #else
 #define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60 * 60) // seconds (1 hr 60 min/hr * 60 s/min)
+#define PRESENCE_INTERVAL_TXT "Wating 1 hour before next presence scan"
 #endif
 
 #include <generic_esp_32.h>

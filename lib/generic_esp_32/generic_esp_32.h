@@ -45,7 +45,7 @@
 #define HTTPS_RETRY_WAIT_MS (1 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try  
-#define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
+#define NTP_RETRIES 15 // // number of retries for timesync inclusing initial try
 #define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
 #define MAX_WAIT_802_11_TXT "15 seconds"
 
@@ -53,8 +53,8 @@
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s) // stress test value
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 15 seconds for next heartbeat"
-#define TIMESYNC_INTERVAL_MS (4 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
-#define TIMESYNC_INTERVAL_TXT "Wating 4 minutes before next NTP timesync"
+#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
+#define TIMESYNC_INTERVAL_TXT "Wating 2 minutes before next NTP timesync"
 #else
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
@@ -64,9 +64,17 @@
 #endif
 
 
-
+#ifdef CONFIG_TWOMES_TEST_SERVER
 #define TWOMES_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
 #define TWOMES_SERVER "https://api.tst.energietransitiewindesheim.nl"
+#endif
+
+#ifdef CONFIG_TWOMES_PRODUCTION_SERVER
+#define TWOMES_SERVER_HOSTNAME "api.energietransitiewindesheim.nl"
+#define TWOMES_SERVER "https://api.energietransitiewindesheim.nl"
+#endif
+
+
 #define VARIABLE_UPLOAD_ENDPOINT "/device/measurements/variable-interval"
 #define DEVICE_ACTIVATION_ENDPOINT "/device/activate"
 

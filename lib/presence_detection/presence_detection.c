@@ -28,7 +28,7 @@ esp_bd_addr_t phone2 = {0x7A, 0x8B, 0x9C, 0xAD, 0xAE, 0xBA}; //example address
 esp_bd_addr_t presence_addr_list[2] = {};
 int presence_addr_list_count = 2;
 presence_data result_list[2];
-const char *TAG = "twomes_presence_detection";
+const char *TAG = "Twomes Presence Detection";
 int requesting_number = -1;
 bool requesting = false;
 int timeout_count = 0;
@@ -367,6 +367,7 @@ void presence_detection_loop(void)
             found_after_stopped = false;
             ESP_LOGI(TAG, "Finally Finishing up!");
             upload_presence_detection_data();
+            ESP_LOGI(TAG, PRESENCE_INTERVAL_TXT);
         }
         //Starting a measurement when we reach the specified timer interval
         if (measuring_interval_count >= PRESENCE_MEASUREMENT_INTERVAL_S)
@@ -392,6 +393,7 @@ void presence_detection_loop(void)
                 store_measurement(false);
                 upload_presence_detection_data();
                 ESP_LOGI(TAG, "Stopping Requesting Early!");
+                ESP_LOGI(TAG, PRESENCE_INTERVAL_TXT);
             }
             timeout_count = 0;
         }
