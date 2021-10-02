@@ -723,7 +723,7 @@ void activate_device(char *name) {
         ESP_LOGE(TAG, "Bearer after post is: %s", newbearer);
         char *bearer_trimmed = malloc(sizeof(char) * strlen(newbearer)); //DONE: checked: malloc() is balanced by free()
         // sscanf(bearer, "\":\"%s", bearer_trimmed);
-        bearer_trimmed = strchr(bearer, ':');
+        bearer_trimmed = strchr(newbearer, ':');
         ESP_LOGI(TAG, "Bearer trimmed: %s", bearer_trimmed);
         bearer_trimmed = strchr(bearer_trimmed, '\"');
         bearer_trimmed++;
