@@ -108,7 +108,7 @@ void obtain_time(void);
 void timesync_task(void *data);
 void timesync();
 void initialize_timezone(char *timezone);
-int post_https(const char *endpoint, char *data, char *response_buf, uint8_t resp_buf_size);
+int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
 char *get_bearer();

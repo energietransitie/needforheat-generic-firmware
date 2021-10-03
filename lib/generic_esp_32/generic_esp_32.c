@@ -597,7 +597,7 @@ void upload_heartbeat(int hbcounter) {
     snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
     //Posting data over HTTPS, using activate_device_endpoint, msg and bearer token.
     ESP_LOGI(TAG, "Data: %s", msg);
-    post_https(VARIABLE_UPLOAD_ENDPOINT, msg, NULL, 0);
+    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, true, msg, NULL, 0);
     free(msg);
 }
 
@@ -701,7 +701,7 @@ void activate_device(char *name) {
         //Wait to make sure Wi-Fi is enabled.
         vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 
-        post_https(DEVICE_ACTIVATION_ENDPOINT, device_activation_data, newbearer, MAX_RESPONSE_LENGTH);
+        upload_data_to_server(DEVICE_ACTIVATION_ENDPOINT, false, device_activation_data, newbearer, MAX_RESPONSE_LENGTH);
         free(device_activation_data);
 
         //Wait to make sure everyting is finished.
@@ -739,7 +739,7 @@ void activate_device(char *name) {
     }
 }
 
-int post_https(const char *endpoint, char *data, char *response_buf, uint8_t resp_buf_size) {
+int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size) {
     int retry = 0;
     const int retry_count = HTTPS_UPLOAD_RETRIES;
     int content_length = 0;
@@ -766,24 +766,27 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
     esp_http_client_set_header(client, "Host", TWOMES_SERVER_HOSTNAME);
     esp_http_client_set_header(client, "Content-Type", "text/plain");
 
-    char *authenticationToken = get_bearer();
-    if (strlen(authenticationToken) > 1) {
-        ESP_LOGI(TAG, "Bearer read: %s", authenticationToken);
-    }
-    else if (strcmp(authenticationToken, "") == 0) {
-        ESP_LOGI(TAG, "Bearer not found, activate device first!");
-    }
-    else if (!authenticationToken) {
-        ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
-    }
-
+    char *authenticationToken;
     char *authenticationTokenString = "";
-    if (authenticationToken) {
-        char *authenticationTokenStringPlain = "Bearer %s";
-        int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
-        authenticationTokenString = malloc(sizeof(char) * strCount);
-        snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
-        esp_http_client_set_header(client, "Authorization", authenticationTokenString);
+    if (use_bearer) {
+        authenticationToken = get_bearer();
+        if (strlen(authenticationToken) > 1) {
+            ESP_LOGI(TAG, "Bearer read: %s", authenticationToken);
+        }
+        else if (strcmp(authenticationToken, "") == 0) {
+            ESP_LOGI(TAG, "Bearer not found, activate device first!");
+        }
+        else if (!authenticationToken) {
+            ESP_LOGE(TAG, "Something went wrong whilst reading the bearer!");
+        }
+
+        if (authenticationToken) {
+            char *authenticationTokenStringPlain = "Bearer %s";
+            int strCount = snprintf(authenticationTokenString, 0, authenticationTokenStringPlain, authenticationToken) + 1;
+            authenticationTokenString = malloc(sizeof(char) * strCount);
+            snprintf(authenticationTokenString, strCount * sizeof(char), authenticationTokenStringPlain, authenticationToken);
+            esp_http_client_set_header(client, "Authorization", authenticationTokenString);
+        }
     }
 
     esp_http_client_set_post_field(client, data, strlen(data));
@@ -834,9 +837,11 @@ int post_https(const char *endpoint, char *data, char *response_buf, uint8_t res
         fflush(stdout);
         esp_restart();
     }
-    if (authenticationToken) {
-        free(authenticationTokenString);
-    }
+   if (use_bearer) {
+           if (authenticationToken) {
+            free(authenticationTokenString);
+        }
+   }
     if (endpoint) {
         free(urlString);
     }
