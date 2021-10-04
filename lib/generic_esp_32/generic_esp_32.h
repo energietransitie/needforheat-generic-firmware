@@ -123,8 +123,8 @@ void initialize_nvs();
 wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 void twomes_device_provisioning(const char *device_type_name);
-void disable_wifi(char *taskString);
+bool disable_wifi(char *taskString);
 bool enable_wifi(char *taskString);
-void disconnect_wifi();
-void connect_wifi();
+bool disconnect_wifi(char *taskString);
+bool connect_wifi(char *taskString);
 #endif

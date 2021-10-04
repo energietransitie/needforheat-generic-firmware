@@ -221,12 +221,12 @@ void presence_addr_to_string(presence_data data, char *buffer, int buffer_size)
 /*
 char *result_to_string(presence_data data)
 {
-    char *property_string_plain_addr = "{\"property_name\": \"%s\","
+    char *property_string_plain_addr = "{\"property_name\":\"%s\","
                                        "\"measurements\": ["
                                        "{ \"timestamp\":\"%d\","
                                        "\"value\":\"%s\"}]},";
 
-    char *property_string_plain_isHome = "{\"property_name\": \"%s\","
+    char *property_string_plain_isHome = "{\"property_name\":\"%s\","
                                          "\"measurements\": ["
                                          "{ \"timestamp\":\"%d\","
                                          "\"value\":\"%d\"}]}";
@@ -248,8 +248,8 @@ char *result_to_string(presence_data data)
 
 char *results_to_rssi_list()
 {
-    char *property_string_plain = "{\"property_name\": \"%s\","
-                                  "\"measurements\": ["
+    char *property_string_plain = "{\"property_name\":\"%s\","
+                                  "\"measurements\":["
                                   "{ \"timestamp\":\"%d\","
                                   "\"value\":\"%s\"}";
 
@@ -297,9 +297,7 @@ char *results_to_rssi_list()
 void upload_presence_detection_data()
 {
     if (enable_wifi("upload_presence_detection_data")) {
-        //Wait to make sure Wi-Fi is enabled.
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        char *msg_multiple_string_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[ "
+        char *msg_multiple_string_plain = "{\"upload_time\":\"%d\",\"property_measurements\":["
                                         "%s"
                                         "]}]}";
 
@@ -314,10 +312,6 @@ void upload_presence_detection_data()
         free(rssi_property_string);
         free(msg_multiple_string);
         reset_results();
-
-        //Wait to make sure everyting is finished.
-        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-
         disable_wifi("upload_presence_detection_data");
     } else {
         ESP_LOGE(TAG, "Failed to connect to network to post presence data");
