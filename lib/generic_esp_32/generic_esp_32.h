@@ -41,8 +41,11 @@
 
 #define LONG_BUTTON_PRESS_DURATION 10 // seconds
 
+#define POST_WITH_BEARER true
+#define POST_WITHOUT_BEARER false
+
 #define HTTPS_PRE_WAIT_MS (1.5 * 1000) // milliseconds ( 1,5 s * 1000 ms/s)
-#define HTTPS_RETRY_WAIT_MS (1 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
+#define HTTPS_RETRY_WAIT_MS (2 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try  
 #define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
