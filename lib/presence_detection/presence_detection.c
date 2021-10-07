@@ -24,10 +24,11 @@ esp_gatt_if_t interface;
 
 esp_bd_addr_t phone = {0x1A, 0x2B, 0x3C, 0x4D, 0x5E, 0x6F}; //example address
 esp_bd_addr_t phone2 = {0x7A, 0x8B, 0x9C, 0xAD, 0xAE, 0xBA}; //example address
+esp_bd_addr_t phone3 = {0xCA, 0xDB, 0xEC, 0xFD, 0xA1, 0xB2}; //example address
 
-esp_bd_addr_t presence_addr_list[2] = {};
-int presence_addr_list_count = 2;
-presence_data result_list[2];
+esp_bd_addr_t presence_addr_list[3] = {};
+int presence_addr_list_count = 3;
+presence_data result_list[3];
 const char *TAG = "Twomes Presence Detection";
 int requesting_number = -1;
 bool requesting = false;
@@ -115,6 +116,7 @@ void initialize_presence_detection()
     initialize_timer(TIMER_GROUP_0, TIMER_0, true, 1000000);
     memcpy(presence_addr_list[0], phone, sizeof(esp_bd_addr_t));
     memcpy(presence_addr_list[1], phone2, sizeof(esp_bd_addr_t));
+    memcpy(presence_addr_list[2], phone3, sizeof(esp_bd_addr_t));
 }
 
 //Send name request to private MAC adress given in mac_addr variable.
@@ -219,12 +221,12 @@ void presence_addr_to_string(presence_data data, char *buffer, int buffer_size)
 /*
 char *result_to_string(presence_data data)
 {
-    char *property_string_plain_addr = "{\"property_name\": \"%s\","
+    char *property_string_plain_addr = "{\"property_name\":\"%s\","
                                        "\"measurements\": ["
                                        "{ \"timestamp\":\"%d\","
                                        "\"value\":\"%s\"}]},";
 
-    char *property_string_plain_isHome = "{\"property_name\": \"%s\","
+    char *property_string_plain_isHome = "{\"property_name\":\"%s\","
                                          "\"measurements\": ["
                                          "{ \"timestamp\":\"%d\","
                                          "\"value\":\"%d\"}]}";
@@ -246,8 +248,8 @@ char *result_to_string(presence_data data)
 
 char *results_to_rssi_list()
 {
-    char *property_string_plain = "{\"property_name\": \"%s\","
-                                  "\"measurements\": ["
+    char *property_string_plain = "{\"property_name\":\"%s\","
+                                  "\"measurements\":["
                                   "{ \"timestamp\":\"%d\","
                                   "\"value\":\"%s\"}";
 
@@ -258,22 +260,22 @@ char *results_to_rssi_list()
     char *rssi_partial = malloc(rssi_string_size); //DONE check whether this malloc() is balanced by free()
     if (result_list[0].isHome)
     {
-        snprintf(rssi_partial, rssi_string_size, "%d,", 900);
+        snprintf(rssi_partial, rssi_string_size, "%d,", RSSI_PRESENT);
     }
     else if (result_list[0].isHome == 0)
     {
-        snprintf(rssi_partial, rssi_string_size, "%d,", -899);
+        snprintf(rssi_partial, rssi_string_size, "%d,", RSSI_ABSENT);
     }
     strcpy(rssi_string, rssi_partial);
     for (int i = 1; i < presence_addr_list_count; i++)
     {
         if (result_list[i].isHome)
         {
-            snprintf(rssi_partial, rssi_string_size, "%d", 900);
+            snprintf(rssi_partial, rssi_string_size, "%d", RSSI_PRESENT);
         }
         else if (result_list[i].isHome == 0)
         {
-            snprintf(rssi_partial, rssi_string_size, "%d", -899);
+            snprintf(rssi_partial, rssi_string_size, "%d", RSSI_ABSENT);
         }
         if (i != presence_addr_list_count - 1)
         {
@@ -291,13 +293,11 @@ char *results_to_rssi_list()
     ESP_LOGI(TAG, "Property String Result: %s", property_string);
     return property_string;
 }
-//Uploads our data via the post_https of the generic firmware
+//Uploads our data via the upload_data_to_server() of the generic firmware
 void upload_presence_detection_data()
 {
     if (enable_wifi("upload_presence_detection_data")) {
-        //Wait to make sure Wi-Fi is enabled.
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        char *msg_multiple_string_plain = "{\"upload_time\": \"%d\",\"property_measurements\":[ "
+        char *msg_multiple_string_plain = "{\"upload_time\":\"%d\",\"property_measurements\":["
                                         "%s"
                                         "]}]}";
 
@@ -308,14 +308,10 @@ void upload_presence_detection_data()
         msg_multiple_string = malloc(msg_multiple_string_size); //DONE: checked: malloc() is balanced by free()
         snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
         ESP_LOGI(TAG, "Payload: %s", msg_multiple_string);
-        post_https(VARIABLE_UPLOAD_ENDPOINT, msg_multiple_string, NULL, 0);
+        upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, true, msg_multiple_string, NULL, 0);
         free(rssi_property_string);
         free(msg_multiple_string);
         reset_results();
-
-        //Wait to make sure everyting is finished.
-        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-
         disable_wifi("upload_presence_detection_data");
     } else {
         ESP_LOGE(TAG, "Failed to connect to network to post presence data");

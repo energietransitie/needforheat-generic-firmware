@@ -45,39 +45,28 @@
 #define HTTPS_RETRY_WAIT_MS (1 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
 #define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try  
-#define NTP_RETRIES 15 // // number of retries for timesync inclusing initial try
-
+#define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
+#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
+#define MAX_WAIT_802_11_TXT "15 seconds"
 
 #ifdef CONFIG_TWOMES_STRESS_TEST
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s) // stress test value
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 15 seconds for next heartbeat"
-#define TIMESYNC_INTERVAL_MS (2 * 60 * 1000) // milliseconds (2 min * 60 s/min * 1000 ms/s)  // stress test value 
-#define TIMESYNC_INTERVAL_TXT "Wating 2 minutes before next NTP timesync"
-#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
-#define MAX_WAIT_802_11_TXT "15 seconds"
+#define TIMESYNC_INTERVAL_MS (4 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
+#define TIMESYNC_INTERVAL_TXT "Wating 4 minutes before next NTP timesync"
 #else
-#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (1 * 60 * 60 * 1000) // milliseconds (1 hr 10 min/hr * 60 s/min * 1000 ms/s)
-#define HEARTBEAT_UPLOAD_INTERVAL_MS (1 * 60 * 60 * 1000) // milliseconds (1 hr * 10 min/hr * 60 s/min * 1000 ms/s)
+#define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
 #define TIMESYNC_INTERVAL_TXT "Wating 6 hours before next NTP timesync"
-#define MAX_WAIT_802_11_MS (2 * 60  * 1000) // milliseconds (2 min * 60 s/min * 1000 ms/s)  // stress test value
-#define MAX_WAIT_802_11_TXT "2 minuten"
 #endif
 
+xSemaphoreHandle wireless_802_11_mutex;
 
-#ifdef CONFIG_TWOMES_TEST_SERVER
 #define TWOMES_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
 #define TWOMES_SERVER "https://api.tst.energietransitiewindesheim.nl"
-#endif
-
-#ifdef CONFIG_TWOMES_PRODUCTION_SERVER
-#define TWOMES_SERVER_HOSTNAME "api.energietransitiewindesheim.nl"
-#define TWOMES_SERVER "https://api.energietransitiewindesheim.nl"
-#endif
-
-
 #define VARIABLE_UPLOAD_ENDPOINT "/device/measurements/variable-interval"
 #define DEVICE_ACTIVATION_ENDPOINT "/device/activate"
 
@@ -98,35 +87,33 @@ void sntp_sync_time(struct timeval *tv);
 #define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
 #define INPUT_BITMASK ((1ULL << WIFI_RESET_BUTTON))
 
-xSemaphoreHandle wireless_802_11_mutex;
-
 void initGPIO();
 void buttonPressDuration(void *args);
 #endif
 void blink(void *args);
-char* get_types(char* stringf, int count);
-int variable_sprintf_size(char* string, int count, ...);
+char *get_types(char *stringf, int count);
+int variable_sprintf_size(char *string, int count, ...);
 void initialize_generic_firmware();
 void create_dat();
 void prepare_device(const char *device_type_name);
 void time_sync_notification_cb(struct timeval *tv);
-void prov_event_handler(void *arg, esp_event_base_t event_base,int32_t event_id, void *event_data);
+void prov_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
 esp_err_t http_event_handler(esp_http_client_event_t *evt);
 void wifi_init_sta(void);
 void get_device_service_name(char *service_name, size_t max);
 esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen,
-                                   uint8_t **outbuf, ssize_t *outlen, void *priv_data);
+    uint8_t **outbuf, ssize_t *outlen, void *priv_data);
 void initialize_sntp(void);
 void obtain_time(void);
 void timesync_task(void *data);
 void timesync();
-void initialize_timezone(char* timezone);
-int post_https(const char *endpoint, char *data, char* response_buf, uint8_t resp_buf_size);
+void initialize_timezone(char *timezone);
+int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
-char* get_bearer();
+char *get_bearer();
 void activate_device(char *name);
-void get_http(const char* url);
+void get_http(const char *url);
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 void start_presence_detection();
 #endif
@@ -136,8 +123,8 @@ void initialize_nvs();
 wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 void twomes_device_provisioning(const char *device_type_name);
-void disable_wifi(char *taskString);
+bool disable_wifi(char *taskString);
 bool enable_wifi(char *taskString);
-void disconnect_wifi();
-void connect_wifi();
+bool disconnect_wifi(char *taskString);
+bool connect_wifi(char *taskString);
 #endif
