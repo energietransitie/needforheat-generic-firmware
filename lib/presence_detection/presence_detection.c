@@ -13,6 +13,7 @@
 //Start the addr list with room for 10 adresses
 #define PRESENCE_ADDR_LIST_START_SIZE 10
 #define PRESENCE_NAME_REQ_TIMEOUT 5
+#define BLUETOOTH_PRESENCE_TASK_TXT "bluetooth_presence_detection"
 #define TIMER_DIVIDER 80
 #define ADDR_LEN 17 // 6 * 2 hex digits + 5 colons
 #define RSSI_PRESENT 900
@@ -187,11 +188,22 @@ void initialize_bluetooth()
 //This function starts the requesting by setting the right variables.
 void start_requesting()
 {
-    time_measuring_start_timestamp = time(NULL);
-    measuring_interval_count = 0;
-    requesting = true;
-    requesting_number = 0;
-    send_name_request(presence_addr_list[requesting_number]);
+    if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
+        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", BLUETOOTH_PRESENCE_TASK_TXT, esp_log_system_timestamp());
+        if (disable_wifi_keeping_802_11_mutex()) {
+            time_measuring_start_timestamp = time(NULL);
+            measuring_interval_count = 0;
+            requesting = true;
+            requesting_number = 0;
+            send_name_request(presence_addr_list[requesting_number]);
+        } 
+        else {
+            ESP_LOGE(TAG, "%s failed to disable wifi without releasing 802.11 mutex", BLUETOOTH_PRESENCE_TASK_TXT);
+        }
+    }
+    else {
+        ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", BLUETOOTH_PRESENCE_TASK_TXT, MAX_WAIT_802_11_TXT);
+    }
 }
 
 void reset_results(){
@@ -296,7 +308,7 @@ char *results_to_rssi_list()
 //Uploads our data via the upload_data_to_server() of the generic firmware
 void upload_presence_detection_data()
 {
-    if (enable_wifi("upload_presence_detection_data")) {
+    if (connect_wifi_having_802_11_mutex()) {
         char *msg_multiple_string_plain = "{\"upload_time\":\"%d\",\"property_measurements\":["
                                         "%s"
                                         "]}]}";
@@ -312,11 +324,11 @@ void upload_presence_detection_data()
         free(rssi_property_string);
         free(msg_multiple_string);
         reset_results();
-        disable_wifi("upload_presence_detection_data");
-    } else {
-        ESP_LOGE(TAG, "Failed to connect to network to post presence data");
+        disconnect_wifi("upload_presence_detection_data");
     }
-
+    else {
+        ESP_LOGE(TAG, "Skipped uploading presence data that was collected");
+    }
 }
 
 void store_measurement(bool isHome)
@@ -362,6 +374,7 @@ void presence_detection_loop(void)
             requesting_number = 0;
             found_after_stopped = false;
             ESP_LOGI(TAG, "Finally Finishing up!");
+            ESP_LOGI(TAG, "%s keeps the 802_11 resource a little longer for uploading", BLUETOOTH_PRESENCE_TASK_TXT);
             upload_presence_detection_data();
             ESP_LOGI(TAG, PRESENCE_INTERVAL_TXT);
         }
@@ -387,6 +400,7 @@ void presence_detection_loop(void)
                 ESP_LOGI(TAG, "Timedout_end %d", requesting_number);
                 stop_requesting();
                 store_measurement(false);
+                ESP_LOGI(TAG, "%s keeps the 802_11 resource a little longer for uploading", BLUETOOTH_PRESENCE_TASK_TXT);
                 upload_presence_detection_data();
                 ESP_LOGI(TAG, "Stopping Requesting Early!");
                 ESP_LOGI(TAG, PRESENCE_INTERVAL_TXT);

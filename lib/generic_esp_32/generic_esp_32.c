@@ -244,6 +244,7 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
         }
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_start();
         esp_wifi_connect();
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
@@ -254,6 +255,8 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGI(TAG, "Disconnected.");
+        /* Clear the WIFI_CONNECTED_EVENT bits when a disconnect is detected; ensuring that the bits properly signal connectivity */
+        xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_EVENT);
         if (wifi_autoconnect) {
             ESP_LOGI(TAG, "Connecting to the AP again...");
             esp_wifi_connect();
@@ -407,18 +410,18 @@ void prepare_device(const char *device_type_name) {
     }
     else {
         ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
-        if (enable_wifi("prepare_device")) {
+        if (connect_wifi("prepare_device")) {
             while (!wifi_initialized) {
                 ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             };
             get_dat(&dat); //device access token  created with true random generation
             ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
-            disable_wifi("prepare_device");
+            disconnect_wifi("prepare_device");
         }
         else {
             get_dat(&dat); //device access token  created with pseudo random generation
-            disable_wifi("prepare_device");
+            disconnect_wifi("prepare_device");
         }
     }
     char *device_name = malloc(DEVICE_NAME_SIZE); //DONE checked malloc() balanced by free()
@@ -541,7 +544,13 @@ void timesync() {
     time(&now);
     localtime_r(&now, &timeinfo);
     ESP_LOGI(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
-    if (enable_wifi("timesync")) {
+    if (connect_wifi("timesync")) {
+
+        ESP_LOGI(TAG, "Waiting for IP connection...");
+        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+        //Wait to make extra sure Wi-Fi is connected and stable
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Waiting for IP connection... done; initiating timesync call");
 
         //obtain time via NTP
         obtain_time();
@@ -550,7 +559,7 @@ void timesync() {
         time(&now);
 
         //Disconnect WiFi
-        disable_wifi("timesync");
+        disconnect_wifi("timesync");
     }
     else {
         ESP_LOGE(TAG, "Failed to connect to network for timesync");
@@ -599,9 +608,9 @@ void upload_heartbeat(int hbcounter) {
 void heartbeat_task(void *data) {
     ESP_LOGI("Main", "Heartbeat task started");
     for (int heartbeatcounter = 1; true; heartbeatcounter++) {
-        if (enable_wifi("heartbeat_task")) {
+        if (connect_wifi("heartbeat_task")) {
             upload_heartbeat(heartbeatcounter);
-            disable_wifi("heartbeat_task");
+            disconnect_wifi("heartbeat_task");
         }
         else {
             ESP_LOGE(TAG, "Skipped a heartbeat");
@@ -686,10 +695,10 @@ void activate_device(char *name) {
     char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //TODO: check whether malloc() is balanced by free()
     ESP_LOGI(TAG, "Posting on device activation endpoint");
 
-    if (enable_wifi("activate_device")) {
+    if (connect_wifi("activate_device")) {
         upload_data_to_server(DEVICE_ACTIVATION_ENDPOINT, false, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
         free(device_activation_data);
-        disable_wifi("activate_device");
+        disconnect_wifi("activate_device");
     }
     else {
         ESP_LOGE(TAG, "Failed to post activation data!");
@@ -714,10 +723,11 @@ void activate_device(char *name) {
         if (store_bearer(bearer_trimmed) == ESP_OK) {
             bearer = strdup(bearer_trimmed); //copy the trimmed bearer into the global bearer variable.
             ESP_LOGI(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
-        } else {
+        }
+        else {
             ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
         }
-        free(activation_response); 
+        free(activation_response);
     }
 }
 
@@ -773,6 +783,13 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
 
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+
+    ESP_LOGI(TAG, "Waiting for IP connection...");
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+    //Wait to make extra sure Wi-Fi is connected and stable
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+    ESP_LOGI(TAG, "Waiting for IP connection... done; initiating data upload");
+
     esp_err_t err = esp_http_client_open(client, strlen(data));
     while (err != ESP_OK && ++retry < retry_count) {
         ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), retry, retry_count, esp_log_system_timestamp());
@@ -819,11 +836,11 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
         fflush(stdout);
         esp_restart();
     }
-   if (use_bearer) {
-           if (authenticationToken) {
+    if (use_bearer) {
+        if (authenticationToken) {
             free(authenticationTokenString);
         }
-   }
+    }
     if (endpoint) {
         free(urlString);
     }
@@ -1011,31 +1028,47 @@ bool disable_wifi(char *taskString) {
     if (esp_wifi_stop() == ESP_OK) {
         ESP_LOGI(TAG, "Disabled Wi-Fi");
         wifi_initialized = false;
-        ESP_LOGI(TAG, "%s will release the 802_11 resource now", taskString);
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
         //Wait to make sure everyting is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
         return true;
-    } else {
+    }
+    else {
         ESP_LOGE(TAG, "Failed to disable Wi-Fi");
         return false;
     }
 }
 
+bool disable_wifi_keeping_802_11_mutex(){
+    if (esp_wifi_stop() == ESP_OK) {
+        ESP_LOGI(TAG, "Disabled Wi-Fi without releasing 802.11 mutex");
+        wifi_initialized = false;
+        //Wait to make sure everyting is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+        return true;
+    }
+    else {
+        ESP_LOGE(TAG, "Failed to disable Wi-Fi without releasing 802.11 mutex");
+        return false;
+    }
+}
+
+
 bool enable_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        ESP_LOGI(TAG, "%s got access to 802_11 resource", taskString);
+        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
         if (esp_wifi_start() == ESP_OK) {
             ESP_LOGI(TAG, "Enabled Wi-Fi");
             wifi_initialized = true;
-            //Wait to make sure Wi-Fi is enabled.
-            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
             return true;
-        } else {
+        }
+        else {
             ESP_LOGE(TAG, "Failed to enable Wi-Fi");
             return false;
         }
-    } else {
+    }
+    else {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
@@ -1046,12 +1079,13 @@ bool disconnect_wifi(char *taskString) {
     esp_err_t err = esp_wifi_disconnect();
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "Disconnected Wi-Fi");
-        ESP_LOGI(TAG, "%s will release the 802_11 resource now", taskString);
-        //Wait to make sure everyting is finished.
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        //Wait to make extra sure Wi-Fi is connected and stable
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
         return true;
-    } else {
+    }
+    else {
         ESP_LOGE(TAG, "Failed to disconnect Wi-Fi: %s", esp_err_to_name(err));
         return false;
     }
@@ -1059,29 +1093,37 @@ bool disconnect_wifi(char *taskString) {
 
 bool connect_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        esp_err_t err;
-        if (wifi_initialized) {
-            err = esp_wifi_connect();
-        } else {
-            err = esp_wifi_start();
-        }
-        wifi_autoconnect = true;
-        if (err == ESP_OK) {
-            wifi_initialized = true;
-            ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
-            //Wait to make sure Wi-Fi is connected.
-            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-            return true;
-        } else {
-            ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
-            xSemaphoreGive(wireless_802_11_mutex);
-            return false;
-        }
-    } else {
+        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        return connect_wifi_having_802_11_mutex();
+    }
+    else {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
 }
+
+bool connect_wifi_having_802_11_mutex(){
+    esp_err_t err;
+    if (wifi_initialized) {
+        err = esp_wifi_connect();
+    }
+    else {
+        err = esp_wifi_start();
+    }
+    wifi_autoconnect = true;
+    if (err == ESP_OK) {
+        wifi_initialized = true;
+        ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
+        return true;
+    }
+    else {
+        ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
+        xSemaphoreGive(wireless_802_11_mutex);
+        return false;
+    }
+}
+
 
 void initialize_nvs() {
     /* Initialize NVS partition */

@@ -1,6 +1,8 @@
 #ifndef PRESENCE_DETECTION_H
 #define PRESENCE_DETECTION_H
 
+#define HTTPS_PRE_PRESENCE_UPLOAD_ADDITIONAL_WAIT_MS (10) // milliseconds
+
 #ifdef CONFIG_TWOMES_STRESS_TEST
 #define PRESENCE_MEASUREMENT_INTERVAL_S (1 * 60) // seconds ( 1 min * 60 s/min)
 #define PRESENCE_INTERVAL_TXT "Wating 1 minute before next presence scan"
