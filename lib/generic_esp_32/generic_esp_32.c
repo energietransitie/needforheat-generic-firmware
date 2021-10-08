@@ -54,7 +54,7 @@ bool wifi_autoconnect = true;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_CUSTOM
 void sntp_sync_time(struct timeval *tv) {
     settimeofday(tv, NULL);
-    ESP_LOGI(TAG, "Time is synchronized from custom code");
+    ESP_LOGD(TAG, "Time is synchronized from custom code");
     sntp_set_sync_status(SNTP_SYNC_STATUS_COMPLETED);
 }
 #endif
@@ -95,7 +95,7 @@ void initGPIO() {
 */
 void buttonPressDuration(void *args) {
     uint32_t io_num;
-    ESP_LOGI(TAG, "Button Press Duration is Here!");
+    ESP_LOGD(TAG, "Button Press Duration is Here!");
     while (1) {
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             uint8_t seconds = 0;
@@ -103,11 +103,11 @@ void buttonPressDuration(void *args) {
                 vTaskDelay(1000 / portTICK_PERIOD_MS);
                 seconds++;
                 if (seconds == 9) {
-                    ESP_LOGI("ISR", "Button held for over 10 seconds\n");
+                    ESP_LOGD("ISR", "Button held for over 10 seconds\n");
                     char blinkArgs[2] = { 5, LED_ERROR };
                     xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
                     //Long press on WIFI_RESET_BUTTON(BOOT on the esp32) is for clearing Wi-Fi provisioning memory:
-                    ESP_LOGI("ISR", "Resetting Provisioning and Restarting Device!");
+                    ESP_LOGD("ISR", "Resetting Provisioning and Restarting Device!");
                     esp_wifi_restore();
                     vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
                     esp_restart();                         //software restart, to get new provisioning. Sensors do NOT need to be paired again when gateway is reset (MAC address does not change)
@@ -140,7 +140,7 @@ void blink(void *args) {
 } //void blink;
 
 void initialize_generic_firmware() {
-    ESP_LOGI(TAG, "Generic Firmware Version: %s", VERSION);
+    ESP_LOGD(TAG, "Generic Firmware Version: %s", VERSION);
 
     wireless_802_11_mutex = xSemaphoreCreateMutex();
 
@@ -158,7 +158,7 @@ void initialize_generic_firmware() {
 }
 
 void time_sync_notification_cb(struct timeval *tv) {
-    ESP_LOGI(TAG, "Notification of a time synchronization event");
+    ESP_LOGD(TAG, "Notification of a time synchronization event");
 }
 
 char *get_types(char *stringf, int count) {
@@ -213,15 +213,16 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     if (event_base == WIFI_PROV_EVENT) {
         switch (event_id) {
             case WIFI_PROV_START:
-                ESP_LOGI(TAG, "Provisioning started");
+                ESP_LOGD(TAG, "Provisioning started");
                 break;
             case WIFI_PROV_CRED_RECV:
             {
                 wifi_sta_config_t *wifi_sta_cfg = (wifi_sta_config_t *)event_data;
-                ESP_LOGI(TAG, "Received Wi-Fi credentials"
-                    "\n\tSSID     : %s\n\tPassword : %s",
-                    (const char *)wifi_sta_cfg->ssid,
-                    (const char *)wifi_sta_cfg->password);
+                ESP_LOGD(TAG, "Received Wi-Fi credentials");
+                // ESP_LOGD(TAG, "Received Wi-Fi credentials"
+                //     "\n\tSSID     : %s\n\tPassword : %s",
+                //     (const char *)wifi_sta_cfg->ssid,
+                //     (const char *)wifi_sta_cfg->password); // only reveal password on serial interface in very specific debug sessions!
                 break;
             }
             case WIFI_PROV_CRED_FAIL:
@@ -233,7 +234,7 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
                 break;
             }
             case WIFI_PROV_CRED_SUCCESS:
-                ESP_LOGI(TAG, "Provisioning successful");
+                ESP_LOGD(TAG, "Provisioning successful");
                 break;
             case WIFI_PROV_END:
                 /* De-initialize manager once provisioning is finished */
@@ -249,16 +250,16 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-        ESP_LOGI(TAG, "Connected with IP Address:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGD(TAG, "Connected with IP Address:" IPSTR, IP2STR(&event->ip_info.ip));
         /* Signal main application to continue execution */
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_EVENT);
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGI(TAG, "Disconnected.");
+        ESP_LOGD(TAG, "Disconnected.");
         /* Clear the WIFI_CONNECTED_EVENT bits when a disconnect is detected; ensuring that the bits properly signal connectivity */
         xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_EVENT);
         if (wifi_autoconnect) {
-            ESP_LOGI(TAG, "Connecting to the AP again...");
+            ESP_LOGD(TAG, "Connecting to the AP again...");
             esp_wifi_connect();
         }
     }
@@ -317,7 +318,7 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt) {
             }
             break;
         case HTTP_EVENT_DISCONNECTED:
-            ESP_LOGI(TAG, "HTTP_EVENT_DISCONNECTED");
+            ESP_LOGD(TAG, "HTTP_EVENT_DISCONNECTED");
             int mbedtls_err = 0;
             esp_err_t err = esp_tls_get_and_clear_last_error(evt->data, &mbedtls_err, NULL);
             if (err != 0) {
@@ -326,12 +327,12 @@ esp_err_t http_event_handler(esp_http_client_event_t *evt) {
                     output_buffer = NULL;
                     output_len = 0;
                 }
-                ESP_LOGI(TAG, "Last esp error code: 0x%x", err);
-                ESP_LOGI(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
+                ESP_LOGD(TAG, "Last esp error code: 0x%x", err);
+                ESP_LOGD(TAG, "Last mbedtls failure: 0x%x", mbedtls_err);
             }
             break;
         default:
-            ESP_LOGI(TAG, "GOT AN ERROR BUT DONT KNOW WHAT!");
+            ESP_LOGD(TAG, "GOT AN ERROR BUT DONT KNOW WHAT!");
             break;
     }
     return ESP_OK;
@@ -352,21 +353,21 @@ void create_dat() {
         ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
     }
     else {
-        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGD(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_get_u32(dat_handle, "dat", &dat);
         switch (err) {
             case ESP_OK:
-                ESP_LOGI(TAG, "The dat was initialized already!\n");
-                ESP_LOGI(TAG, "The dat is: %u\n", dat);
+                ESP_LOGD(TAG, "The dat was initialized already!\n");
+                ESP_LOGD(TAG, "The dat is: %u\n", dat);
                 break;
             case ESP_ERR_NVS_NOT_FOUND:
-                ESP_LOGI(TAG, "The dat is not initialized yet!");
-                ESP_LOGI(TAG, "Creating dat");
+                ESP_LOGD(TAG, "The dat is not initialized yet!");
+                ESP_LOGD(TAG, "Creating dat");
                 dat = esp_random();
-                ESP_LOGI(TAG, "Attempting to store dat: %d", dat);
+                ESP_LOGD(TAG, "Attempting to store dat: %d", dat);
                 err = nvs_set_u32(dat_handle, "dat", dat);
                 if (!err) {
-                    ESP_LOGI(TAG, "Succesfully wrote dat: %u to NVS twomes_storage", dat);
+                    ESP_LOGD(TAG, "Succesfully wrote dat: %u to NVS twomes_storage", dat);
                 }
                 else {
                     ESP_LOGE(TAG, "Failed to write dat to NVS twomes_storage: %s", esp_err_to_name(err));
@@ -377,7 +378,7 @@ void create_dat() {
         }
         nvs_close(dat_handle);
     }
-    ESP_LOGI(TAG, "dat: %u", dat);
+    ESP_LOGD(TAG, "dat: %u", dat);
 }
 
 void get_dat(uint32_t *buf) {
@@ -388,11 +389,11 @@ void get_dat(uint32_t *buf) {
         ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
     }
     else {
-        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGD(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_get_u32(dat_handle, "dat", buf);
         switch (err) {
             case ESP_OK:
-                ESP_LOGI(TAG, "The dat has succesfully been read!\n");
+                ESP_LOGD(TAG, "The dat has succesfully been read!\n");
                 break;
             default:
                 ESP_LOGE(TAG, "%s", esp_err_to_name(err));
@@ -404,19 +405,19 @@ void get_dat(uint32_t *buf) {
 void prepare_device(const char *device_type_name) {
     uint32_t dat;
     if (wifi_initialized) {
-        ESP_LOGI(TAG, "Wi-Fi has been enabled for true random dat generation!");
+        ESP_LOGD(TAG, "Wi-Fi has been enabled for true random dat generation!");
         create_dat();
         get_dat(&dat);
     }
     else {
-        ESP_LOGI(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
+        ESP_LOGD(TAG, "Wi-Fi has not been enabled for true random dat generation, enabling Wi-Fi!");
         if (connect_wifi("prepare_device")) {
             while (!wifi_initialized) {
-                ESP_LOGI(TAG, "Waiting for Wi-Fi enable to finish.");
+                ESP_LOGD(TAG, "Waiting for Wi-Fi enable to finish.");
                 vTaskDelay(100 / portTICK_PERIOD_MS);
             };
             get_dat(&dat); //device access token  created with true random generation
-            ESP_LOGI(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
+            ESP_LOGD(TAG, "Disabling Wi-Fi again as to not disturb provisioning.");
             disconnect_wifi("prepare_device");
         }
         else {
@@ -469,7 +470,7 @@ void get_device_service_name(char *service_name, size_t max) {
 esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen,
     uint8_t **outbuf, ssize_t *outlen, void *priv_data) {
     if (inbuf) {
-        ESP_LOGI(TAG, "Received data: %.*s", inlen, (char *)inbuf);
+        ESP_LOGD(TAG, "Received data: %.*s", inlen, (char *)inbuf);
     }
     char response[] = "SUCCESS";
     *outbuf = (uint8_t *)strdup(response);
@@ -483,7 +484,7 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 }
 
 void initialize_sntp(void) {
-    ESP_LOGI(TAG, "SNTP: setting operating mode");
+    ESP_LOGD(TAG, "SNTP: setting operating mode");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
     sntp_setservername(0, "pool.ntp.org");
     sntp_set_time_sync_notification_cb(time_sync_notification_cb);
@@ -494,20 +495,20 @@ void initialize_sntp(void) {
 }
 
 void obtain_time(void) {
-    ESP_LOGI(TAG, "Initializing SNTP");
+    ESP_LOGD(TAG, "Initializing SNTP");
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
      */
 
     if (sntp_enabled()) {
-        ESP_LOGI(TAG, "SNTP already initialized; no need to initialize again");
+        ESP_LOGD(TAG, "SNTP already initialized; no need to initialize again");
     }
     else {
         ESP_ERROR_CHECK(nvs_flash_init());
         ESP_ERROR_CHECK(esp_netif_init());
         initialize_sntp();
-        ESP_LOGI(TAG, "SNTP Initialized");
+        ESP_LOGD(TAG, "SNTP Initialized");
     }
 
     // wait for time to be set
@@ -515,7 +516,7 @@ void obtain_time(void) {
     struct tm timeinfo = { 0 };
     int retry = 0;
     while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < NTP_RETRIES) {
-        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, NTP_RETRIES);
+        ESP_LOGD(TAG, "Waiting for system time to be set... (%d/%d)", retry, NTP_RETRIES);
         vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
     }
     time(&now);
@@ -523,10 +524,10 @@ void obtain_time(void) {
 }
 
 void timesync_task(void *data) {
-    ESP_LOGI("Main", "Timesync task started");
+    ESP_LOGD("Main", "Timesync task started");
     while (1) {
         //Wait for next measurement
-        ESP_LOGI("Main", TIMESYNC_INTERVAL_TXT);
+        ESP_LOGD("Main", TIMESYNC_INTERVAL_TXT);
         vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
         timesync();
     }
@@ -543,14 +544,14 @@ void timesync() {
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
-    ESP_LOGI(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
+    ESP_LOGD(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
     if (connect_wifi("timesync")) {
 
-        ESP_LOGI(TAG, "Waiting for IP connection...");
+        ESP_LOGD(TAG, "Waiting for IP connection...");
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
         //Wait to make extra sure Wi-Fi is connected and stable
         vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Waiting for IP connection... done; initiating timesync call");
+        ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
 
         //obtain time via NTP
         obtain_time();
@@ -567,13 +568,13 @@ void timesync() {
 
     // log time as Unix time.
     uint32_t unix_time = time(NULL);
-    ESP_LOGI(TAG, "Unix Time is: %d", unix_time);
+    ESP_LOGD(TAG, "Unix Time is: %d", unix_time);
 
     // log time as UTC time.
     char strftime_buf[64];
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(TAG, "UTC/date/time is: %s", strftime_buf);
+    ESP_LOGD(TAG, "UTC/date/time is: %s", strftime_buf);
 }
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
@@ -600,13 +601,13 @@ void upload_heartbeat(int hbcounter) {
     //Inputting variables into the plain json string from above(msgPlain).
     snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
     //Posting data over HTTPS, using activate_device_endpoint, msg and bearer token.
-    ESP_LOGI(TAG, "Data: %s", msg);
+    ESP_LOGD(TAG, "Data: %s", msg);
     upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, true, msg, NULL, 0);
     free(msg);
 }
 
 void heartbeat_task(void *data) {
-    ESP_LOGI("Main", "Heartbeat task started");
+    ESP_LOGD("Main", "Heartbeat task started");
     for (int heartbeatcounter = 1; true; heartbeatcounter++) {
         if (connect_wifi("heartbeat_task")) {
             upload_heartbeat(heartbeatcounter);
@@ -616,7 +617,7 @@ void heartbeat_task(void *data) {
             ESP_LOGE(TAG, "Skipped a heartbeat");
         }
         //Wait for next measurement
-        ESP_LOGI(TAG, HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
+        ESP_LOGD(TAG, HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
         vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
     }
 }
@@ -629,12 +630,12 @@ esp_err_t store_bearer(char *activation_response) {
         ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
     }
     else {
-        ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
+        ESP_LOGD(TAG, "Succesfully opened NVS twomes_storage!");
         err = nvs_set_str(bearer_handle, "bearer", activation_response);
         switch (err) {
             case ESP_OK:
-                ESP_LOGI(TAG, "The bearer was written!\n");
-                ESP_LOGI(TAG, "The bearer is %i characters: %s\n", strlen(activation_response), activation_response);
+                ESP_LOGD(TAG, "The bearer was written!\n");
+                ESP_LOGD(TAG, "The bearer is %i characters: %s\n", strlen(activation_response), activation_response);
                 break;
             default:
                 ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
@@ -647,7 +648,7 @@ esp_err_t store_bearer(char *activation_response) {
 
 char *get_bearer() {
     if (bearer != NULL) {
-        ESP_LOGI(TAG, "Existing bearer read from memory: %s", bearer);
+        ESP_LOGD(TAG, "Existing bearer read from memory: %s", bearer);
     }
     else {
         esp_err_t err;
@@ -657,18 +658,18 @@ char *get_bearer() {
             ESP_LOGE(TAG, "Failed to open NVS twomes_storage: %s", esp_err_to_name(err));
         }
         else {
-            ESP_LOGI(TAG, "Succesfully opened NVS twomes_storage!");
+            ESP_LOGD(TAG, "Succesfully opened NVS twomes_storage!");
             size_t bearer_size;
             nvs_get_str(bearer_handle, "bearer", NULL, &bearer_size);
             bearer = malloc(bearer_size); //TODO: don't free(bearer); malloc() is used only once!
             err = nvs_get_str(bearer_handle, "bearer", bearer, &bearer_size);
             switch (err) {
                 case ESP_OK:
-                    ESP_LOGI(TAG, "The bearer was read!\n");
-                    ESP_LOGI(TAG, "The bearer is: %s\n", bearer);
+                    ESP_LOGD(TAG, "The bearer was read!\n");
+                    ESP_LOGD(TAG, "The bearer is: %s\n", bearer);
                     break;
                 case ESP_ERR_NVS_NOT_FOUND:
-                    ESP_LOGI(TAG, "The bearer was not yet initialized!");
+                    ESP_LOGD(TAG, "The bearer was not yet initialized!");
                     bearer = "";
                     break;
                 default:
@@ -691,9 +692,9 @@ void activate_device(char *name) {
     char *device_activation_data = malloc(activation_data_size); //DONE: check whether malloc() is balanced by free()
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
-    ESP_LOGI(TAG, "%s", device_activation_data);
+    ESP_LOGD(TAG, "%s", device_activation_data);
     char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //TODO: check whether malloc() is balanced by free()
-    ESP_LOGI(TAG, "Posting on device activation endpoint");
+    ESP_LOGD(TAG, "Posting on device activation endpoint");
 
     if (connect_wifi("activate_device")) {
         upload_data_to_server(DEVICE_ACTIVATION_ENDPOINT, false, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
@@ -704,7 +705,7 @@ void activate_device(char *name) {
         ESP_LOGE(TAG, "Failed to post activation data!");
     }
 
-    ESP_LOGI(TAG, "Return from device activation endpoint!");
+    ESP_LOGD(TAG, "Return from device activation endpoint!");
 
     // this section of code first retrieves the bearer from the JSON-formatted response.
     // to be replaced later with a call to a propre json parser.
@@ -712,17 +713,17 @@ void activate_device(char *name) {
         ESP_LOGE(TAG, "Failed to activate device!");
     }
     else {
-        ESP_LOGI(TAG, "Bearer returned in response: %i characters: %s", strlen(activation_response), activation_response);
+        ESP_LOGD(TAG, "Bearer returned in response: %i characters: %s", strlen(activation_response), activation_response);
         char *bearer_trimmed = strchr(activation_response, ':'); // set begin of string at first colon
-        ESP_LOGI(TAG, "Initial bearer trimmed: %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
+        ESP_LOGD(TAG, "Initial bearer trimmed: %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
         bearer_trimmed = strchr(bearer_trimmed, '\"'); // set begin of string at first quote after that
         bearer_trimmed++; // move forward one position to first real character
         char *end_of_bearer_string = strchr(bearer_trimmed, '\"'); // search for position of final quote
         *end_of_bearer_string = '\0'; // set end-of-string character in that position in memory
-        ESP_LOGI(TAG, "Final bearer_trimmed %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
+        ESP_LOGD(TAG, "Final bearer_trimmed %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
         if (store_bearer(bearer_trimmed) == ESP_OK) {
             bearer = strdup(bearer_trimmed); //copy the trimmed bearer into the global bearer variable.
-            ESP_LOGI(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
+            ESP_LOGD(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
         }
         else {
             ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
@@ -763,10 +764,10 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
     if (use_bearer) {
         authenticationToken = get_bearer();
         if (strlen(authenticationToken) > 1) {
-            ESP_LOGI(TAG, "Bearer read %i characters: %s", strlen(authenticationToken), authenticationToken);
+            ESP_LOGD(TAG, "Bearer read %i characters: %s", strlen(authenticationToken), authenticationToken);
         }
         else if (strcmp(authenticationToken, "") == 0) {
-            ESP_LOGI(TAG, "Bearer not found, activate device first!");
+            ESP_LOGD(TAG, "Bearer not found, activate device first!");
         }
         else if (!authenticationToken) {
             ESP_LOGE(TAG, "Something went wrong reading the bearer!");
@@ -782,19 +783,19 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
     }
 
     esp_http_client_set_post_field(client, data, strlen(data));
-    ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+    ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    ESP_LOGI(TAG, "Waiting for IP connection...");
+    ESP_LOGD(TAG, "Waiting for IP connection...");
     xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
     //Wait to make extra sure Wi-Fi is connected and stable
     vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-    ESP_LOGI(TAG, "Waiting for IP connection... done; initiating data upload");
+    ESP_LOGD(TAG, "Waiting for IP connection... done; initiating data upload");
 
     esp_err_t err = esp_http_client_open(client, strlen(data));
     while (err != ESP_OK && ++retry < retry_count) {
         ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), retry, retry_count, esp_log_system_timestamp());
         vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+        ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
         err = esp_http_client_open(client, strlen(data));
     }
 
@@ -815,9 +816,9 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
                     ESP_LOGE(TAG, "Response: %s", response);
                 }
                 else {
-                    ESP_LOGI(TAG, "Status Code: %d Response Length: %d", status_code,
+                    ESP_LOGD(TAG, "Status Code: %d Response Length: %d", status_code,
                         content_length);
-                    ESP_LOGI(TAG, "Response: %s", response);
+                    ESP_LOGD(TAG, "Response: %s", response);
                 }
                 esp_http_client_close(client);
             }
@@ -827,7 +828,7 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
         }
     }
     else { //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
-        ESP_LOGI(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+        ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
         for (int i = 10; i >= 0; i--) {
             ESP_LOGE(TAG, "Restarting in %d seconds...", i);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -913,7 +914,7 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect) {
 
     /* If device is not yet provisioned start provisioning service */
     if (!provisioned) {
-        ESP_LOGI(TAG, "Starting provisioning");
+        ESP_LOGD(TAG, "Starting provisioning");
 
         /* What is the Device Service Name that we want
          * This translates to :
@@ -1007,12 +1008,12 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect) {
          * so let's release it's resources */
         wifi_prov_mgr_deinit();
         if (connect) {
-            ESP_LOGI(TAG, "Already provisioned, starting Wi-Fi STA");
+            ESP_LOGD(TAG, "Already provisioned, starting Wi-Fi STA");
             /* Start Wi-Fi station */
             wifi_init_sta();
         }
         else {
-            ESP_LOGI(TAG, "Already provisioned, not starting Wi-Fi because connecting is disabled");
+            ESP_LOGD(TAG, "Already provisioned, not starting Wi-Fi because connecting is disabled");
         }
     }
     /* Wait for Wi-Fi connection */
@@ -1026,9 +1027,9 @@ void start_provisioning(wifi_prov_mgr_config_t config, bool connect) {
 
 bool disable_wifi(char *taskString) {
     if (esp_wifi_stop() == ESP_OK) {
-        ESP_LOGI(TAG, "Disabled Wi-Fi");
+        ESP_LOGD(TAG, "Disabled Wi-Fi");
         wifi_initialized = false;
-        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
         //Wait to make sure everyting is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
@@ -1042,7 +1043,7 @@ bool disable_wifi(char *taskString) {
 
 bool disable_wifi_keeping_802_11_mutex(){
     if (esp_wifi_stop() == ESP_OK) {
-        ESP_LOGI(TAG, "Disabled Wi-Fi without releasing 802.11 mutex");
+        ESP_LOGD(TAG, "Disabled Wi-Fi without releasing 802.11 mutex");
         wifi_initialized = false;
         //Wait to make sure everyting is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
@@ -1057,9 +1058,9 @@ bool disable_wifi_keeping_802_11_mutex(){
 
 bool enable_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        ESP_LOGD(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
         if (esp_wifi_start() == ESP_OK) {
-            ESP_LOGI(TAG, "Enabled Wi-Fi");
+            ESP_LOGD(TAG, "Enabled Wi-Fi");
             wifi_initialized = true;
             return true;
         }
@@ -1078,8 +1079,8 @@ bool disconnect_wifi(char *taskString) {
     wifi_autoconnect = false;
     esp_err_t err = esp_wifi_disconnect();
     if (err == ESP_OK) {
-        ESP_LOGI(TAG, "Disconnected Wi-Fi");
-        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        ESP_LOGD(TAG, "Disconnected Wi-Fi");
+        ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
         //Wait to make extra sure Wi-Fi is connected and stable
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
@@ -1093,7 +1094,7 @@ bool disconnect_wifi(char *taskString) {
 
 bool connect_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        ESP_LOGD(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
         return connect_wifi_having_802_11_mutex();
     }
     else {
@@ -1113,12 +1114,12 @@ bool connect_wifi_having_802_11_mutex(){
     wifi_autoconnect = true;
     if (err == ESP_OK) {
         wifi_initialized = true;
-        ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
+        ESP_LOGD(TAG, "Succesfully connected Wi-Fi");
         return true;
     }
     else {
         ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
-        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
+        ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
         xSemaphoreGive(wireless_802_11_mutex);
         return false;
     }
@@ -1167,18 +1168,18 @@ void twomes_device_provisioning(const char *device_type_name) {
     bearer = get_bearer();
 
     if (bearer != NULL && strlen(bearer) > 1) {
-        ESP_LOGI(TAG, "Bearer read %i characters: %s", strlen(bearer), bearer);
+        ESP_LOGD(TAG, "Bearer read %i characters: %s", strlen(bearer), bearer);
     }
 
     else if (strcmp(bearer, "") == 0) {
-        ESP_LOGI(TAG, "Bearer not found, activating device!");
+        ESP_LOGD(TAG, "Bearer not found, activating device!");
         // get device name
         char *device_name;
         device_name = malloc(DEVICE_NAME_SIZE); //DONE: checked malloc() is balanced by free()
         get_device_service_name(device_name, DEVICE_NAME_SIZE);
         activate_device(device_name);
-        ESP_LOGI(TAG, "Device activated");
-        ESP_LOGI(TAG, "Bearer after activation is %i characters: %s", strlen(bearer), bearer);
+        ESP_LOGD(TAG, "Device activated");
+        ESP_LOGD(TAG, "Bearer after activation is %i characters: %s", strlen(bearer), bearer);
         free(device_name);
     }
 
