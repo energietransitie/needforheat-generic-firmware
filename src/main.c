@@ -16,20 +16,20 @@ void app_main(void)
 {
     twomes_device_provisioning(device_type_name);
 
-    ESP_LOGI(TAG, "Starting heartbeat task");
+    ESP_LOGD(TAG, "Starting heartbeat task");
     xTaskCreatePinnedToCore(&heartbeat_task, "heartbeat_task", 4096, NULL, 1, NULL, 1);
 
-    ESP_LOGI(TAG, BOOT_STARTUP_INTERVAL_TXT);
+    ESP_LOGD(TAG, BOOT_STARTUP_INTERVAL_TXT);
     vTaskDelay(BOOT_STARTUP_INTERVAL_MS / portTICK_PERIOD_MS);
     
-    ESP_LOGI(TAG, "Starting timesync task");
+    ESP_LOGD(TAG, "Starting timesync task");
     xTaskCreatePinnedToCore(&timesync_task, "timesync_task", 4096, NULL, 1, NULL, 1);
 
-    ESP_LOGI(TAG, BOOT_STARTUP_INTERVAL_TXT);
+    ESP_LOGD(TAG, BOOT_STARTUP_INTERVAL_TXT);
     vTaskDelay(BOOT_STARTUP_INTERVAL_MS / portTICK_PERIOD_MS);
 
     #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-    ESP_LOGI(TAG, "Starting presence detection");
+    ESP_LOGD(TAG, "Starting presence detection");
     start_presence_detection();
     #endif
 
