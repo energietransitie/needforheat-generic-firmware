@@ -44,26 +44,29 @@
 #define POST_WITH_BEARER true
 #define POST_WITHOUT_BEARER false
 
-#define HTTPS_PRE_WAIT_MS (1.5 * 1000) // milliseconds ( 1,5 s * 1000 ms/s)
+#define HTTPS_PRE_WAIT_MS (100) // milliseconds
 #define HTTPS_RETRY_WAIT_MS (2 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
-#define HTTPS_POST_WAIT_MS (1 * 1000) // milliseconds ( 1 s * 1000 ms/s)
-#define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try  
+#define HTTPS_POST_WAIT_MS (100) // milliseconds
+#define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try
+
 #define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
-#define MAX_WAIT_802_11_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s)
-#define MAX_WAIT_802_11_TXT "15 seconds"
 
 #ifdef CONFIG_TWOMES_STRESS_TEST
-#define HEARTBEAT_UPLOAD_INTERVAL_MS (15 * 1000) // milliseconds ( 15 s * 1000 ms/s) // stress test value
+#define HEARTBEAT_UPLOAD_INTERVAL_MS (1 * 60  * 1000) // milliseconds ( 1 min * 60 s/min * 1000 ms/s) // stress test value
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS HEARTBEAT_UPLOAD_INTERVAL_MS
-#define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 15 seconds for next heartbeat"
+#define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 1 minute for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (4 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
 #define TIMESYNC_INTERVAL_TXT "Wating 4 minutes before next NTP timesync"
+#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 20 s * 1000 ms/s)
+#define MAX_WAIT_802_11_TXT "30 seconds"
 #else
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
 #define TIMESYNC_INTERVAL_TXT "Wating 6 hours before next NTP timesync"
+#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 20 s * 1000 ms/s)
+#define MAX_WAIT_802_11_TXT "30 seconds"
 #endif
 
 xSemaphoreHandle wireless_802_11_mutex;
@@ -127,7 +130,10 @@ wifi_prov_mgr_config_t initialize_provisioning();
 void start_provisioning(wifi_prov_mgr_config_t config, bool connect);
 void twomes_device_provisioning(const char *device_type_name);
 bool disable_wifi(char *taskString);
+bool disable_wifi_keeping_802_11_mutex();
 bool enable_wifi(char *taskString);
 bool disconnect_wifi(char *taskString);
 bool connect_wifi(char *taskString);
+bool connect_wifi_having_802_11_mutex();
+
 #endif

@@ -255,6 +255,8 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         ESP_LOGI(TAG, "Disconnected.");
+        /* Clear the WIFI_CONNECTED_EVENT bits when a disconnect is detected; ensuring that the bits properly signal connectivity */
+        xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_EVENT);
         if (wifi_autoconnect) {
             ESP_LOGI(TAG, "Connecting to the AP again...");
             esp_wifi_connect();
@@ -544,6 +546,12 @@ void timesync() {
     ESP_LOGI(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
     if (connect_wifi("timesync")) {
 
+        ESP_LOGI(TAG, "Waiting for IP connection...");
+        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+        //Wait to make extra sure Wi-Fi is connected and stable
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "Waiting for IP connection... done; initiating timesync call");
+
         //obtain time via NTP
         obtain_time();
 
@@ -775,6 +783,13 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
 
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGI(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+
+    ESP_LOGI(TAG, "Waiting for IP connection...");
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+    //Wait to make extra sure Wi-Fi is connected and stable
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+    ESP_LOGI(TAG, "Waiting for IP connection... done; initiating data upload");
+
     esp_err_t err = esp_http_client_open(client, strlen(data));
     while (err != ESP_OK && ++retry < retry_count) {
         ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), retry, retry_count, esp_log_system_timestamp());
@@ -1013,7 +1028,7 @@ bool disable_wifi(char *taskString) {
     if (esp_wifi_stop() == ESP_OK) {
         ESP_LOGI(TAG, "Disabled Wi-Fi");
         wifi_initialized = false;
-        ESP_LOGI(TAG, "%s will release the 802_11 resource now", taskString);
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
         //Wait to make sure everyting is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
@@ -1025,14 +1040,27 @@ bool disable_wifi(char *taskString) {
     }
 }
 
+bool disable_wifi_keeping_802_11_mutex(){
+    if (esp_wifi_stop() == ESP_OK) {
+        ESP_LOGI(TAG, "Disabled Wi-Fi without releasing 802.11 mutex");
+        wifi_initialized = false;
+        //Wait to make sure everyting is finished.
+        vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
+        return true;
+    }
+    else {
+        ESP_LOGE(TAG, "Failed to disable Wi-Fi without releasing 802.11 mutex");
+        return false;
+    }
+}
+
+
 bool enable_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        ESP_LOGI(TAG, "%s got access to 802_11 resource", taskString);
+        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
         if (esp_wifi_start() == ESP_OK) {
             ESP_LOGI(TAG, "Enabled Wi-Fi");
             wifi_initialized = true;
-            //Wait to make sure Wi-Fi is enabled.
-            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
             return true;
         }
         else {
@@ -1051,8 +1079,8 @@ bool disconnect_wifi(char *taskString) {
     esp_err_t err = esp_wifi_disconnect();
     if (err == ESP_OK) {
         ESP_LOGI(TAG, "Disconnected Wi-Fi");
-        ESP_LOGI(TAG, "%s will release the 802_11 resource now", taskString);
-        //Wait to make sure everyting is finished.
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        //Wait to make extra sure Wi-Fi is connected and stable
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
         xSemaphoreGive(wireless_802_11_mutex);
         return true;
@@ -1065,32 +1093,37 @@ bool disconnect_wifi(char *taskString) {
 
 bool connect_wifi(char *taskString) {
     if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
-        esp_err_t err;
-        if (wifi_initialized) {
-            err = esp_wifi_connect();
-        }
-        else {
-            err = esp_wifi_start();
-        }
-        wifi_autoconnect = true;
-        if (err == ESP_OK) {
-            wifi_initialized = true;
-            ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
-            //Wait to make sure Wi-Fi is connected.
-            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-            return true;
-        }
-        else {
-            ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
-            xSemaphoreGive(wireless_802_11_mutex);
-            return false;
-        }
+        ESP_LOGI(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
+        return connect_wifi_having_802_11_mutex();
     }
     else {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
 }
+
+bool connect_wifi_having_802_11_mutex(){
+    esp_err_t err;
+    if (wifi_initialized) {
+        err = esp_wifi_connect();
+    }
+    else {
+        err = esp_wifi_start();
+    }
+    wifi_autoconnect = true;
+    if (err == ESP_OK) {
+        wifi_initialized = true;
+        ESP_LOGI(TAG, "Succesfully connected Wi-Fi");
+        return true;
+    }
+    else {
+        ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
+        ESP_LOGI(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
+        xSemaphoreGive(wireless_802_11_mutex);
+        return false;
+    }
+}
+
 
 void initialize_nvs() {
     /* Initialize NVS partition */
