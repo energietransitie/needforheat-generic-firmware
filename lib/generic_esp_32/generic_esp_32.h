@@ -112,9 +112,10 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 void initialize_sntp(void);
 void obtain_time(void);
 void timesync_task(void *data);
-void timesync();
+void timesync(bool disconnect_after_sync);
 void initialize_timezone(char *timezone);
-int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
+int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
+int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_conn, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
 char *get_bearer();
