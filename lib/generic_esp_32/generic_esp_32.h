@@ -42,9 +42,6 @@
 
 #define LONG_BUTTON_PRESS_DURATION 10 // seconds
 
-#define POST_WITH_BEARER true
-#define POST_WITHOUT_BEARER false
-
 #define HTTPS_PRE_WAIT_MS (100) // milliseconds
 #define HTTPS_RETRY_WAIT_MS (2 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (100) // milliseconds
@@ -113,14 +110,14 @@ esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ss
 void initialize_sntp(void);
 void obtain_time(void);
 void timesync_task(void *data);
-void timesync(bool disconnect_after_sync);
+#define ALREADY_CONNECTED true
+#define NOT_ALREADY_CONNECTED false
+void timesync(bool already_connected);
 void initialize_timezone(char *timezone);
 #define USE_BEARER true
 #define DO_NOT_USE_BEARER false
-#define WAIT_FOR_IP_CONNECTION true
-#define DO_NOT_WAIT_FOR_IP_CONNECTION false
 int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
-int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_connection, char *data, char *response_buf, uint8_t resp_buf_size);
+int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
 char *get_bearer();

@@ -529,7 +529,7 @@ void timesync_task(void *data) {
         //Wait for next measurement
         ESP_LOGD("Main", TIMESYNC_INTERVAL_TXT);
         vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
-        timesync(true);
+        timesync(ALREADY_CONNECTED);
     }
 }
 
@@ -539,34 +539,31 @@ void initialize_timezone(char *timezone) {
     tzset();
 }
 
-void timesync(bool disconnect_after_sync) {
+void timesync(bool already_connected) {
     time_t now;
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
     ESP_LOGD(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
-    if (connect_wifi("timesync")) {
+    if (!already_connected) {
+        if (connect_wifi("timesync")) {
 
-        ESP_LOGD(TAG, "Waiting for IP connection...");
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
-        //Wait to make extra sure Wi-Fi is connected and stable
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
-
-        //obtain time via NTP
-        obtain_time();
-
-        // update 'now' variable with current time
-        time(&now);
-
-        if (disconnect_after_sync) {
-            //Disconnect WiFi
-            disconnect_wifi("timesync");
+            ESP_LOGD(TAG, "Waiting for IP connection...");
+            xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+            //Wait to make extra sure Wi-Fi is connected and stable
+            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+            ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
+        }
+        else {
+            ESP_LOGE(TAG, "Failed to connect to network for timesync");
         }
     }
-    else {
-        ESP_LOGE(TAG, "Failed to connect to network for timesync");
-    }
+
+    //obtain time via NTP
+    obtain_time();
+
+    // update 'now' variable with current time
+    time(&now);
 
     // log time as Unix time.
     uint32_t unix_time = time(NULL);
@@ -577,6 +574,11 @@ void timesync(bool disconnect_after_sync) {
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGD(TAG, "UTC/date/time is: %s", strftime_buf);
+
+    if (!already_connected) {
+        //Disconnect WiFi
+        disconnect_wifi("timesync");
+    }
 }
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
@@ -689,7 +691,7 @@ void activate_device() {
 
     ESP_LOGD(TAG, "%s", device_activation_data);
     char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balanced by free()
-    https_response_status = post_https(DEVICE_ACTIVATION_ENDPOINT, DO_NOT_USE_BEARER, WAIT_FOR_IP_CONNECTION, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
+    https_response_status = post_https(DEVICE_ACTIVATION_ENDPOINT, DO_NOT_USE_BEARER, ALREADY_CONNECTED, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
     free(device_activation_data);
     ESP_LOGD(TAG, "Return from device activation endpoint!");
 
@@ -723,7 +725,7 @@ void activate_device() {
     }
 }
 
-int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_connection, char *data, char *response_buf, uint8_t resp_buf_size) {
+int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size) {
     int connect_retry_counter = 0;
     int upload_retry_counter = 0;
     int content_length = 0;
@@ -777,35 +779,34 @@ int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_connection, cha
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    connect_success = connect_wifi(endpoint); 
-    while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
-        ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
+    if (!already_connected){
         connect_success = connect_wifi(endpoint); 
-    }
-
-    if (!connect_success) {
-        //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
-        ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
-        for (int i = 10; i >= 0; i--) {
-            ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
+            ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
+            connect_success = connect_wifi(endpoint); 
         }
-        ESP_LOGE(TAG, "Restarting now.");
-        fflush(stdout);
-        esp_restart();
-    }
-        
-    if (wait_for_ip_connection) {
+
+        if (!connect_success) {
+            //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
+            ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+            for (int i = 10; i >= 0; i--) {
+                ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+            }
+            ESP_LOGE(TAG, "Restarting now.");
+            fflush(stdout);
+            esp_restart();
+        }
+
         ESP_LOGD(TAG, "Waiting for IP connection...");
         xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
         ESP_LOGD(TAG, "Waiting for IP connection... done");
+
+        //Wait to make extra sure Wi-Fi is connected and stable
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
     }
 
-    //Wait to make extra sure Wi-Fi is connected and stable
-    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-
     ESP_LOGD(TAG, "Initiating call to endpoint %s with payload: %s", endpoint, data);
-
 
     esp_err_t err = esp_http_client_open(client, strlen(data));
     while (err != ESP_OK && ++upload_retry_counter < HTTPS_UPLOAD_RETRIES) {
@@ -872,12 +873,13 @@ int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_connection, cha
         }
 
     }
+    //always disconnect after & release mutex at the end of this function
     disconnect_wifi(endpoint);
     return status_code;
 }
 
 int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size) {
-    return post_https(endpoint, use_bearer, true, data, response_buf, resp_buf_size);
+    return post_https(endpoint, use_bearer, NOT_ALREADY_CONNECTED, data, response_buf, resp_buf_size);
 }
 
 wifi_prov_mgr_config_t initialize_provisioning() {
@@ -1178,7 +1180,7 @@ void twomes_device_provisioning(const char *device_type_name) {
 
     // initialize time with timezone UTC; building timezone is stored in central database
     initialize_timezone("UTC");
-    timesync(true);
+    timesync(ALREADY_CONNECTED);
 
     // get bearer token
     bearer = get_bearer();
@@ -1196,5 +1198,5 @@ void twomes_device_provisioning(const char *device_type_name) {
     else if (!bearer) {
         ESP_LOGE(TAG, "Something went wrong while reading the bearer!");
     }
-    //disconnect_wifi("timesync");
+    disconnect_wifi("after provisioning");
 }

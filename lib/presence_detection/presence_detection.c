@@ -318,7 +318,7 @@ void upload_presence_detection_data()
     msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
     msg_multiple_string = malloc(msg_multiple_string_size); //DONE: checked: malloc() is balanced by free()
     snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
-    post_https(VARIABLE_UPLOAD_ENDPOINT, true, true, msg_multiple_string, NULL, 0); //TEST: can we avoid waiting for IP event?
+    post_https(VARIABLE_UPLOAD_ENDPOINT, USE_BEARER, NOT_ALREADY_CONNECTED, msg_multiple_string, NULL, 0); //TEST: can we avoid waiting for IP event?
     free(rssi_property_string);
     free(msg_multiple_string);
     reset_results();
