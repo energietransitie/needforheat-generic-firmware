@@ -114,8 +114,8 @@ void timesync_task(void *data);
 #define NOT_ALREADY_CONNECTED false
 void timesync(bool already_connected);
 void initialize_timezone(char *timezone);
-#define USE_BEARER true
-#define DO_NOT_USE_BEARER false
+#define POST_WITH_BEARER true
+#define POST_WITHOUT_BEARER false
 int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
 int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);

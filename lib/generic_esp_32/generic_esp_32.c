@@ -604,7 +604,7 @@ void upload_heartbeat(int hbcounter) {
     char *msg = malloc(msgSize); //DONE: malloc() is balanced by free
     //Inputting variables into the plain json string from above(msgPlain).
     snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
-    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, USE_BEARER, msg, NULL, 0);
+    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, POST_WITH_BEARER, msg, NULL, 0);
     free(msg);
 }
 
@@ -691,7 +691,7 @@ void activate_device() {
 
     ESP_LOGD(TAG, "%s", device_activation_data);
     char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balanced by free()
-    https_response_status = post_https(DEVICE_ACTIVATION_ENDPOINT, DO_NOT_USE_BEARER, ALREADY_CONNECTED, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
+    https_response_status = post_https(DEVICE_ACTIVATION_ENDPOINT, POST_WITHOUT_BEARER, ALREADY_CONNECTED, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
     free(device_activation_data);
     ESP_LOGD(TAG, "Return from device activation endpoint!");
 
