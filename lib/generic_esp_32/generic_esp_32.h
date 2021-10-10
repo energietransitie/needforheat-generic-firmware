@@ -20,6 +20,7 @@
 #include <nvs_flash.h>
 #include <esp_tls.h>
 #include <esp_http_client.h>
+#define HTTPSTATUS_OK 200 //change everywhere in code to HttpStatus_Ok when including esp_http_client.h library of 19 Nov 2020 or later
 #include <driver/gpio.h>
 
 #include <wifi_provisioning/manager.h>
@@ -47,9 +48,9 @@
 #define HTTPS_PRE_WAIT_MS (100) // milliseconds
 #define HTTPS_RETRY_WAIT_MS (2 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (100) // milliseconds
-#define HTTPS_UPLOAD_RETRIES 10 // number of retries inclusing initial try
-
-#define NTP_RETRIES 10 // // number of retries for timesync inclusing initial try
+#define HTTPS_UPLOAD_RETRIES 10 // number of retries including initial try
+#define WIFI_CONNECT_RETRIES 10 // number of retries including initial try
+#define NTP_RETRIES 10 // // number of retries for timesync including initial try
 
 #ifdef CONFIG_TWOMES_STRESS_TEST
 #define HEARTBEAT_UPLOAD_INTERVAL_MS (1 * 60  * 1000) // milliseconds ( 1 min * 60 s/min * 1000 ms/s) // stress test value
@@ -114,12 +115,16 @@ void obtain_time(void);
 void timesync_task(void *data);
 void timesync(bool disconnect_after_sync);
 void initialize_timezone(char *timezone);
+#define USE_BEARER true
+#define DO_NOT_USE_BEARER false
+#define WAIT_FOR_IP_CONNECTION true
+#define DO_NOT_WAIT_FOR_IP_CONNECTION false
 int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size);
-int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_conn, char *data, char *response_buf, uint8_t resp_buf_size);
+int post_https(char *endpoint, bool use_bearer, bool wait_for_ip_connection, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
 char *get_bearer();
-void activate_device(char *name);
+void activate_device();
 void get_http(const char *url);
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 void start_presence_detection();
