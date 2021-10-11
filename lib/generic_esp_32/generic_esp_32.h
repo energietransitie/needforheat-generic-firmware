@@ -29,7 +29,7 @@
 #include "presence_detection.h"
 #endif
 
-#define VERSION "V2.0.0"
+#define VERSION "V2.5.0"
 #define WIFI_RESET_BUTTON   GPIO_NUM_0
 #define LED_ERROR   GPIO_NUM_19
 #define MAX_RESPONSE_LENGTH 100
@@ -55,7 +55,7 @@
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 1 minute for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (4 * 60 * 1000) // milliseconds (4 min * 60 s/min * 1000 ms/s)  // stress test value 
 #define TIMESYNC_INTERVAL_TXT "Wating 4 minutes before next NTP timesync"
-#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 20 s * 1000 ms/s)
+#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s)
 #define MAX_WAIT_802_11_TXT "30 seconds"
 #else
 #define HEARTBEAT_MEASUREMENT_INTERVAL_MS (10 * 60 * 1000) // milliseconds ( 10 min * 60 s/min * 1000 ms/s)
@@ -63,7 +63,7 @@
 #define HEARTBEAT_MEASUREMENT_INTERVAL_TXT "Wating 10 minutes for next heartbeat"
 #define TIMESYNC_INTERVAL_MS (6 *60 * 60 * 1000) // milliseconds (6 hr * 60 min/hr * 60 s/min * 1000 ms/s)   
 #define TIMESYNC_INTERVAL_TXT "Wating 6 hours before next NTP timesync"
-#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 20 s * 1000 ms/s)
+#define MAX_WAIT_802_11_MS (30 * 1000) // milliseconds ( 30 s * 1000 ms/s)
 #define MAX_WAIT_802_11_TXT "30 seconds"
 #endif
 
