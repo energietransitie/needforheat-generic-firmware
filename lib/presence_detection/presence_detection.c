@@ -308,27 +308,20 @@ char *results_to_rssi_list()
 //Uploads our data via the upload_data_to_server() of the generic firmware
 void upload_presence_detection_data()
 {
-    if (connect_wifi_having_802_11_mutex()) {
-        char *msg_multiple_string_plain = "{\"upload_time\":\"%d\",\"property_measurements\":["
-                                        "%s"
-                                        "]}]}";
+    char *msg_multiple_string_plain = "{\"upload_time\":\"%d\",\"property_measurements\":["
+                                    "%s"
+                                    "]}]}";
 
-        int msg_multiple_string_size;
-        char *msg_multiple_string;
-        char *rssi_property_string = results_to_rssi_list(); //DONE: checked malloc() is balanced by free()
-        msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
-        msg_multiple_string = malloc(msg_multiple_string_size); //DONE: checked: malloc() is balanced by free()
-        snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
-        ESP_LOGD(TAG, "Payload: %s", msg_multiple_string);
-        upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, true, msg_multiple_string, NULL, 0);
-        free(rssi_property_string);
-        free(msg_multiple_string);
-        reset_results();
-        disconnect_wifi("upload_presence_detection_data");
-    }
-    else {
-        ESP_LOGE(TAG, "Skipped uploading presence data that was collected");
-    }
+    int msg_multiple_string_size;
+    char *msg_multiple_string;
+    char *rssi_property_string = results_to_rssi_list(); //DONE: checked malloc() is balanced by free()
+    msg_multiple_string_size = variable_sprintf_size(msg_multiple_string_plain, 2, time(NULL), rssi_property_string);
+    msg_multiple_string = malloc(msg_multiple_string_size); //DONE: checked: malloc() is balanced by free()
+    snprintf(msg_multiple_string, msg_multiple_string_size, msg_multiple_string_plain, time(NULL), rssi_property_string);
+    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, POST_WITH_BEARER, msg_multiple_string, NULL, 0);
+    free(rssi_property_string);
+    free(msg_multiple_string);
+    reset_results();
 }
 
 void store_measurement(bool isHome)

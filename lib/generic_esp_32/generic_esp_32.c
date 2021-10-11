@@ -217,8 +217,8 @@ void prov_event_handler(void *arg, esp_event_base_t event_base,
                 break;
             case WIFI_PROV_CRED_RECV:
             {
-                wifi_sta_config_t *wifi_sta_cfg = (wifi_sta_config_t *)event_data;
                 ESP_LOGD(TAG, "Received Wi-Fi credentials");
+                // wifi_sta_config_t *wifi_sta_cfg = (wifi_sta_config_t *)event_data;
                 // ESP_LOGD(TAG, "Received Wi-Fi credentials"
                 //     "\n\tSSID     : %s\n\tPassword : %s",
                 //     (const char *)wifi_sta_cfg->ssid,
@@ -529,7 +529,7 @@ void timesync_task(void *data) {
         //Wait for next measurement
         ESP_LOGD("Main", TIMESYNC_INTERVAL_TXT);
         vTaskDelay((TIMESYNC_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
-        timesync();
+        timesync(ALREADY_CONNECTED);
     }
 }
 
@@ -539,32 +539,31 @@ void initialize_timezone(char *timezone) {
     tzset();
 }
 
-void timesync() {
+void timesync(bool already_connected) {
     time_t now;
     struct tm timeinfo;
     time(&now);
     localtime_r(&now, &timeinfo);
     ESP_LOGD(TAG, "Time sync: connecting to Wi-Fi and getting time over NTP.");
-    if (connect_wifi("timesync")) {
+    if (!already_connected) {
+        if (connect_wifi("timesync")) {
 
-        ESP_LOGD(TAG, "Waiting for IP connection...");
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
-        //Wait to make extra sure Wi-Fi is connected and stable
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-        ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
-
-        //obtain time via NTP
-        obtain_time();
-
-        // update 'now' variable with current time
-        time(&now);
-
-        //Disconnect WiFi
-        disconnect_wifi("timesync");
+            ESP_LOGD(TAG, "Waiting for IP connection...");
+            xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+            //Wait to make extra sure Wi-Fi is connected and stable
+            vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+            ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
+        }
+        else {
+            ESP_LOGE(TAG, "Failed to connect to network for timesync");
+        }
     }
-    else {
-        ESP_LOGE(TAG, "Failed to connect to network for timesync");
-    }
+
+    //obtain time via NTP
+    obtain_time();
+
+    // update 'now' variable with current time
+    time(&now);
 
     // log time as Unix time.
     uint32_t unix_time = time(NULL);
@@ -575,6 +574,11 @@ void timesync() {
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     ESP_LOGD(TAG, "UTC/date/time is: %s", strftime_buf);
+
+    if (!already_connected) {
+        //Disconnect WiFi
+        disconnect_wifi("timesync");
+    }
 }
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
@@ -600,22 +604,14 @@ void upload_heartbeat(int hbcounter) {
     char *msg = malloc(msgSize); //DONE: malloc() is balanced by free
     //Inputting variables into the plain json string from above(msgPlain).
     snprintf(msg, msgSize, msg_plain, now, measurementType, now, hbcounter);
-    //Posting data over HTTPS, using activate_device_endpoint, msg and bearer token.
-    ESP_LOGD(TAG, "Data: %s", msg);
-    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, true, msg, NULL, 0);
+    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, POST_WITH_BEARER, msg, NULL, 0);
     free(msg);
 }
 
 void heartbeat_task(void *data) {
     ESP_LOGD("Main", "Heartbeat task started");
     for (int heartbeatcounter = 1; true; heartbeatcounter++) {
-        if (connect_wifi("heartbeat_task")) {
-            upload_heartbeat(heartbeatcounter);
-            disconnect_wifi("heartbeat_task");
-        }
-        else {
-            ESP_LOGE(TAG, "Skipped a heartbeat");
-        }
+        upload_heartbeat(heartbeatcounter);
         //Wait for next measurement
         ESP_LOGD(TAG, HEARTBEAT_MEASUREMENT_INTERVAL_TXT);
         vTaskDelay((HEARTBEAT_MEASUREMENT_INTERVAL_MS - HTTPS_PRE_WAIT_MS - HTTPS_POST_WAIT_MS) / portTICK_PERIOD_MS);
@@ -682,60 +678,58 @@ char *get_bearer() {
     return bearer;
 }
 
-void activate_device(char *name) {
+void activate_device() {
     esp_err_t err = 0;
     uint32_t dat;
     get_dat(&dat);
     activation = true;
+    int https_response_status = 0;
     char *device_activation_plain = "{\"activation_token\":\"%u\"}";
     int activation_data_size = variable_sprintf_size(device_activation_plain, 1, dat);
     char *device_activation_data = malloc(activation_data_size); //DONE: check whether malloc() is balanced by free()
     snprintf(device_activation_data, activation_data_size, device_activation_plain, dat);
 
     ESP_LOGD(TAG, "%s", device_activation_data);
-    char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //TODO: check whether malloc() is balanced by free()
-    ESP_LOGD(TAG, "Posting on device activation endpoint");
-
-    if (connect_wifi("activate_device")) {
-        upload_data_to_server(DEVICE_ACTIVATION_ENDPOINT, false, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
-        free(device_activation_data);
-        disconnect_wifi("activate_device");
-    }
-    else {
-        ESP_LOGE(TAG, "Failed to post activation data!");
-    }
-
+    char *activation_response = malloc(sizeof(char) * MAX_RESPONSE_LENGTH); //DONE: check whether malloc() is balanced by free()
+    https_response_status = post_https(DEVICE_ACTIVATION_ENDPOINT, POST_WITHOUT_BEARER, ALREADY_CONNECTED, device_activation_data, activation_response, MAX_RESPONSE_LENGTH);
+    free(device_activation_data);
     ESP_LOGD(TAG, "Return from device activation endpoint!");
 
     // this section of code first retrieves the bearer from the JSON-formatted response.
-    // to be replaced later with a call to a propre json parser.
-    if (!activation_response) {
-        ESP_LOGE(TAG, "Failed to activate device!");
+    // TODO: replace with a call to a propre json parser.
+    if (https_response_status != HTTPSTATUS_OK) { //change everywhere in code to HttpStatus_Ok when including esp_http_client.h library of 19 Nov 2020 or later
+        ESP_LOGE(TAG, "Failed to activate device: response is not %i but %i", HTTPSTATUS_OK, https_response_status);
     }
     else {
-        ESP_LOGD(TAG, "Bearer returned in response: %i characters: %s", strlen(activation_response), activation_response);
-        char *bearer_trimmed = strchr(activation_response, ':'); // set begin of string at first colon
-        ESP_LOGD(TAG, "Initial bearer trimmed: %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
-        bearer_trimmed = strchr(bearer_trimmed, '\"'); // set begin of string at first quote after that
-        bearer_trimmed++; // move forward one position to first real character
-        char *end_of_bearer_string = strchr(bearer_trimmed, '\"'); // search for position of final quote
-        *end_of_bearer_string = '\0'; // set end-of-string character in that position in memory
-        ESP_LOGD(TAG, "Final bearer_trimmed %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
-        if (store_bearer(bearer_trimmed) == ESP_OK) {
-            bearer = strdup(bearer_trimmed); //copy the trimmed bearer into the global bearer variable.
-            ESP_LOGD(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
+        if (!activation_response) {
+            ESP_LOGE(TAG, "Failed to activate device: no activation response!");
         }
         else {
-            ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
+            ESP_LOGD(TAG, "Bearer returned in response: %i characters: %s", strlen(activation_response), activation_response);
+            char *bearer_trimmed = strchr(activation_response, ':'); // set begin of string at first colon
+            ESP_LOGD(TAG, "Initial bearer trimmed: %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
+            bearer_trimmed = strchr(bearer_trimmed, '\"'); // set begin of string at first quote after that
+            bearer_trimmed++; // move forward one position to first real character
+            char *end_of_bearer_string = strchr(bearer_trimmed, '\"'); // search for position of final quote
+            *end_of_bearer_string = '\0'; // set end-of-string character in that position in memory
+            ESP_LOGD(TAG, "Final bearer_trimmed %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
+            if (store_bearer(bearer_trimmed) == ESP_OK) {
+                bearer = strdup(bearer_trimmed); //copy the trimmed bearer into the global bearer variable.
+                ESP_LOGD(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
+            }
+            else {
+                ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
+            }
+            free(activation_response);
         }
-        free(activation_response);
     }
 }
 
-int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size) {
-    int retry = 0;
-    const int retry_count = HTTPS_UPLOAD_RETRIES;
+int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size) {
+    int connect_retry_counter = 0;
+    int upload_retry_counter = 0;
     int content_length = 0;
+    bool connect_success = false;
     int status_code = 0;
     char *response = NULL;
     char *urlString = NULL;
@@ -785,15 +779,38 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    ESP_LOGD(TAG, "Waiting for IP connection...");
-    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
-    //Wait to make extra sure Wi-Fi is connected and stable
-    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-    ESP_LOGD(TAG, "Waiting for IP connection... done; initiating data upload");
+    if (!already_connected){
+        connect_success = connect_wifi(endpoint); 
+        while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
+            ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
+            connect_success = connect_wifi(endpoint); 
+        }
+
+        if (!connect_success) {
+            //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
+            ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+            for (int i = 10; i >= 0; i--) {
+                ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
+                vTaskDelay(1000 / portTICK_PERIOD_MS);
+            }
+            ESP_LOGE(TAG, "Restarting now.");
+            fflush(stdout);
+            esp_restart();
+        }
+
+        ESP_LOGD(TAG, "Waiting for IP connection...");
+        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+        ESP_LOGD(TAG, "Waiting for IP connection... done");
+
+        //Wait to make extra sure Wi-Fi is connected and stable
+        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
+    }
+
+    ESP_LOGD(TAG, "Initiating call to endpoint %s with payload: %s", endpoint, data);
 
     esp_err_t err = esp_http_client_open(client, strlen(data));
-    while (err != ESP_OK && ++retry < retry_count) {
-        ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), retry, retry_count, esp_log_system_timestamp());
+    while (err != ESP_OK && ++upload_retry_counter < HTTPS_UPLOAD_RETRIES) {
+        ESP_LOGE(TAG, "Failed to open HTTPS connection %s (%d/%d) at %s", esp_err_to_name(err), upload_retry_counter, HTTPS_UPLOAD_RETRIES, esp_log_system_timestamp());
         vTaskDelay(HTTPS_RETRY_WAIT_MS / portTICK_PERIOD_MS);
         ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
         err = esp_http_client_open(client, strlen(data));
@@ -810,7 +827,7 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
             if (content_length > 0) {
                 response = malloc(sizeof(char) * content_length); //DONE: checked that malloc() is balanced by free()
                 esp_http_client_read(client, response, content_length);
-                if (status_code != 200) {
+                if (status_code != HTTPSTATUS_OK) {
                     ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
                         content_length);
                     ESP_LOGE(TAG, "Response: %s", response);
@@ -830,7 +847,7 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
     else { //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
         ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
         for (int i = 10; i >= 0; i--) {
-            ESP_LOGE(TAG, "Restarting in %d seconds...", i);
+            ESP_LOGE(TAG, "Could still not upload; restarting in %d seconds...", i);
             vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
         ESP_LOGE(TAG, "Restarting now.");
@@ -856,7 +873,13 @@ int upload_data_to_server(const char *endpoint, bool use_bearer, char *data, cha
         }
 
     }
+    //always disconnect after & release mutex at the end of this function
+    disconnect_wifi(endpoint);
     return status_code;
+}
+
+int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *response_buf, uint8_t resp_buf_size) {
+    return post_https(endpoint, use_bearer, NOT_ALREADY_CONNECTED, data, response_buf, resp_buf_size);
 }
 
 wifi_prov_mgr_config_t initialize_provisioning() {
@@ -1032,7 +1055,7 @@ bool disable_wifi(char *taskString) {
         ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", taskString, esp_log_system_timestamp());
         //Wait to make sure everyting is finished.
         vTaskDelay(HTTPS_POST_WAIT_MS / portTICK_PERIOD_MS);
-        xSemaphoreGive(wireless_802_11_mutex);
+        xSemaphoreGiveRecursive(wireless_802_11_mutex);
         return true;
     }
     else {
@@ -1057,7 +1080,7 @@ bool disable_wifi_keeping_802_11_mutex(){
 
 
 bool enable_wifi(char *taskString) {
-    if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
+    if (xSemaphoreTakeRecursive(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
         ESP_LOGD(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
         if (esp_wifi_start() == ESP_OK) {
             ESP_LOGD(TAG, "Enabled Wi-Fi");
@@ -1093,38 +1116,33 @@ bool disconnect_wifi(char *taskString) {
 }
 
 bool connect_wifi(char *taskString) {
-    if (xSemaphoreTake(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
+    if (xSemaphoreTakeRecursive(wireless_802_11_mutex, MAX_WAIT_802_11_MS / portTICK_PERIOD_MS)) {
         ESP_LOGD(TAG, "%s got access to 802_11 resource at %s", taskString, esp_log_system_timestamp());
-        return connect_wifi_having_802_11_mutex();
+        esp_err_t err;
+        if (wifi_initialized) {
+            err = esp_wifi_connect();
+        }
+        else {
+            err = esp_wifi_start();
+        }
+        wifi_autoconnect = true;
+        if (err == ESP_OK) {
+            wifi_initialized = true;
+            ESP_LOGD(TAG, "Succesfully connected Wi-Fi");
+            return true;
+        }
+        else {
+            ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
+            ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
+            xSemaphoreGiveRecursive(wireless_802_11_mutex);
+            return false;
+        }
     }
     else {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
 }
-
-bool connect_wifi_having_802_11_mutex(){
-    esp_err_t err;
-    if (wifi_initialized) {
-        err = esp_wifi_connect();
-    }
-    else {
-        err = esp_wifi_start();
-    }
-    wifi_autoconnect = true;
-    if (err == ESP_OK) {
-        wifi_initialized = true;
-        ESP_LOGD(TAG, "Succesfully connected Wi-Fi");
-        return true;
-    }
-    else {
-        ESP_LOGE(TAG, "Failed to connect to Wi-Fi: %s", esp_err_to_name(err));
-        ESP_LOGD(TAG, "%s will release the 802_11 resource at %s", "connect_wifi_having_802_11_mutex", esp_log_system_timestamp());
-        xSemaphoreGive(wireless_802_11_mutex);
-        return false;
-    }
-}
-
 
 void initialize_nvs() {
     /* Initialize NVS partition */
@@ -1162,7 +1180,7 @@ void twomes_device_provisioning(const char *device_type_name) {
 
     // initialize time with timezone UTC; building timezone is stored in central database
     initialize_timezone("UTC");
-    timesync("twomes_device_provisioning");
+    timesync(ALREADY_CONNECTED);
 
     // get bearer token
     bearer = get_bearer();
@@ -1173,17 +1191,12 @@ void twomes_device_provisioning(const char *device_type_name) {
 
     else if (strcmp(bearer, "") == 0) {
         ESP_LOGD(TAG, "Bearer not found, activating device!");
-        // get device name
-        char *device_name;
-        device_name = malloc(DEVICE_NAME_SIZE); //DONE: checked malloc() is balanced by free()
-        get_device_service_name(device_name, DEVICE_NAME_SIZE);
-        activate_device(device_name);
-        ESP_LOGD(TAG, "Device activated");
+        activate_device();
         ESP_LOGD(TAG, "Bearer after activation is %i characters: %s", strlen(bearer), bearer);
-        free(device_name);
     }
 
     else if (!bearer) {
         ESP_LOGE(TAG, "Something went wrong while reading the bearer!");
     }
+    disconnect_wifi("after provisioning");
 }
