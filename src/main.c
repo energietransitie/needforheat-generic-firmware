@@ -1,10 +1,10 @@
 #include <generic_esp_32.h>
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-const char*device_type_name = "Presence-Detector";
+#define DEVICE_TYPE_NAME "Presence-Detector"
 static const char *TAG = "Twomes ESP32 presence detector";
 #else
-const char*device_type_name = "Generic-Test";
+#define DEVICE_TYPE_NAME "Generic-Test"
 static const char *TAG = "Twomes ESP32 generic test device";
 #endif
 
@@ -15,7 +15,9 @@ static const char *TAG = "Twomes ESP32 generic test device";
 
 void app_main(void)
 {
-    twomes_device_provisioning(device_type_name);
+    twomes_device_provisioning(DEVICE_TYPE_NAME);
+
+    //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
     ESP_LOGD(TAG, "Starting heartbeat task");
     xTaskCreatePinnedToCore(&heartbeat_task, "heartbeat_task", 4096, NULL, 1, NULL, 1);

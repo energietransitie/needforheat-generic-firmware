@@ -16,10 +16,6 @@
 #define BLUETOOTH_PRESENCE_TASK_TXT "bluetooth_presence_detection"
 #define TIMER_DIVIDER 80
 #define ADDR_LEN 17 // 6 * 2 hex digits + 5 colons
-#define RSSI_PRESENT 900
-#define RSSI_ABSENT -899
-
-char *bearer;
 
 esp_gatt_if_t interface;
 

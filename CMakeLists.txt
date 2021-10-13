@@ -1,8 +1,4 @@
 cmake_minimum_required(VERSION 3.16.0)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-add_compile_definitions(CONFIG_TWOMES_PROV_TRANSPORT_BLE)
-add_compile_definitions(CONFIG_TWOMES_PRESENCE_DETECTION)
-add_compile_definitions(CONFIG_TWOMES_STRESS_TEST)
-add_compile_definitions(CONFIG_TWOMES_TEST_SERVER)
-# add_compile_definitions(CONFIG_TWOMES_PRODUCTION_SERVER)
+
 project(esp32genericrtos)

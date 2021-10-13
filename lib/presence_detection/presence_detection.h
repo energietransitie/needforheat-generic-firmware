@@ -11,6 +11,9 @@
 #define PRESENCE_INTERVAL_TXT "Wating 1 hour before next presence scan"
 #endif
 
+#define RSSI_PRESENT 900
+#define RSSI_ABSENT -899
+
 #include <generic_esp_32.h>
 #include <stdio.h>
 #include <stdlib.h>
