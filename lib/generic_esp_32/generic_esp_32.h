@@ -80,6 +80,7 @@ xSemaphoreHandle wireless_802_11_mutex;
 #endif
 
 #define VARIABLE_UPLOAD_ENDPOINT "/device/measurements/variable-interval"
+#define FIXED_INTERVAL_UPLOAD_ENDPOINT "/device/measurements/fixed-interval"
 #define DEVICE_ACTIVATION_ENDPOINT "/device/activate"
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
