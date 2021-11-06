@@ -90,39 +90,50 @@ void initGPIO() {
 
 /**
  * Check for input of buttons and the duration
- * if the press duration was more than 5 seconds, erase the flash memory to restart provisioning
+ * if the press duration was more than 10 seconds, erase the flash memory to restart provisioning
  * otherwise, blink the status LED (and possibly run another task (sensor provisioning?))
 */
-void buttonPressDuration(void *args) {
+void buttonPressHandlerGeneric(void *args) {
     uint32_t io_num;
-    ESP_LOGD(TAG, "Button Press Duration is Here!");
     while (1) {
         if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
-            uint8_t seconds = 0;
-            while (!gpio_get_level(WIFI_RESET_BUTTON)) {
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-                seconds++;
-                if (seconds == 9) {
-                    ESP_LOGD("ISR", "Button held for over 10 seconds\n");
-                    char blinkArgs[2] = { 5, LED_ERROR };
-                    xTaskCreatePinnedToCore(blink, "blink longpress", 768, (void *)blinkArgs, 10, NULL, 1);
-                    //Long press on WIFI_RESET_BUTTON(BOOT on the esp32) is for clearing Wi-Fi provisioning memory:
-                    ESP_LOGD("ISR", "Resetting Provisioning and Restarting Device!");
-                    esp_wifi_restore();
-                    vTaskDelay(1000 / portTICK_PERIOD_MS); //Wait for blink to finish
-                    esp_restart();                         //software restart, to get new provisioning. Sensors do NOT need to be paired again when gateway is reset (MAC address does not change)
-                    break;                                 //Exit loop
-                }
+            vTaskDelay(100 / portTICK_PERIOD_MS); //Debounce delay: nothing happens if user presses button for less than 100 ms = 0.1s
+
+            //INTERRUPT HANDLER BOOT
+            if (io_num == BOOT) {
+                uint8_t halfSeconds = 0;
+                //Determine length of button press before taking action
+                while (!gpio_get_level(BOOT)) {
+                    //Button BOOT is (still) pressed
+                    vTaskDelay(500 / portTICK_PERIOD_MS); //Wait for 0.5s
+                    halfSeconds++;
+                    ESP_LOGD(TAG, "Button BOOT has been pressed for %u half-seconds now", halfSeconds);
+                    if (halfSeconds >= LONG_BUTTON_PRESS_DURATION) {
+                        //Long press on BOOT is for clearing Wi-Fi provisioning memory:
+                        ESP_LOGI("ISR", "Long-button press detected on button BOOT; resetting Wi-Fi provisioning and restarting device");
+                        char blinkArgs[2] = { 5, RED_LED_ERROR };
+                        xTaskCreatePinnedToCore(blink, "blink_5_times_red", 768, (void *)blinkArgs, 10, NULL, 1);
+                        esp_wifi_restore();
+                        vTaskDelay(5 * (200+200) / portTICK_PERIOD_MS); //Wait for blink to finish
+                        esp_restart();                         //software restart, to enable linking to new Wi-Fi network. Sensors do NOT need to be paired again: MAC address of P1-gateway does not change)
+                        break;                                 //Exit loop (this should not be reached)
+                    }                                          //if (halfSeconds == 9)
+                    else if (gpio_get_level(BOOT)) {
+                        //Button BOOT is released
+                        //Short press on BOOT not used for anything currently
+                        ESP_LOGI("ISR", "Short button press detected on button BOOT");
+                    }
+                } //while(!gpio_level)
             }
-        }
-    }
-}
+        }     //if(xQueueReceive)
+    }  //while(1)
+} // buttonPressHandlerGEneric
 #endif
 
 /**Blink LEDs to test GPIO:
  * Pass two arguments in uint8_t array:
  * argument[0] = amount of blinks
- * argument[1] = pin to blink on (LED_STATUS or LED_ERROR)
+ * argument[1] = pin to blink on (LED_STATUS or RED_LED_ERROR)
  */
 void blink(void *args) {
     uint8_t *arguments = (uint8_t *)args;
@@ -151,9 +162,9 @@ void initialize_generic_firmware() {
     initGPIO();
     //Attach interrupt handler to GPIO pins:
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    xTaskCreatePinnedToCore(buttonPressDuration, "buttonPressDuration", 2048, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(buttonPressHandlerGeneric, "handle_button_pressed", 2048, NULL, 10, NULL, 1);
     gpio_install_isr_service(0);
-    gpio_isr_handler_add(WIFI_RESET_BUTTON, gpio_isr_handler, (void *)WIFI_RESET_BUTTON);
+    gpio_isr_handler_add(BOOT, gpio_isr_handler, (void *)BOOT);
 #endif
 }
 
