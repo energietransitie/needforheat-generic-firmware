@@ -29,9 +29,11 @@
 #include "presence_detection.h"
 #endif
 
-#define VERSION "V2.5.0"
-#define WIFI_RESET_BUTTON   GPIO_NUM_0
-#define LED_ERROR   GPIO_NUM_19
+#define VERSION "V2.6.0"
+#define BOOT   GPIO_NUM_0
+#define RED_LED_ERROR   GPIO_NUM_19
+#define LONG_BUTTON_PRESS_DURATION 19 // (10 s * 2 halfseconds - 1); this constant specifies the number of half seconds minus one to wait
+
 #define MAX_RESPONSE_LENGTH 100
 
 #define SSID_PREFIX "TWOMES-"
@@ -97,11 +99,11 @@ void sntp_sync_time(struct timeval *tv);
 
 
 #ifndef CONFIG_TWOMES_CUSTOM_GPIO
-#define OUTPUT_BITMASK ((1ULL<<LED_ERROR))
-#define INPUT_BITMASK ((1ULL << WIFI_RESET_BUTTON))
+#define OUTPUT_BITMASK ((1ULL<<RED_LED_ERROR))
+#define INPUT_BITMASK ((1ULL << BOOT))
 
 void initGPIO();
-void buttonPressDuration(void *args);
+void buttonPressHandlerGeneric(void *args);
 #endif
 void blink(void *args);
 char *get_types(char *stringf, int count);
