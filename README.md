@@ -3,8 +3,6 @@ This repository contains the generic firmware, with features common to various T
 
 See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
 
-![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
-
 ## Table of contents
 * [General info](#general-info)
 * [Deploying](#deploying)
@@ -15,6 +13,9 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 * [Credits](#credits)
 
 ## General info
+
+![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
+
 Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 or ESP8266 SoC. This facilitaties development of firmware for Twomes measurement devices.
 
 ## Deploying
@@ -134,6 +135,10 @@ This section describes how you can change the source code using a development en
 Prerequisites for deploying, plus:
 *	[Visual Studio Code](https://code.visualstudio.com/download) installed
 *	[PlatformIO for Visual Studio Code](https://platformio.org/install/ide?install=vscode) installed
+*	IN [Visual Studio Code](https://code.visualstudio.com/download), open a PlaformIO Command Line Interface and enter
+	```shell
+	pio platform update
+	```
 *	This GitHub repository cloned
 
 ### Usage  
