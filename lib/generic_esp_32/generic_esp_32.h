@@ -42,8 +42,6 @@
 #define MAX_HTTP_OUTPUT_BUFFER 2048
 #define MAX_HTTP_RECV_BUFFER 512
 
-#define LONG_BUTTON_PRESS_DURATION 10 // seconds
-
 #define HTTPS_PRE_WAIT_MS (100) // milliseconds
 #define HTTPS_RETRY_WAIT_MS (2 * 1000) // milliseconds ( 2 s * 1000 ms/s)  
 #define HTTPS_POST_WAIT_MS (100) // milliseconds
@@ -69,7 +67,7 @@
 #define MAX_WAIT_802_11_TXT "30 seconds"
 #endif
 
-xSemaphoreHandle wireless_802_11_mutex;
+extern xSemaphoreHandle wireless_802_11_mutex;
 
 #ifdef CONFIG_TWOMES_TEST_SERVER
 #define TWOMES_SERVER_HOSTNAME "api.tst.energietransitiewindesheim.nl"
@@ -131,6 +129,7 @@ int upload_data_to_server(char *endpoint, bool use_bearer, char *data, char *res
 int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size);
 void upload_heartbeat(int hbcounter);
 void heartbeat_task(void *data);
+void delete_bearer();
 char *get_bearer();
 void activate_device();
 void get_http(const char *url);

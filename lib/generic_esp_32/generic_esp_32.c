@@ -1,4 +1,4 @@
-#include "generic_esp_32.h"
+#include <generic_esp_32.h>
 
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 
@@ -10,6 +10,8 @@ static EventGroupHandle_t wifi_event_group;
 const int WIFI_CONNECTED_EVENT = BIT0;
 
 char *bearer = NULL;
+
+xSemaphoreHandle wireless_802_11_mutex;
 
 // Twomes servers at *.energietransitiewindesheim.nl use Let's Encrypt certificates
 // based on https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
@@ -69,7 +71,7 @@ static void IRAM_ATTR gpio_isr_handler(void *arg) {
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 } //gpio_isr_handler
 
-//Function to initialise the buttons and LEDs on the gateway, with interrupts on the buttons
+//Function to initialise the buttons and LEDs on the device, with interrupts on the buttons
 void initGPIO() {
     gpio_config_t io_conf;
     //CONFIGURE OUTPUTS:
@@ -114,8 +116,10 @@ void buttonPressHandlerGeneric(void *args) {
                         char blinkArgs[2] = { 5, RED_LED_ERROR };
                         xTaskCreatePinnedToCore(blink, "blink_5_times_red", 768, (void *)blinkArgs, 10, NULL, 1);
                         esp_wifi_restore();
-                        vTaskDelay(5 * (200+200) / portTICK_PERIOD_MS); //Wait for blink to finish
-                        esp_restart();                         //software restart, to enable linking to new Wi-Fi network. Sensors do NOT need to be paired again: MAC address of P1-gateway does not change)
+                        // also remove bearer to force re-activation
+						delete_bearer();
+                        vTaskDelay(5 * (200 + 200) / portTICK_PERIOD_MS); //Wait for blink to finish
+                        esp_restart();                         //software restart, to enable linking to new Wi-Fi network.
                         break;                                 //Exit loop (this should not be reached)
                     }                                          //if (halfSeconds == 9)
                     else if (gpio_get_level(BOOT)) {
@@ -560,7 +564,7 @@ void timesync(bool already_connected) {
         if (connect_wifi("timesync")) {
 
             ESP_LOGD(TAG, "Waiting for IP connection...");
-            xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+            xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
             //Wait to make extra sure Wi-Fi is connected and stable
             vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
             ESP_LOGD(TAG, "Waiting for IP connection... done; initiating timesync call");
@@ -653,6 +657,18 @@ esp_err_t store_bearer(char *activation_response) {
     return err;
 }
 
+void delete_bearer() {
+    esp_err_t err;
+    bearer = "";
+    err = store_bearer(""); 
+    if (err == ESP_OK) {
+        ESP_LOGD(TAG, "Bearer reset to force re-activation");
+    }
+    else {
+        ESP_LOGE(TAG, "Error (%s) storing empty bearer value into nvs!", esp_err_to_name(err));
+    }
+}
+
 char *get_bearer() {
     if (bearer != NULL) {
         ESP_LOGD(TAG, "Existing bearer read from memory: %s", bearer);
@@ -726,7 +742,7 @@ void activate_device() {
             ESP_LOGD(TAG, "Final bearer_trimmed %i characters: %s", strlen(bearer_trimmed), bearer_trimmed);
             if (store_bearer(bearer_trimmed) == ESP_OK) {
                 bearer = strdup(bearer_trimmed); //copy the trimmed bearer into the global bearer variable.
-                ESP_LOGD(TAG, "Final bearer: %i characters: %s", strlen(bearer), bearer);
+                ESP_LOGD(TAG, "Final bearer stored: %i characters: %s", strlen(bearer), bearer);
             }
             else {
                 ESP_LOGE(TAG, "Error (%s) reading!\n", esp_err_to_name(err));
@@ -790,11 +806,11 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    if (!already_connected){
-        connect_success = connect_wifi(endpoint); 
+    if (!already_connected) {
+        connect_success = connect_wifi(endpoint);
         while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
             ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
-            connect_success = connect_wifi(endpoint); 
+            connect_success = connect_wifi(endpoint);
         }
 
         if (!connect_success) {
@@ -810,7 +826,7 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
         }
 
         ESP_LOGD(TAG, "Waiting for IP connection...");
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY); 
+        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
         ESP_LOGD(TAG, "Waiting for IP connection... done");
 
         //Wait to make extra sure Wi-Fi is connected and stable
@@ -1075,7 +1091,7 @@ bool disable_wifi(char *taskString) {
     }
 }
 
-bool disable_wifi_keeping_802_11_mutex(){
+bool disable_wifi_keeping_802_11_mutex() {
     if (esp_wifi_stop() == ESP_OK) {
         ESP_LOGD(TAG, "Disabled Wi-Fi without releasing 802.11 mutex");
         wifi_initialized = false;
