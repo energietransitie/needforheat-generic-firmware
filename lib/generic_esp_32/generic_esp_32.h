@@ -29,7 +29,7 @@
 #include "presence_detection.h"
 #endif
 
-#define VERSION "V2.6.0"
+#define VERSION "V2.7.0"
 #define BOOT   GPIO_NUM_0
 #define RED_LED_ERROR   GPIO_NUM_19
 #define LONG_BUTTON_PRESS_DURATION 19 // (10 s * 2 halfseconds - 1); this constant specifies the number of half seconds minus one to wait
