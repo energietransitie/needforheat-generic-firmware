@@ -1,5 +1,5 @@
-# Generic firmware for Twomes measurement devices based on ESP
-This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 or ESP8266 SoC.
+# Generic firmware for Twomes measurement devices
+This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 SoC.
 
 See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
 
@@ -16,21 +16,21 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 
 ![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
 
-Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 or ESP8266 SoC. This facilitaties development of firmware for Twomes measurement devices.
+Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
 
 ## Deploying
 This section describes how you can deploy binary releases of the firmware, i.e. without changing the source code, without a development environment and without needing to compile the source code.
 
 ### Prerequisites
-*	a device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) or an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html);
+*	a device based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3);
 *	a USB to micro-USB cable;
 *	a PC with a USB port;
 *	[Python v3.8 or above](https://www.python.org/downloads/) installed, and make sure to select `Add Python <version number> to PATH` so you can use the Python commands we document below from a command prompt;
 *	[Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility;
-*	[PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), a serial monitor utility. (If your you're also developing, you may use the serial monitor utility in your IDE, instead).
+*	[PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), a serial monitor utility (if your you are also developing, you may use the serial monitor utility in your IDE, instead).
 
 ### Erasing all persistenly stored data
-Unless you are 100% sure that it is safe to only upload firmware and keep other mpersistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The precedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token (needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server) that may reside in the persistent memory of the device.
+Unless you are 100% sure that it is safe to only upload firmware and keep other persistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The procedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token  that may reside in the persistent memory of the device and which is needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server.
 *	Open a command prompt and enter:
 	```shell
 	py -m esptool erase_flash
@@ -41,14 +41,18 @@ Unless you are 100% sure that it is safe to only upload firmware and keep other 
 	```
 Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
-After this command, on a device that it luit with the Twomes generic firmware, you should perform the full Twomes device provisioning flow below.
+After this command you should perform the full Twomes device provisioning flow below.
 
-### Device Preparation step 1/a: Uploading Firmware to ESP32
+### Device preparation step 1: Uploading firmware tothe ESP32 device
 *	Connect the device with a USB cable to the PC.
 *	Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
-*	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by Windows. You may need to install a specific usb driver on your computer before you can upload firmware. For Windows, we included `CH341SER.exe` in the  driver subfolder of the release; run this executable to install the device driver.
+*	Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by your OS. You may need to install a specific usb driver on your computer before you can upload firmware:
+	* [Windows driver](http://www.wch.cn/download/CH341SER_EXE.html);
+	* [Mac OSX driver](http://www.wch.cn/download/CH341SER_MAC_ZIP.html) (see also [this additional info](https://kig.re/2014/12/31/how-to-use-arduino-nano-mini-pro-with-CH340G-on-mac-osx-yosemite.html));
+	* [Linux driver](http://www.wch.cn/download/CH341SER_LINUX_ZIP.html);
+	* [Android driver](http://www.wch.cn/download/CH341SER_ANDROID_ZIP.html).
 *	If you used the device before, you shoud first [erase all persistenly stored data](#erasing-all-persistenly-stored-data)
-*	Open a comand prompt in that directory, change the directory to the binaries subfolder and enter:
+*	Open a comand prompt in the directory you chose for the download, change the directory to the subfolder `binaries` and enter:
 	```shell
 	py -m esptool --chip esp32 --baud 460800 --before default_reset --after hard_reset write_flash -z --flash_mode dio --flash_freq 40m --flash_size detect 0x1000 bootloader.bin 0x8000 partitions.bin 0xe000 ota_data_initial.bin 0x10000 firmware.bin  
 	```
@@ -67,10 +71,7 @@ or
 esptool.py
 ````
 
-### Device Preparation step 1/b: Uploading Firmware to ESP8266 devices
-TO BE DOCUMENTED
-
-### Device Preparation step 2: Establishing a device name and device activation_token 
+### Device preparation step 2: Establishing a device name and device activation_token 
 * First, you should open your serial monitor utility.
 	*  For [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), use the following destination settings (be sure to `Save` them to `Load` them conveniently later):
 		* Connection type: `Serial`
@@ -83,10 +84,10 @@ TO BE DOCUMENTED
 		* for a device that supports Wi-Fi provisioning via Bluetooth Low Energy, looks something like<br>`{`<br>`"ver":"v1",`<br>`"name":"TWOMES-0D45DF",`<br>`"pop":"810667973",`<br>`"transport":"ble"`<br>`}` 
 		* for a device that supports Wi-Fi provisioning via a temporary Wi-Fi Access Point set up by the device, looks something like<br>`{`<br>`"ver":"v1",`<br>`"name":“TWOMES-8E23A6",`<br>`"pop":“516319575",`<br>`"transport":"softap",`<br>`"security":"1",`<br>`"password":"516319575"`<br>`}`
 
-### Device Preparation step 3: Creating the device in the Twomes backend using device name and device activation_token   
+### Device preparation step 3: Creating the device in the Twomes backend using device name and device activation_token   
 The device name and activation_token you just established should be created in the database of the server backend that you're using. If you are using the Twomes test server API, you can do this via a [POST on the /device endpoint](https://api.tst.energietransitiewindesheim.nl/docs#/default/device_create_device_post), using the `device_type` and the device `name` and `activation_token` you just established. If you are using the Twomes test server API, you should use a `device_type` from the [list of pre-registered device type names in the twomes test server](https://github.com/energietransitie/twomes-backoffice-api/blob/master/src/data/sensors.csv). If you don't have an admin bearer session token, refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deployment) how to obtain one.
 
-### Device Preparation step 4: Generating a QR-code
+### Device preparation step 4: Generating a QR-code
 The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that is printed and stuck to the back of the Twomes measurement device. In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
 
 The QR-code payload is a JSON string representing a dictionary with key value pairs listed in the table below.
@@ -102,38 +103,36 @@ Payload information :
 | security  	| Security during Wi-Fi provisioning  	| Either `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
 | password  	| device.activation_token         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
-To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you MUST use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you SHOULD use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
 
 ### Erasing only Wi-Fi provisioning data
-To change the name and/or associated password of the Wi-Fi network that a measurement device is connected to, end users can hold down the single end user accessible button for more than 10 seconds. 
+To change the name and/or associated password of the Wi-Fi network that a measurement device is connected to, we recommend an enclosure design that has only one end-user accessibe button. End users should hold down this button for more than 10 seconds to do a Wi-Fi reset and provision the device with a new Wi-Fi network. 
 
-On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board, this button is labeled  'BOOT'. You can find it just above the micro-USB port. 
+On a bare [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) development board with the generic Twomes firmware in this repository, this button is labeled  'BOOT'. You can find it just above the micro-USB port. 
 
-On measurement devices that will be deployed in the field, this button is typically covered by a shield in the Wemos D1 Mini form factor and an enclosure; their designs should include a recessed button behind a small hole in the enclosure, which makes it hard to press this button accidentally, but easy to press deliberately with a bent paperclip (in our experience, using a pen or pencil requires a hardware design with a robust button that can withstand the considerable forces that humans can apply with these tools, which is larger than the force applied by a bent paperclip).
+On measurement devices that will be deployed in the field, this button is typically covered by a shield in the Wemos D1 Mini form factor and an enclosure; their designs preferably should have a recessed button behind a small hole in the enclosure, which makes it hard to press this button accidentally, but easy to press deliberately with a bent paperclip (in our experience, using a pen or pencil requires a hardware design with a robust button that can withstand the considerable forces that humans can apply with these tools, which is larger than the force applied by a bent paperclip).
 
-In hardware designs that require the end users to start with a (short) button press, e.g. to establish a link between a satellite measurement device and a measurement device that acts as a gateway, a more easily accessible button may be used. For a measurement device that also acts as a gateway, a long press on this button can be used to trigger erasint the Wi-Fi provisioning data.
+In hardware designs that require the end users to start with a (short) button press, e.g. to establish a link between a satellite measurement device and a measurement device that acts as a gateway, a more easily accessible button may be used. For a measurement device that also acts as a gateway, a long press on this button can be used to trigger erasing the Wi-Fi provisioning data.
 
-When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory, the device reboots and starts the Wi-Fi provisioning process again. You can currently only observe this behaviour via a serial monitor. 
+When you release the button after holding it down for more than 10 seconds, the Wi-Fi provisioning data is deleted from persistent (non-volatile) memory. 
 
-Before you can use the WarmteWachter app to reprovision Wi-Fi for the device, the current version of the Twomes WarmteWachter app and Twomes API require manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
-* empty the value in the `building_id` column by entering the value `[NULL]`; 
-* delete the value in the `activated_on` column;
-* click on `SAVE`.
+We noticed that some devices require a full power down and power up cycle to properly start the Wi-Fi provisioning process again. 
 
 Note that this procedure:
 * will NOT erase nor change the device name, nor the device activation_token;
 * will NOT erase the bearer authorisation token needed to upload measurement data to the server;
 * will not cause a call on the /device/activate endpoint on the server. 
 
-Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile) memory and will NOT be erased when you upload new firmware. 
+Note also that the Wi-Fi provisioning data is stored in persistent (non-volatile) memory and will NOT be erased when you upload new firmware. Hence, it is possible to update the firmware without the need to print and attach a new QR-code to the device.
 
 ### Repurposing an existing device
-If you want to repurpose and existing device (e.g. use it in another home), after erasing all persistently stored data and performing the other required steps for device preparation, you must perform one  additional manual action in the database. For the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/). Perform the following actions on the existing device entry:
-* after the value in the `name` column, add `-OLD`; 
-* click on `SAVE`.
+If you want to repurpose and existing device (e.g. use it in another home), you should:
+* erase all persistently stored data on the device;
+* after the value in the `name` column of the existing device entry in the database, add `-OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
+*  proceed with regular device preparation.
 
 ## Developing 
-This section describes how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be depoyed, either via the development environment, or via the method described in the section [Deploying](#deploying).
+This section describes how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be deployed, either via the development environment, or via the method described in the section [Deploying](#deploying).
 
 ### Prerequisites
 Prerequisites for deploying, plus:
@@ -156,8 +155,8 @@ Open the project in PlatformIO:
   7. Click the PlatformIO Icon (the little alien in the left of the screen).
   8. Unfold `esp32dev`.
   9. Click `upload and monitor`. 
-NOTE: The first time might take a while because PlatformIO needs to install and build the ESP-IDF before flashing.
-  10. When it is done flashing, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
+NOTE: The first time might take a while because PlatformIO needs to install and build the ESP-IDF before it can upload the firmwware.
+  10. When it is done uploading, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
   11. To provision the device with Wi-Fi connectivity, use an app that supports Espressif Unified Provisioning. A list can be found below. 
 
 ### Testing device preparation
@@ -211,16 +210,18 @@ Currently ready:
 * Heartbeats: hourly measurement and upload of timestamped measurment data with property `heartbeat`
 * Long button press to erase only Wi-Fi provisioning data 
 * Example code
-* Presence Detection (needs static Bluetooth addresses for presence detection compile time)
+* Presence Detection (compile time provisioning of tracked Bluetooth addresses)
 
 To-do:
 
-* Visual indication via the green LED that allows the end user to recognize success
+* Visual indication via the red and/or green LEDs that allows the end user to recognize various device states
+ 	* ready for device activation: blinking green LED 
  	* device activation: turning green LED on for a few seconds
  	* sending a heartbeat: blink green LED rapidly two times  
 * Persistent buffering of measurement data
-* Presence Detection (static Bluetooth addresses to track provided during device provisioning)
-* Secure transport over TLS/SSL (ESP8266 as well)
+* Presence Detection (provisioning of tracked Bluetooth addresses during device provisioning)
+* Presence Detection (runtime Bluetooth addresses provisioning)
+* Support for ESP8266
 
 ## Status
 Project is: in-progress
