@@ -150,11 +150,11 @@ Open the project in PlatformIO:
   2. Select the folder where you cloned or extracted the repository.
   3. In the `src` folder you will find `main.c`; this is an example application.
   4. In the `lib` folder you will find the library that this repository contains.
-  5. To change between provisioning via BLE or SoftAp, in the `CMakeLists.txt`file in the folder where you cloned the repo (not the one in src/), change the variable `CONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP` to `CONFIG_EXAMPLE_PROV_TRANSPORT_BLE`or vice versa.
+  5. To change between provisioning via BLE or SoftAP, in the `platformio.ini`file, comment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_BLE` and uncomment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP` or vice versa.
   6. Change the code in `src/main.c` as you see fit.
   7. Click the PlatformIO Icon (the little alien in the left of the screen).
   8. Unfold `esp32dev`.
-  9. Click `upload and monitor`. 
+  9. Click `Upload and Monitor`. 
 NOTE: The first time might take a while because PlatformIO needs to install and build the ESP-IDF before it can upload the firmwware.
   10. When it is done uploading, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
   11. To provision the device with Wi-Fi connectivity, use an app that supports Espressif Unified Provisioning. A list can be found below. 
