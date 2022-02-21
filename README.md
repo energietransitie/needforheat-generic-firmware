@@ -200,7 +200,7 @@ Also note that we don't use the [POST /device/measurements/fixed-interval](https
 
 ### Other Things To Keep In Mind
 * Check the platformio.ini file in the cloned folder, look at the board_upload.flash_size, board_upload.maximum_size and board_build.partitions to check if they are right for your hardware.
-* if you have a user dir name with whitespaces, you may encounter te message "Error: Detected a whitespace character in project paths" by the build process. you can solve this problemen by change the core_dir path by add the following lines at the platformio.ini file:  
+* If you have a user dir name with whitespaces, you may encounter the message "Error: Detected a whitespace character in project paths" by the build process. You can solve this problem by changing the core_dir path by adding the following lines at the platformio.ini file:  
 ```
 [platformio]
 core_dir = <path_without_whitespaces>
