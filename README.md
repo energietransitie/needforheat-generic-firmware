@@ -138,9 +138,14 @@ This section describes how you can change the source code using a development en
 Prerequisites for deploying, plus:
 *	[Visual Studio Code](https://code.visualstudio.com/download) installed
 *	[PlatformIO for Visual Studio Code](https://platformio.org/install/ide?install=vscode) installed
-*	IN [Visual Studio Code](https://code.visualstudio.com/download), open a PlaformIO Command Line Interface and enter
+*	In [Visual Studio Code](https://code.visualstudio.com/download), open a PlaformIO Command Line Interface and enter
 	```shell
 	pio platform update
+	```
+*	If your user directory name contains a whitespace, you may need to change the platformio.ini file. To avoid the error message "Error: Detected a whitespace character in project paths" when building an ESP-IDF project with PlatformIO, add the following lines to the platformio.ini file, as documented in https://docs.platformio.org/en/latest/frameworks/espidf.html#limitations:  
+	```
+	[platformio]
+	core_dir = <path_without_whitespaces>
 	```
 *	This GitHub repository cloned
 
@@ -235,6 +240,7 @@ This software is made by:
 
 Thanks also go to:
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
+* Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
 
 Product owner:
 * Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
