@@ -15,6 +15,16 @@ static const char *TAG = "Twomes ESP32 generic test device";
 
 void app_main(void)
 {
+    // setup power pin
+    gpio_config_t config = {
+        .pin_bit_mask = GPIO_SEL_12,
+        .mode = GPIO_MODE_OUTPUT
+    };
+    gpio_config(&config);
+
+    // turn battery power on
+    gpio_set_level(GPIO_NUM_12, 1);
+
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
     //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
