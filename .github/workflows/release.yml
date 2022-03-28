@@ -1,0 +1,65 @@
+name: Create draft release with binary files
+# Trigger on new tag
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  # Name of the archive .zip and .tar.gz archives without extension. Tag will be appended to this.
+  ARCHIVE_PREFIX: ${{ github.event.repository.name }}
+  
+  # Directory where the to-be-archived files are.
+  ARCHIVE_DIR: .pio/build/esp32dev
+
+  # Files that need to be archived.
+  ARCHIVE_FILES: bootloader.bin firmware.bin ota_data_initial.bin partitions.bin
+
+jobs:
+  build-and-draft-release:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout repository.
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      # Setup Python (needed by PlatformIO)
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      # Setup PlatformIO.
+      - name: Setup PlatformIO
+        run: pip install platformio
+
+      # Cache build directory.
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: .pio
+          key: ${{ runner.os }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            ${{ runner.os }}
+      
+      # Build the PlatformIO project.
+      - name: Build PlatformIO project
+        run: pio run
+      
+      # Set ARCHIVE_NAME variable from ARCHIVE_PREFIX and tag name.
+      - name: Set ARCHIVE_NAME
+        run: echo "ARCHIVE_NAME=${ARCHIVE_PREFIX}_${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+
+      # Archive binary files.
+      - name: Archive binary files
+        run: |
+          cd $ARCHIVE_DIR
+          zip $ARCHIVE_NAME.zip $ARCHIVE_FILES
+#          tar -czvf $ARCHIVE_NAME.tar.gz $ARCHIVE_FILES
+      
+      # Create a release draft.
+      - name: Create draft release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: |
+            ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.zip
+#            ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz
