@@ -1,5 +1,5 @@
 #include <generic_esp_32.h>
-#include "rtc_scheduler/rtc_scheduler.h"
+#include "rtc_scheduler/scheduler.h"
 #include "rtc_scheduler/powerpin.h"
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
@@ -22,7 +22,7 @@ void app_main(void)
 
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
-    rtc_scheduler_start();
+    scheduler_start();
 
     //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
