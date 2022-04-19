@@ -1,4 +1,3 @@
-#include <driver/gpio.h>
 #include <time.h>
 #include "bm8563.h"
 #include "i2c_hal.h"
@@ -10,8 +9,6 @@ bm8563_t bm8563;
 
 // private functions
 void rtc_scheduler_init();
-void powerpin_set();
-void powerpin_reset();
 time_t rtc_get_time();
 void rtc_set_alarm(time_t *alarm);
 
@@ -33,9 +30,6 @@ void rtc_scheduler_init()
 // rtc scheduler
 void rtc_scheduler_start()
 {
-    // tell power unit to stay on
-    powerpin_set();
-
     // initialize rtc functions
     rtc_scheduler_init();
 
@@ -74,29 +68,6 @@ void rtc_scheduler_start()
     // end test
 
     // wait while tasks are running
-
-    // tell power unit to power off
-    powerpin_reset();
-}
-
-// setup and set GPIO 12
-void powerpin_set()
-{
-    // setup power pin
-    gpio_config_t config = {
-        .pin_bit_mask = GPIO_SEL_12,
-        .mode = GPIO_MODE_OUTPUT
-    };
-    gpio_config(&config);
-
-    // turn battery power on
-    gpio_set_level(GPIO_NUM_12, 1);
-}
-
-// reset powerpin
-void powerpin_reset()
-{
-    gpio_set_level(GPIO_NUM_12,0);
 }
 
 // get rtc time in seconds 
