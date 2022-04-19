@@ -1,5 +1,6 @@
 #include <generic_esp_32.h>
 #include "rtc_scheduler/rtc_scheduler.h"
+#include "rtc_scheduler/powerpin.h"
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
@@ -17,14 +18,7 @@ static const char *TAG = "Twomes ESP32 generic test device";
 void app_main(void)
 {
     // setup power pin
-    gpio_config_t config = {
-        .pin_bit_mask = GPIO_SEL_12,
-        .mode = GPIO_MODE_OUTPUT
-    };
-    gpio_config(&config);
-
-    // turn battery power on
-    gpio_set_level(GPIO_NUM_12, 1);
+    powerpin_set();
 
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
