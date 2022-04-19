@@ -14,23 +14,13 @@ void scheduler_start()
     // test code
     char buffer[128],tmp;
     struct tm rtc;
-    time_t unix_rtc;
     do {        
         // print time
         bm8563_read(&bm8563, &rtc);
         strftime(buffer, 128 ,"%c (day %j)" , &rtc);
         ESP_LOGD("print","RTC: %s\n", buffer);
 
-        // get unix time
-        unix_rtc = rtc_get_time();
-        ESP_LOGD("print","unix time = %li",unix_rtc);
-        
-        // add 60 seconds
-        unix_rtc += 60;
-        ESP_LOGD("print","unix time + 60 = %li",unix_rtc);
-
-        // set alarm
-        rtc_set_alarm(&unix_rtc);
+        rtc_set_alarm(INTERVAL_1M);
 
         // wait for alarm
         ESP_LOGD("print","wait for alarm");

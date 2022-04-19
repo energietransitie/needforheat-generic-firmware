@@ -22,7 +22,7 @@ void rtc_scheduler_init()
 }
 
 // get rtc time in seconds 
-time_t rtc_get_time()
+time_t rtc_get_unixtime()
 {
   struct tm rtc_time;
     // read rtc time
@@ -33,22 +33,30 @@ time_t rtc_get_time()
 }
 
 // set rtc alarm
-void rtc_set_alarm(time_t *alarm)
-{
-  struct tm *ptr_rtc_alarm,rtc_alarm;
-  uint8_t tmp;
+void rtc_set_alarm(interval_t alarm) {
+ time_t time;
+ struct tm rtc_alarm,*ptr_alarm;
+ uint8_t tmp;
     // clear alarm flag
     bm8563_ioctl(&bm8563,BM8563_CONTROL_STATUS2_READ, &tmp);
     tmp &= ~BM8563_AF;
     bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &tmp);
+    
+    // get current rtc time
+    time = rtc_get_unixtime();
 
-    // convert time_t to struct tm
-    ptr_rtc_alarm = localtime(alarm);
+    // add interval to time
+    time += alarm;
 
-    // set rtc alarm
-    rtc_alarm.tm_wday = BM8563_ALARM_NONE;
-    rtc_alarm.tm_mday = BM8563_ALARM_NONE;
-    rtc_alarm.tm_min = ptr_rtc_alarm->tm_min;
-    rtc_alarm.tm_hour = ptr_rtc_alarm->tm_hour;
-    bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_alarm);
+    // convert 
+    ptr_alarm = localtime(&time);
+
+    // set rtc alarm or timer
+    if(alarm >= INTERVAL_1M && alarm <= INTERVAL_2D) {
+      rtc_alarm.tm_wday = ptr_alarm->tm_wday;
+      rtc_alarm.tm_mday = BM8563_ALARM_NONE;
+      rtc_alarm.tm_min = ptr_alarm->tm_min;
+      rtc_alarm.tm_hour = ptr_alarm->tm_hour;
+      bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_alarm);
+    }
 }
