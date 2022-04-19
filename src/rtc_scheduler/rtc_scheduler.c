@@ -42,13 +42,34 @@ void rtc_scheduler_start()
     // execute scheduler
 
     // test code
-    char buffer[128];
+    char buffer[128],tmp;
     struct tm rtc;
-    do {
-        vTaskDelay(pdMS_TO_TICKS(1000));
+    time_t unix_rtc;
+    do {        
+        // print time
         bm8563_read(&bm8563, &rtc);
         strftime(buffer, 128 ,"%c (day %j)" , &rtc);
         ESP_LOGD("print","RTC: %s\n", buffer);
+
+        // get unix time
+        unix_rtc = rtc_get_time();
+        ESP_LOGD("print","unix time = %li",unix_rtc);
+        
+        // add 60 seconds
+        unix_rtc += 60;
+        ESP_LOGD("print","unix time + 60 = %li",unix_rtc);
+
+        // set alarm
+        rtc_set_alarm(&unix_rtc);
+
+        // wait for alarm
+        ESP_LOGD("print","wait for alarm");
+        do{
+            vTaskDelay(pdMS_TO_TICKS(500));
+            bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
+
+        } while (!(tmp & BM8563_AF));
+        ESP_LOGD("print","alarm goes off!");
     } while (1);
     // end test
 
@@ -102,12 +123,10 @@ void rtc_set_alarm(time_t *alarm)
     // convert time_t to struct tm
     ptr_rtc_alarm = localtime(alarm);
 
-    // bug fix
-    rtc_alarm.tm_mday = BM8563_ALARM_NONE;
+    // set rtc alarm
     rtc_alarm.tm_wday = BM8563_ALARM_NONE;
+    rtc_alarm.tm_mday = BM8563_ALARM_NONE;
     rtc_alarm.tm_min = ptr_rtc_alarm->tm_min;
     rtc_alarm.tm_hour = ptr_rtc_alarm->tm_hour;
-
-    // set rtc alarm
     bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_alarm);
 }
