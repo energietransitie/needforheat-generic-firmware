@@ -1,4 +1,5 @@
 #include <generic_esp_32.h>
+#include "rtc_scheduler/rtc_scheduler.h"
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
@@ -26,6 +27,8 @@ void app_main(void)
     gpio_set_level(GPIO_NUM_12, 1);
 
     twomes_device_provisioning(DEVICE_TYPE_NAME);
+
+    rtc_scheduler_start();
 
     //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
