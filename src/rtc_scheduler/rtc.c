@@ -1,16 +1,10 @@
 #include <time.h>
+#include "rtc.h"
 #include "bm8563.h"
 #include "i2c_hal.h"
-#include <generic_esp_32.h>
-#include "rtc_scheduler.h"
 
 // private global variables
-bm8563_t bm8563;
-
-// private functions
-void rtc_scheduler_init();
-time_t rtc_get_time();
-void rtc_set_alarm(time_t *alarm);
+bm8563_t bm8563; //(in future private)
 
 void rtc_scheduler_init()
 {
@@ -25,49 +19,6 @@ void rtc_scheduler_init()
     // set time
     current_time = time(NULL);
     bm8563_write(&bm8563, localtime( &current_time ));
-}
-
-// rtc scheduler
-void rtc_scheduler_start()
-{
-    // initialize rtc functions
-    rtc_scheduler_init();
-
-    // execute scheduler
-
-    // test code
-    char buffer[128],tmp;
-    struct tm rtc;
-    time_t unix_rtc;
-    do {        
-        // print time
-        bm8563_read(&bm8563, &rtc);
-        strftime(buffer, 128 ,"%c (day %j)" , &rtc);
-        ESP_LOGD("print","RTC: %s\n", buffer);
-
-        // get unix time
-        unix_rtc = rtc_get_time();
-        ESP_LOGD("print","unix time = %li",unix_rtc);
-        
-        // add 60 seconds
-        unix_rtc += 60;
-        ESP_LOGD("print","unix time + 60 = %li",unix_rtc);
-
-        // set alarm
-        rtc_set_alarm(&unix_rtc);
-
-        // wait for alarm
-        ESP_LOGD("print","wait for alarm");
-        do{
-            vTaskDelay(pdMS_TO_TICKS(500));
-            bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
-
-        } while (!(tmp & BM8563_AF));
-        ESP_LOGD("print","alarm goes off!");
-    } while (1);
-    // end test
-
-    // wait while tasks are running
 }
 
 // get rtc time in seconds 
