@@ -1,6 +1,7 @@
 #ifndef RTC_H
 #define RTC_H
 #include <time.h>
+#include <stdbool.h>
 #include "bm8563.h"
 
 extern bm8563_t bm8563;
@@ -28,5 +29,8 @@ void rtc_scheduler_init();
 time_t rtc_get_time();
 void rtc_set_alarm(interval_t alarm);
 
+void rtc_print_time();
+bool rtc_check_TF();
+bool rtc_check_AF();
 
 #endif
