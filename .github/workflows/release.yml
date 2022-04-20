@@ -62,4 +62,5 @@ jobs:
           draft: true
           files: |
             ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.zip
+            .pio/build/esp32dev/firmware.bin
 #            ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz
