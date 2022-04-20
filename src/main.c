@@ -24,8 +24,10 @@ void app_main(void)
 
     scheduler_start();
 
-    //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
+    //xTaskCreate(scheduler_start,"test",6024,NULL,1,NULL);
 
+    //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
+/*
     ESP_LOGD(TAG, "Starting heartbeat task");
     xTaskCreatePinnedToCore(&heartbeat_task, "heartbeat_task", 4096, NULL, 1, NULL, 1);
 
@@ -42,7 +44,7 @@ void app_main(void)
     ESP_LOGD(TAG, "Starting presence detection");
     start_presence_detection();
     #endif
-
+*/
     while(1) {
         vTaskDelay(1000/ portTICK_PERIOD_MS); //
     }

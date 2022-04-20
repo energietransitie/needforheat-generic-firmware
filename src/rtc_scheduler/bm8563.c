@@ -174,6 +174,7 @@ bm8563_err_t bm8563_ioctl(const bm8563_t *bm, int16_t command, void *buffer)
             data[0] = BM8563_ALARM_DISABLE;
         } else {
             data[0] = decimal2bcd(time->tm_min);
+            data[0] &= 0b01111111; // this line is added for completness
         }
 
         /* 0..23 */

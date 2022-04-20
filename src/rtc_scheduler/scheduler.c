@@ -12,23 +12,20 @@ void scheduler_start()
     // execute scheduler
 
     // test code
-    char buffer[128],tmp;
-    struct tm rtc;
+    char tmp;
     do {        
         // print time
-        bm8563_read(&bm8563, &rtc);
-        strftime(buffer, 128 ,"%c (day %j)" , &rtc);
-        ESP_LOGD("print","RTC: %s\n", buffer);
+        rtc_print_time();
 
+        // set interval
         rtc_set_alarm(INTERVAL_1M);
 
         // wait for alarm
         ESP_LOGD("print","wait for alarm");
         do{
             vTaskDelay(pdMS_TO_TICKS(500));
-            bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
 
-        } while (!(tmp & BM8563_AF));
+        } while (!rtc_check_AF());
         ESP_LOGD("print","alarm goes off!");
     } while (1);
     // end test
