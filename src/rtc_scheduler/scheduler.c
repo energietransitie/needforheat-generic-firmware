@@ -25,7 +25,7 @@ void scheduler_start()
         do{
             vTaskDelay(pdMS_TO_TICKS(500));
 
-        } while (!rtc_check_AF());
+        } while (!rtc_check_flag());
         ESP_LOGD("print","alarm goes off!");
     } while (1);
     // end test

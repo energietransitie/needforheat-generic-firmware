@@ -41,40 +41,39 @@ time_t rtc_get_unixtime()
 }
 
 // set rtc alarm
-void rtc_set_alarm(interval_t alarm) {
- time_t time;
- struct tm rtc_alarm,*ptr_alarm;
- uint8_t tmp;
-    // get current rtc time
-    time = rtc_get_unixtime();
-
-    // add interval to time
-    time += alarm;
-
-    // convert 
-    ptr_alarm = localtime(&time);
-    
-    if(alarm >= INTERVAL_10S && alarm < INTERVAL_1M) {
-      // set rtc timer
-      bm8563_ioctl(&bm8563, BM8563_TIMER_WRITE, &alarm);
-      tmp = 0|(BM8563_TIMER_ENABLE|BM8563_TIMER_1HZ);
-      bm8563_ioctl(&bm8563, BM8563_TIMER_CONTROL_WRITE, &tmp);
+void rtc_set_alarm(interval_t interval) {
+ time_t unix_time;
+ struct tm rtc_time,*new_time;
+ uint8_t reg;
+    // Decide to use timer or alarm based on given interval
+    if(interval >= INTERVAL_10S && interval < INTERVAL_1M) { // use timer
+      // set timer count register
+      bm8563_ioctl(&bm8563, BM8563_TIMER_WRITE, &interval);
+      // enable timer and set clock frequency to 1 Hz
+      reg = 0|(BM8563_TIMER_ENABLE|BM8563_TIMER_1HZ);
+      bm8563_ioctl(&bm8563, BM8563_TIMER_CONTROL_WRITE, &reg);
     } 
-    else if(alarm >= INTERVAL_1M && alarm <= INTERVAL_2D) {
-      // set rtc alarm
-      rtc_alarm.tm_wday = ptr_alarm->tm_wday;
-      rtc_alarm.tm_mday = BM8563_ALARM_NONE;
-      rtc_alarm.tm_min = ptr_alarm->tm_min;
-      rtc_alarm.tm_hour = ptr_alarm->tm_hour;
-      bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_alarm);
+    else if(interval >= INTERVAL_1M && interval <= INTERVAL_2D) { // use alarm
+      // add interval to currrent time
+      unix_time = rtc_get_unixtime();
+      unix_time += interval; 
+      new_time = localtime(&unix_time);
+      
+      // set rtc alarm with this new time
+      rtc_time.tm_wday = BM8563_ALARM_NONE;
+      rtc_time.tm_mday = BM8563_ALARM_NONE;
+      rtc_time.tm_min = new_time->tm_min;
+      rtc_time.tm_hour = new_time->tm_hour;
+      bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_time);
     }
 
     // clear alarm and timer flag
-    bm8563_ioctl(&bm8563,BM8563_CONTROL_STATUS2_READ, &tmp);
-    tmp &= ~(BM8563_AF|BM8563_TF);
-    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &tmp);
+    bm8563_ioctl(&bm8563,BM8563_CONTROL_STATUS2_READ, &reg);
+    reg &= ~(BM8563_AF|BM8563_TF);
+    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &reg);
 }
 
+// reads out the rtc time and print formated string
 void rtc_print_time() {
  char buffer[128];
  struct tm rtc;
@@ -83,14 +82,9 @@ void rtc_print_time() {
   ESP_LOGD("print","RTC: %s\n", buffer);
 }
 
-bool rtc_check_AF() {
+// reads out rtc register to detmine if the alarm or timer flag is set
+bool rtc_check_flag() {
   uint8_t reg;
   bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
-  return (reg & BM8563_AF);
-}
-
-bool rtc_check_TF() {
-  uint8_t reg;
-  bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
-  return (reg & BM8563_TF);
+  return (reg & (BM8563_AF|BM8563_TF));
 }
