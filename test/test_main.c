@@ -2,9 +2,9 @@
 #include <time.h>
 #include <stdint.h>
 
-#include "../src/rtc_scheduler/bm8563.h"
-#include "../src/rtc_scheduler/i2c_hal.h"
-#include "../src/rtc_scheduler/rtc.h"
+#include <bm8563.h>
+#include <i2c_hal.h>
+#include <rtc.h>
 
 // needed for vtaskdelay function
 #include <freertos/FreeRTOS.h>
