@@ -30,7 +30,6 @@ time_t rtc_get_time();
 void rtc_set_alarm(interval_t alarm);
 
 void rtc_print_time();
-bool rtc_check_TF();
-bool rtc_check_AF();
+bool rtc_check_flag();
 
 #endif
