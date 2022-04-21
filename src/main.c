@@ -1,6 +1,6 @@
 #include <generic_esp_32.h>
-#include "rtc_scheduler/scheduler.h"
-#include "rtc_scheduler/powerpin.h"
+#include <scheduler.h>
+#include <powerpin.h>
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
