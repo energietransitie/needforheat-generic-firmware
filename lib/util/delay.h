@@ -8,35 +8,35 @@
 namespace Delay
 {
     /**
-     * Convert miliseconds to FreeRTOS ticks.
+     * Convert milliseconds to FreeRTOS ticks.
      *
-     * @returns The amount of FreeRTOS ticks.
+     * @returns amount of milliseconds, converted to FreeRTOS ticks.
      */
-    constexpr TickType_t MiliSeconds(TickType_t amount)
+    constexpr TickType_t MilliSeconds(TickType_t amount)
     {
-        // amount is already in miliseconds.
+        // amount [ms] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount / portTICK_PERIOD_MS;
     }
 
     /**
      * Convert seconds to FreeRTOS ticks.
      *
-     * @returns The amount of FreeRTOS ticks.
+     * @returns amount of seconds, converted to FreeRTOS ticks.
      */
     constexpr TickType_t Seconds(TickType_t amount)
     {
-        // amount * 1000 (miliseconds) = seconds.
+        // amount [s] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount * 1000 / portTICK_PERIOD_MS;
     }
 
     /**
      * Convert minutes to FreeRTOS ticks.
      *
-     * @returns The amount of FreeRTOS ticks.
+     * @returns amount of minutes, converted to FreeRTOS ticks.
      */
     constexpr TickType_t Minutes(TickType_t amount)
     {
-        // amount * 60 (seconds) * 1000 (miliseconds) = minutes.
+        // amount [min] * 60 [s/min] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount * 60 * 1000 / portTICK_PERIOD_MS;
     }
 }
