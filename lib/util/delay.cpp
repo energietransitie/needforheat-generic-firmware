@@ -3,23 +3,23 @@
 namespace Delay
 {
     template <typename T>
-    constexpr TickType_t MiliSeconds(T amount)
+    constexpr TickType_t MilliSeconds(T amount)
     {
-        // amount is already in miliseconds.
+        // amount [ms] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount / portTICK_PERIOD_MS;
     }
 
     template <typename T>
     constexpr TickType_t Seconds(T amount)
     {
-        // amount * 1000 (miliseconds) = seconds.
+        // amount [s] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount * 1000 / portTICK_PERIOD_MS;
     }
 
     template <typename T>
     constexpr TickType_t Minutes(T amount)
     {
-        // amount * 60 (seconds) * 1000 (miliseconds) = minutes.
+        // amount [min] * 60 [s/min] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount * 60 * 1000 / portTICK_PERIOD_MS;
     }
 }
