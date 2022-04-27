@@ -51,10 +51,6 @@ namespace HTTPUtil
 
         auto client = esp_http_client_init(&config);
 
-        // Always set these headers.
-        headersSend["user-agent"] = USER_AGENT_VALUE;
-        headersSend["accept"] = "*/*";
-
         for (auto const &header : headersSend)
         {
             err = esp_http_client_set_header(client, header.first.c_str(), header.second.c_str());
