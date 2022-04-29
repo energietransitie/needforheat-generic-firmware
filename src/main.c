@@ -4,6 +4,7 @@
 #include <freertos/event_groups.h>
 
 extern EventGroupHandle_t scheduler_taskevents;
+extern interval_t private_wake_up_interval;
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
@@ -19,8 +20,8 @@ static const char *TAG = "Twomes ESP32 generic test device";
 
 void taskA(void *in) {
     ESP_LOGD("taskA", "I am task A and i am running");
-    ESP_LOGD("taskA", "I wait 10 seconds");
-    vTaskDelay(pdMS_TO_TICKS(10000));
+    ESP_LOGD("taskA", "I wait 5 seconds");
+    vTaskDelay(pdMS_TO_TICKS(5000));
     ESP_LOGD("taskA","I have done my purpuse, bye");
 
     // tell that is stopped
@@ -47,7 +48,7 @@ void app_main(void)
         {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
         {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S}
     };
-    scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t));
+    scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t),SCHEDULER_INTERVAL_30S);
 
     //twomes_device_provisioning(DEVICE_TYPE_NAME);
 
@@ -79,10 +80,10 @@ void app_main(void)
    int current=0;
     while(1) {
         ESP_LOGD("rtc","time is %i",current);
-        if((current % SCHEDULER_INTERVAL_30S) == 0) {
+        if((current % private_wake_up_interval) == 0) {
             ESP_LOGD("rtc","wake up..");
             scheduler_execute_tasks(current);
-            xTaskCreate(scheduler_sleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,1,NULL);
+            xTaskCreate(scheduler_sleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
             //scheduler_sleep(SCHEDULER_INTERVAL_30S);
         }
         current++;
