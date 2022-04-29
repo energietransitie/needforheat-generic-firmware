@@ -1,6 +1,9 @@
 #include <generic_esp_32.h>
 #include <scheduler.h>
-#include <powerpin.h>
+#include <freertos/task.h>
+#include <freertos/event_groups.h>
+
+extern EventGroupHandle_t scheduler_taskevents;
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
@@ -14,20 +17,47 @@ static const char *TAG = "Twomes ESP32 generic test device";
 #define BOOT_STARTUP_INTERVAL_MS (10 * 1000) // milliseconds ( 10 s * 1000 ms/s)
 #define BOOT_STARTUP_INTERVAL_TXT "Wating 10 seconds before next measurement data series is started"
 
+void taskA(void *in) {
+    ESP_LOGD("taskA", "I am task A and i am running");
+    ESP_LOGD("taskA", "I wait 10 seconds");
+    vTaskDelay(pdMS_TO_TICKS(10000));
+    ESP_LOGD("taskA","I have done my purpuse, bye");
+
+    // tell that is stopped
+    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *) in)->id));
+    vTaskDelete(NULL);
+}
+
+void taskB(void *in) {
+    ESP_LOGD("taskB", "I am task B and i am running");
+    ESP_LOGD("taskB", "I wait 2 seconds");
+    vTaskDelay(pdMS_TO_TICKS(2000));
+    ESP_LOGD("taskB","I have done my purpuse, bye");
+
+    // tell that is stopped
+    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *) in)->id));
+    vTaskDelete(NULL);
+}
 
 void app_main(void)
 {
-    // setup power pin
-    powerpin_set();
+    ESP_LOGD(TAG, "platform target %s", TARGET_ENV);
 
-    twomes_device_provisioning(DEVICE_TYPE_NAME);
+    scheduler_t schedule[] = {
+        {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+        {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S}
+    };
+    scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t));
 
-    scheduler_start();
+    //twomes_device_provisioning(DEVICE_TYPE_NAME);
+
+    //scheduler_start();
 
     //xTaskCreate(scheduler_start,"test",6024,NULL,1,NULL);
 
     //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
-/*
+
+    /*
     ESP_LOGD(TAG, "Starting heartbeat task");
     xTaskCreatePinnedToCore(&heartbeat_task, "heartbeat_task", 4096, NULL, 1, NULL, 1);
 
@@ -44,8 +74,19 @@ void app_main(void)
     ESP_LOGD(TAG, "Starting presence detection");
     start_presence_detection();
     #endif
-*/
+    */
+
+   int current=0;
     while(1) {
+        ESP_LOGD("rtc","time is %i",current);
+        if((current % SCHEDULER_INTERVAL_30S) == 0) {
+            ESP_LOGD("rtc","wake up..");
+            scheduler_execute_tasks(current);
+            xTaskCreate(scheduler_sleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,1,NULL);
+            //scheduler_sleep(SCHEDULER_INTERVAL_30S);
+        }
+        current++;
         vTaskDelay(1000/ portTICK_PERIOD_MS); //
+        
     }
 }
