@@ -33,7 +33,7 @@ typedef struct {
   interval_t interval;
 } scheduler_t;
 
-void scheduler_init(scheduler_t *, int);
+void scheduler_init(scheduler_t *, int,interval_t);
 void scheduler_execute_tasks(time_t);
 void scheduler_sleep(void *);
 
