@@ -115,8 +115,6 @@ namespace OTAFirmwareUpdater
                 return std::make_pair(true, foundVersion.String());
             }
 
-            ESP_LOGI(TAG, "Latest release is older than this version. Running version: %s", currentVersion.CString());
-
             return std::make_pair(false, foundVersion.String());
         }
 
