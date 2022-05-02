@@ -3,6 +3,7 @@
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
 #include <math.h>
+#include <rtc.h>
 
 extern interval_t private_wake_up_interval;
 
@@ -47,6 +48,29 @@ void tasksleep(void *in) {
 
 void app_main(void)
 {
+    twomes_device_provisioning(DEVICE_TYPE_NAME);
+
+    rtc_ainit();
+    
+    
+    //rtc_print_time();
+    //rtc_syncronize_rtc_time();
+
+    struct tm rtc ={};
+    /* 2020-12-31 23:59:45 */
+    rtc.tm_year = 2020 - 1900;
+    rtc.tm_mon = 12 - 1;
+    rtc.tm_mday = 31;
+    rtc.tm_hour = 23;
+    rtc.tm_min = 59;
+    rtc.tm_sec = 45;
+
+    bm8563_init(&bm8563);
+    bm8563_write(&bm8563, &rtc);
+
+    rtc_syncronize_sys_time();
+
+    /*
     ESP_LOGD(TAG, "platform target %s", TARGET_ENV);
 
     scheduler_t schedule[] = {
@@ -54,7 +78,7 @@ void app_main(void)
         {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S}
     };
     scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t),SCHEDULER_INTERVAL_30S);
-
+    */
     //twomes_device_provisioning(DEVICE_TYPE_NAME);
 
     //scheduler_start();
@@ -83,6 +107,7 @@ void app_main(void)
     */
 
     while(1) {
+        /*
         time_t current = time(NULL),realy_read;
         ESP_LOGD("rtc","time is %li",current);
         if((current % private_wake_up_interval) == 0) {
@@ -93,6 +118,17 @@ void app_main(void)
             xTaskCreate(tasksleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
             //scheduler_sleep(SCHEDULER_INTERVAL_30S);
         }
+        */
+
+       rtc_print_time();
+
+        char buffer[128];
+        time_t test;
+        struct tm *systime;
+        test = time(NULL);
+        systime = localtime(&test);
+        strftime(buffer, 128, "%c (day %j)", systime);
+        ESP_LOGD(TAG, "sys time: %s\n", buffer);
         vTaskDelay(1000/ portTICK_PERIOD_MS); //
         
     }
