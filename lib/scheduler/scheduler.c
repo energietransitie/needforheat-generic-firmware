@@ -4,13 +4,7 @@
 #include <time.h>
 #include <stdint.h>
 
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#include <freertos/event_groups.h>
-
 #define TAG "SCHEDULER"
-
-#define MASK_ALL_TASKS(n) (~((~0)<< ((uint32_t) (n))))
 
 // public global variables
 EventGroupHandle_t scheduler_taskevents;
@@ -27,7 +21,7 @@ void scheduler_init(scheduler_t *sched,int sched_size, interval_t wake_up) {
   private_schedule = sched;
   private_schedule_size = sched_size;
 
-  // setup wake up interva;
+  // setup wake up interval
   private_wake_up_interval = wake_up;
 
   // create event group for running tasks
@@ -39,6 +33,7 @@ void scheduler_execute_tasks(time_t current) {
  scheduler_t *schedule_item;
   ESP_LOGD(TAG,"execute tasks that are due ...");
   
+  // clear all task wait bits
   private_tasks_waitbits = 0;
 
   // for each item on the schedule
@@ -46,13 +41,13 @@ void scheduler_execute_tasks(time_t current) {
   for(int i=0; i<private_schedule_size; i++,schedule_item++) {
     // if the task is due
     if( (current % schedule_item->interval) == 0) {
-      // give id to task
+      // pas task id to task
       schedule_item->parameters.id = i;
 
-      // generate wait MASK
+      // set wait bit for this task
       private_tasks_waitbits |= BIT_TASK(i);
 
-      // and execute task
+      // execute task
       ESP_LOGD(TAG,"task %s is due, execute ...",schedule_item->name);
       xTaskCreate(
         schedule_item->task,
@@ -65,8 +60,8 @@ void scheduler_execute_tasks(time_t current) {
   }
 }
 
-// let device sleep after all due tasks are completed
-void scheduler_sleep(void *in) {
+// put device in sleep after waiting that all due tasks are completed
+void scheduler_sleep() {
   // wait that all task event bits are cleared
   xEventGroupWaitBits(
     scheduler_taskevents,
@@ -78,6 +73,4 @@ void scheduler_sleep(void *in) {
 
   // put system in sleep (privated_wake_up_interval)
   ESP_LOGD("sleep","there are no running task, put system to sleep");
-
-  vTaskDelete(NULL);
 }

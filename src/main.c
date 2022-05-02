@@ -3,7 +3,6 @@
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
 
-extern EventGroupHandle_t scheduler_taskevents;
 extern interval_t private_wake_up_interval;
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
@@ -37,6 +36,11 @@ void taskB(void *in) {
 
     // tell that is stopped
     xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *) in)->id));
+    vTaskDelete(NULL);
+}
+
+void tasksleep(void *in) {
+    scheduler_sleep();
     vTaskDelete(NULL);
 }
 
@@ -77,16 +81,15 @@ void app_main(void)
     #endif
     */
 
-   int current=0;
     while(1) {
-        ESP_LOGD("rtc","time is %i",current);
+        time_t current = time(NULL);
+        ESP_LOGD("rtc","time is %li",current);
         if((current % private_wake_up_interval) == 0) {
             ESP_LOGD("rtc","wake up..");
             scheduler_execute_tasks(current);
-            xTaskCreate(scheduler_sleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
+            xTaskCreate(tasksleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
             //scheduler_sleep(SCHEDULER_INTERVAL_30S);
         }
-        current++;
         vTaskDelay(1000/ portTICK_PERIOD_MS); //
         
     }
