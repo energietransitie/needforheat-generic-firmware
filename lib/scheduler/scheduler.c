@@ -40,7 +40,7 @@ void scheduler_execute_tasks(time_t current) {
   schedule_item = private_schedule;
   for(int i=0; i<private_schedule_size; i++,schedule_item++) {
     // if the task is due
-    if( (current % schedule_item->interval) == 0) {
+    if( (current % schedule_item->interval) < private_wake_up_interval) {
       // pas task id to task
       schedule_item->parameters.id = i;
 
