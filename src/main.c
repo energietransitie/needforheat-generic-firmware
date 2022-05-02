@@ -2,6 +2,7 @@
 #include <scheduler.h>
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
+#include <math.h>
 
 extern interval_t private_wake_up_interval;
 
@@ -82,11 +83,13 @@ void app_main(void)
     */
 
     while(1) {
-        time_t current = time(NULL);
+        time_t current = time(NULL),realy_read;
         ESP_LOGD("rtc","time is %li",current);
         if((current % private_wake_up_interval) == 0) {
             ESP_LOGD("rtc","wake up..");
-            scheduler_execute_tasks(current);
+            realy_read = current+rand()%SCHEDULER_INTERVAL_30S;
+            ESP_LOGD("wake up","I read the following time %li",realy_read);
+            scheduler_execute_tasks(realy_read);
             xTaskCreate(tasksleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
             //scheduler_sleep(SCHEDULER_INTERVAL_30S);
         }
