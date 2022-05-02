@@ -2,6 +2,9 @@
 #define SCHEDULER_H
 
 #include <time.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/event_groups.h>
 
 #define BIT_TASK(n) (1<<n)
 
@@ -35,6 +38,8 @@ typedef struct {
 
 void scheduler_init(scheduler_t *, int,interval_t);
 void scheduler_execute_tasks(time_t);
-void scheduler_sleep(void *);
+void scheduler_sleep();
+
+extern EventGroupHandle_t scheduler_taskevents;
 
 #endif
