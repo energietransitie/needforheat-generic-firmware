@@ -9,7 +9,7 @@
 bm8563_t bm8563;
 
 // initialize rtc library
-void rtc_ainit()
+void rtc_initialize()
 {
   // initialize bm8563 functions and i2c hal
   i2c_hal_init();

@@ -50,7 +50,7 @@ void app_main(void)
 {
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
-    rtc_ainit();
+    rtc_initialize();
     
     
     //rtc_print_time();
