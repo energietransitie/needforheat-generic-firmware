@@ -21,8 +21,8 @@ static const char *TAG = "Twomes ESP32 generic test device";
 void taskA(void *in)
 {
     ESP_LOGD("taskA", "I am task A and i am running");
-    ESP_LOGD("taskA", "I wait 5 seconds");
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    ESP_LOGD("taskA", "I wait 20 seconds");
+    vTaskDelay(pdMS_TO_TICKS(20000));
     ESP_LOGD("taskA", "I have done my purpuse, bye");
 
     // tell that is stopped
@@ -33,8 +33,8 @@ void taskA(void *in)
 void taskB(void *in)
 {
     ESP_LOGD("taskB", "I am task B and i am running");
-    ESP_LOGD("taskB", "I wait 2 seconds");
-    vTaskDelay(pdMS_TO_TICKS(2000));
+    ESP_LOGD("taskB", "I wait 10 seconds");
+    vTaskDelay(pdMS_TO_TICKS(10000));
     ESP_LOGD("taskB", "I have done my purpuse, bye");
 
     // tell that is stopped
@@ -45,7 +45,7 @@ void taskB(void *in)
 void tasksleep(void *in)
 {
     scheduler_sleep();
-    rtc_set_alarm(SCHEDULER_INTERVAL_30S);
+    rtc_set_alarm(SCHEDULER_INTERVAL_5M);
     vTaskDelete(NULL);
 }
 
@@ -59,10 +59,10 @@ void app_main(void)
     ESP_LOGD(TAG, "platform target %s", TARGET_ENV);
 
     scheduler_t schedule[] = {
-        {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-        {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S}
+        {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_5M},
+        {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30M}
     };
-    scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t),SCHEDULER_INTERVAL_30S);
+    scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t),SCHEDULER_INTERVAL_5M);
     
 
     // twomes_device_provisioning(DEVICE_TYPE_NAME);
@@ -102,14 +102,14 @@ void app_main(void)
         time_t current = time(NULL), realy_read;
         ESP_LOGD("rtc", "time is %li", current);
         bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
-        if (tmp & (BM8563_AF | BM8563_TF))
+        if (tmp & (BM8563_AF))
         {
             time(&tijd);
             ESP_LOGD("rtc", "wake up.. on %li",tijd);
             realy_read = current; //+ rand() % SCHEDULER_INTERVAL_30S;
             ESP_LOGD("wake up", "I read the following time %li", realy_read);
             scheduler_execute_tasks(realy_read);
-            xTaskCreate(tasksleep, "sleep", 4096, (void *)SCHEDULER_INTERVAL_30S, 3, NULL);
+            xTaskCreate(tasksleep, "sleep", 4096, (void *)SCHEDULER_INTERVAL_5M, 3, NULL);
 
             bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
             tmp &= ~(BM8563_AF | BM8563_TF);
