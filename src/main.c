@@ -15,34 +15,37 @@ static const char *TAG = "Twomes ESP32 presence detector";
 static const char *TAG = "Twomes ESP32 generic test device";
 #endif
 
-
 #define BOOT_STARTUP_INTERVAL_MS (10 * 1000) // milliseconds ( 10 s * 1000 ms/s)
 #define BOOT_STARTUP_INTERVAL_TXT "Wating 10 seconds before next measurement data series is started"
 
-void taskA(void *in) {
+void taskA(void *in)
+{
     ESP_LOGD("taskA", "I am task A and i am running");
     ESP_LOGD("taskA", "I wait 5 seconds");
     vTaskDelay(pdMS_TO_TICKS(5000));
-    ESP_LOGD("taskA","I have done my purpuse, bye");
+    ESP_LOGD("taskA", "I have done my purpuse, bye");
 
     // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *) in)->id));
+    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *)in)->id));
     vTaskDelete(NULL);
 }
 
-void taskB(void *in) {
+void taskB(void *in)
+{
     ESP_LOGD("taskB", "I am task B and i am running");
     ESP_LOGD("taskB", "I wait 2 seconds");
     vTaskDelay(pdMS_TO_TICKS(2000));
-    ESP_LOGD("taskB","I have done my purpuse, bye");
+    ESP_LOGD("taskB", "I have done my purpuse, bye");
 
     // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *) in)->id));
+    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *)in)->id));
     vTaskDelete(NULL);
 }
 
-void tasksleep(void *in) {
+void tasksleep(void *in)
+{
     scheduler_sleep();
+    rtc_set_alarm(SCHEDULER_INTERVAL_30S);
     vTaskDelete(NULL);
 }
 
@@ -51,26 +54,8 @@ void app_main(void)
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
     rtc_initialize();
-    
-    
-    //rtc_print_time();
-    //rtc_syncronize_rtc_time();
+    rtc_syncronize_rtc_time();
 
-    struct tm rtc ={};
-    /* 2020-12-31 23:59:45 */
-    rtc.tm_year = 2020 - 1900;
-    rtc.tm_mon = 12 - 1;
-    rtc.tm_mday = 31;
-    rtc.tm_hour = 23;
-    rtc.tm_min = 59;
-    rtc.tm_sec = 45;
-
-    bm8563_init(&bm8563);
-    bm8563_write(&bm8563, &rtc);
-
-    rtc_syncronize_sys_time();
-
-    /*
     ESP_LOGD(TAG, "platform target %s", TARGET_ENV);
 
     scheduler_t schedule[] = {
@@ -78,14 +63,15 @@ void app_main(void)
         {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S}
     };
     scheduler_init(schedule,sizeof(schedule)/sizeof(scheduler_t),SCHEDULER_INTERVAL_30S);
-    */
-    //twomes_device_provisioning(DEVICE_TYPE_NAME);
+    
 
-    //scheduler_start();
+    // twomes_device_provisioning(DEVICE_TYPE_NAME);
 
-    //xTaskCreate(scheduler_start,"test",6024,NULL,1,NULL);
+    // scheduler_start();
 
-    //TODO: move tasks to new twomes_device_initialization() function in generic firmware library
+    // xTaskCreate(scheduler_start,"test",6024,NULL,1,NULL);
+
+    // TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
     /*
     ESP_LOGD(TAG, "Starting heartbeat task");
@@ -93,7 +79,7 @@ void app_main(void)
 
     ESP_LOGD(TAG, BOOT_STARTUP_INTERVAL_TXT);
     vTaskDelay(BOOT_STARTUP_INTERVAL_MS / portTICK_PERIOD_MS);
-    
+
     ESP_LOGD(TAG, "Starting timesync task");
     xTaskCreatePinnedToCore(&timesync_task, "timesync_task", 4096, NULL, 1, NULL, 1);
 
@@ -106,22 +92,33 @@ void app_main(void)
     #endif
     */
 
-    while(1) {
-        /*
-        time_t current = time(NULL),realy_read;
-        ESP_LOGD("rtc","time is %li",current);
-        if((current % private_wake_up_interval) == 0) {
-            ESP_LOGD("rtc","wake up..");
-            realy_read = current+rand()%SCHEDULER_INTERVAL_30S;
-            ESP_LOGD("wake up","I read the following time %li",realy_read);
+   rtc_set_alarm(SCHEDULER_INTERVAL_30S);
+
+   uint8_t tmp;
+   time_t tijd;
+    while (1)
+    {
+        // simulate rtc
+        time_t current = time(NULL), realy_read;
+        ESP_LOGD("rtc", "time is %li", current);
+        bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
+        if (tmp & (BM8563_AF | BM8563_TF))
+        {
+            time(&tijd);
+            ESP_LOGD("rtc", "wake up.. on %li",tijd);
+            realy_read = current; //+ rand() % SCHEDULER_INTERVAL_30S;
+            ESP_LOGD("wake up", "I read the following time %li", realy_read);
             scheduler_execute_tasks(realy_read);
-            xTaskCreate(tasksleep,"sleep",4096, (void *) SCHEDULER_INTERVAL_30S,3,NULL);
-            //scheduler_sleep(SCHEDULER_INTERVAL_30S);
+            xTaskCreate(tasksleep, "sleep", 4096, (void *)SCHEDULER_INTERVAL_30S, 3, NULL);
+
+            bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &tmp);
+            tmp &= ~(BM8563_AF | BM8563_TF);
+            bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &tmp);
         }
-        */
 
-       rtc_print_time();
-
+        // print rtc time and sys time
+        /*
+        rtc_print_time();
         char buffer[128];
         time_t test;
         struct tm *systime;
@@ -129,7 +126,8 @@ void app_main(void)
         systime = localtime(&test);
         strftime(buffer, 128, "%c (day %j)", systime);
         ESP_LOGD(TAG, "sys time: %s\n", buffer);
-        vTaskDelay(1000/ portTICK_PERIOD_MS); //
+        */
         
+        vTaskDelay(1000 / portTICK_PERIOD_MS); //
     }
 }
