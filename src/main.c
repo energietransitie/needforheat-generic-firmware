@@ -18,6 +18,7 @@ static const char *TAG = "Twomes ESP32 generic test device";
 
 void app_main(void)
 {
+#if defined ESP32DEV
     twomes_device_provisioning(DEVICE_TYPE_NAME);
     // TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
@@ -36,6 +37,10 @@ void app_main(void)
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
     ESP_LOGD(TAG, "Starting presence detection");
     start_presence_detection();
+#endif
+
+#elif defined M5STACK_COREINK
+    ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 #endif
     while (1)
     {
