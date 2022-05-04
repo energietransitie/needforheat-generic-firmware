@@ -61,7 +61,8 @@ void scheduler_execute_tasks(time_t current) {
 }
 
 // put device in sleep after waiting that all due tasks are completed
-void scheduler_sleep() {
+void scheduler_sleep(void (*sleep_function)(interval_t),time_t time_passed) {
+  time_t sleep_period;
   // wait that all task event bits are cleared
   xEventGroupWaitBits(
     scheduler_taskevents,
@@ -72,5 +73,13 @@ void scheduler_sleep() {
     );
 
   // put system in sleep (privated_wake_up_interval)
-  ESP_LOGD("sleep","there are no running task, put system to sleep");
+  sleep_period = private_wake_up_interval-time_passed;
+  if(sleep_period > 0) {
+    ESP_LOGD("sleep","there are no running task, put system to sleep");
+    sleep_function(sleep_period);
+  }
+  else {
+    ESP_LOGD("sleep","there are no running task, but program run longer than wake up interval.");
+    ESP_LOGD("sleep","This means that the schedule is not valid");
+  }
 }
