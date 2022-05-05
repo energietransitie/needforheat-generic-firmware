@@ -41,9 +41,19 @@ void app_main(void)
 }
 #elif defined M5STACK_COREINK
 
+#define PPK2_SEL PPK2_SEL_D0|PPK2_SEL_D1|PPK2_SEL_D2 
+#define PPK2_SEL_D0 GPIO_SEL_25
+#define PPK2_SEL_D1 GPIO_SEL_26
+#define PPK2_SEL_D2 GPIO_SEL_23
+
+#define PPK2_NUM_D0 GPIO_NUM_25
+#define PPK2_NUM_D1 GPIO_NUM_26
+#define PPK2_NUM_D2 GPIO_NUM_23
+
 #include <scheduler.h>
 #include <rtc.h>
 #include <scheduled_tasks.h>
+#include <powerpin.h>
 
 scheduler_t schedule[] = {
     {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
@@ -61,12 +71,35 @@ void my_deep_sleep(interval_t interval)
     esp_deep_sleep_start();
 }
 
+#include <driver/gpio.h>
+
 void app_main(void)
 {
+    powerpin_set();
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 
+    // setup test gpio pins for PPKII
+    gpio_config_t config = {
+        PPK2_SEL,
+        GPIO_MODE_OUTPUT,
+        GPIO_PULLUP_DISABLE,
+        GPIO_PULLDOWN_DISABLE,
+        GPIO_INTR_DISABLE
+    };
+    gpio_config(&config);
+    gpio_set_level(PPK2_NUM_D0,0);
+    gpio_set_level(PPK2_NUM_D1,0);
+    gpio_set_level(PPK2_NUM_D2,0);
+
+
     // connect with server
+    gpio_set_level(PPK2_NUM_D0,1);
     twomes_device_provisioning(DEVICE_TYPE_NAME);
+    gpio_set_level(PPK2_NUM_D0,0);
+
+    // initailize rtc
+    rtc_initialize();
+    rtc_syncronize_rtc_time();
 
     // initialize scheduler
     scheduler_init(schedule,schedule_size,wakeup_interval);
@@ -77,7 +110,8 @@ void app_main(void)
         scheduler_execute_tasks(time(NULL));
 
         // wait for the end of all running tasks and then sleep
-        scheduler_sleep(my_deep_sleep);
+        scheduler_sleep(rtc_set_alarm);
+        powerpin_reset();
 
         // program will never reach this if the system is put in deep sleep or power off mode.
         vTaskDelay(pdMS_TO_TICKS(1000));
