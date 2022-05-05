@@ -46,10 +46,10 @@ void app_main(void)
 #include <scheduled_tasks.h>
 
 scheduler_t schedule[] = {
-    {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_30S},
-    {taskB, "task b", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M}};
+    {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    {taskB, "task b", 4096, {0, NULL}, 1, 120}};
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
-interval_t wakeup_interval = SCHEDULER_INTERVAL_30S;
+interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
 
 #include <esp_sleep.h>
 
@@ -63,12 +63,10 @@ void my_deep_sleep(interval_t interval)
 
 void app_main(void)
 {
- time_t start;
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 
     // connect with server
     twomes_device_provisioning(DEVICE_TYPE_NAME);
-    start = time(NULL);
 
     // initialize scheduler
     scheduler_init(schedule,schedule_size,wakeup_interval);
@@ -79,7 +77,7 @@ void app_main(void)
         scheduler_execute_tasks(time(NULL));
 
         // wait for the end of all running tasks and then sleep
-        scheduler_sleep(my_deep_sleep,time(NULL)-start);
+        scheduler_sleep(my_deep_sleep);
 
         // program will never reach this if the system is put in deep sleep or power off mode.
         vTaskDelay(pdMS_TO_TICKS(1000));
