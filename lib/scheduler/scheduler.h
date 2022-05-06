@@ -6,7 +6,8 @@
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
 
-#define BIT_TASK(n) (1<<n)
+#define BIT_TASK(ID) (1<<ID)
+#define GET_TASK_BIT_FROM_ARG(ARG)  (1 << ((scheduler_parameter_t *)ARG)->id)
 
 typedef enum {
   SCHEDULER_INTERVAL_10S=10,

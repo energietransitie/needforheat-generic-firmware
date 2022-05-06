@@ -8,7 +8,7 @@
 #include <driver/gpio.h>
 
 // test task A
-void taskA(void *in)
+void taskA(void *arg)
 {
     gpio_set_level(PPK2_NUM_D1,1);
     ESP_LOGD("taskA", "I am task A and i am running");
@@ -18,12 +18,12 @@ void taskA(void *in)
     gpio_set_level(PPK2_NUM_D1,0);
 
     // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *)in)->id));
+    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
     vTaskDelete(NULL);
 }
 
 // test task B
-void taskB(void *in)
+void taskB(void *arg)
 {
     gpio_set_level(PPK2_NUM_D2,1);
     ESP_LOGD("taskB", "I am task B and i am running");
@@ -33,6 +33,6 @@ void taskB(void *in)
     gpio_set_level(PPK2_NUM_D2,0);
 
     // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, BIT_TASK(((scheduler_parameter_t *)in)->id));
+    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
     vTaskDelete(NULL);
 }
