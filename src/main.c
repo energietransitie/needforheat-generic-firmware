@@ -110,7 +110,7 @@ void app_main(void)
         scheduler_execute_tasks(time(NULL));
 
         // wait for the end of all running tasks and then sleep
-        scheduler_sleep(rtc_set_alarm);
+        scheduler_sleep(my_deep_sleep);
         powerpin_reset();
 
         // program will never reach this if the system is put in deep sleep or power off mode.
