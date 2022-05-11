@@ -66,7 +66,10 @@ void app_main(void)
 scheduler_t schedule[] = {
     {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskB, "task b", 4096, {0, NULL}, 1, 120},
-    {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_1D}};
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+    {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_1D},
+#endif
+};
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
 interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
 
