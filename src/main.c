@@ -1,5 +1,9 @@
 #include <generic_esp_32.h>
 
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#include <c_ota.h>
+#endif
+
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
 static const char *TAG = "Twomes ESP32 presence detector";
@@ -28,6 +32,10 @@ void app_main(void)
 
     ESP_LOGD(TAG, BOOT_STARTUP_INTERVAL_TXT);
     vTaskDelay(BOOT_STARTUP_INTERVAL_MS / portTICK_PERIOD_MS);
+
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+    twomes_ota_start();
+#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
     ESP_LOGD(TAG, "Starting presence detection");
