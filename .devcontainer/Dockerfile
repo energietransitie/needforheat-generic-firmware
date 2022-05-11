@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
     gnupg \
     curl \
     sudo \
+    libusb-1.0-0 \
     locales \
     python3 \
     python3-pip \
@@ -36,6 +37,16 @@ WORKDIR /home/$USERNAME
 
 # Install ESPtool
 RUN pip3 install esptool
+
+# Install esp-idf
+RUN mkdir tools \
+    && cd tools \
+    && git clone -b v4.4 --recurse-submodules -j8 https://github.com/espressif/esp-idf.git \
+    && cd esp-idf \
+    && ./install.sh
+
+# Setup terminal
+RUN echo '. $HOME/tools/esp-idf/export.sh' >> ~/.bashrc
 
 # Install PlatformIO Core CLI
 RUN curl -fsSL https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py -o get-platformio.py \
