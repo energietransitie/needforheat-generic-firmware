@@ -382,5 +382,6 @@ bool connect_wifi(char *taskString);
  * TODO: This function has no definition.
  */
 bool connect_wifi_having_802_11_mutex();
+void wait_for_wifi(char *endpoint);
 
 #endif // GENERIC_ESP_32_H

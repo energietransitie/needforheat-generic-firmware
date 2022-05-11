@@ -734,10 +734,8 @@ void activate_device() {
 }
 
 int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size) {
-    int connect_retry_counter = 0;
     int upload_retry_counter = 0;
     int content_length = 0;
-    bool connect_success = false;
     int status_code = 0;
     char *response = NULL;
     char *urlString = NULL;
@@ -787,32 +785,8 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    if (!already_connected) {
-        connect_success = connect_wifi(endpoint);
-        while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
-            ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
-            connect_success = connect_wifi(endpoint);
-        }
-
-        if (!connect_success) {
-            //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
-            ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
-            for (int i = 10; i >= 0; i--) {
-                ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-            }
-            ESP_LOGE(TAG, "Restarting now.");
-            fflush(stdout);
-            esp_restart();
-        }
-
-        ESP_LOGD(TAG, "Waiting for IP connection...");
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
-        ESP_LOGD(TAG, "Waiting for IP connection... done");
-
-        //Wait to make extra sure Wi-Fi is connected and stable
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-    }
+    if (!already_connected)
+        wait_for_wifi(endpoint);
 
     ESP_LOGD(TAG, "Initiating call to endpoint %s with payload: %s", endpoint, data);
 
@@ -1150,6 +1124,34 @@ bool connect_wifi(char *taskString) {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
+}
+
+void wait_for_wifi(char *endpoint)
+{
+    bool connect_success = connect_wifi(endpoint);
+    for (int retry_counter = 0; !connect_success && retry_counter < WIFI_CONNECT_RETRIES; retry_counter++) {
+        ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
+        connect_success = connect_wifi(endpoint);
+    }
+
+    if (!connect_success) {
+        //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
+        ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+        for (int i = 10; i >= 0; i--) {
+            ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+        ESP_LOGE(TAG, "Restarting now.");
+        fflush(stdout);
+        esp_restart();
+    }
+
+    ESP_LOGD(TAG, "Waiting for IP connection...");
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
+    ESP_LOGD(TAG, "Waiting for IP connection... done");
+
+    //Wait to make extra sure Wi-Fi is connected and stable
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 }
 
 void initialize_nvs() {
