@@ -7,10 +7,15 @@
 extern "C"
 {
 #endif // __cplusplus
-
+    
     void twomes_ota_start()
     {
         OTAFirmwareUpdater::Start();
+    }
+
+    void twomes_ota_firmware_update_task(void *pvParams)
+    {
+        OTAFirmwareUpdater::OTAFirmwareUpdaterTask(pvParams);
     }
 
     void twomes_ota_check()

@@ -11,6 +11,7 @@
 extern "C"
 {
 #include <generic_esp_32.h>
+#include <scheduler.h>
 }
 
 #include <http_util.h>
@@ -142,20 +143,6 @@ namespace OTAFirmwareUpdater
 
             esp_restart();
         }
-
-        void OTAFirmwareUpdaterTask(void *pvParams)
-        {
-            ESP_LOGI(TAG, "Task started.");
-
-            CheckUpdateFinishedSuccessfully();
-
-            while (true)
-            {
-                Check();
-
-                vTaskDelay(Delay::Minutes(UPDATE_CHECK_INTERVAL_MINUTES));
-            }
-        }
     } // namespace
 
     void Start()
@@ -165,6 +152,19 @@ namespace OTAFirmwareUpdater
         {
             ESP_LOGE(TAG, "The OTA Firmware Updater Task failed to start with error code: %d", status);
         }
+    }
+
+    void OTAFirmwareUpdaterTask(void *pvParams)
+    {
+        ESP_LOGI(TAG, "Task started.");
+
+        CheckUpdateFinishedSuccessfully();
+
+        Check();
+
+        // Signal that the task is done.
+        xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(pvParams));
+        vTaskDelete(NULL);
     }
 
     void Check()

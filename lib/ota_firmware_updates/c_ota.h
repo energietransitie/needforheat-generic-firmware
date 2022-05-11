@@ -29,6 +29,13 @@ extern "C"
      */
     void twomes_ota_check_update_finished_successfully();
 
+    /**
+     * OTA Firmware Updater task.
+     *
+     * @see OTAFirmwareUpdater::OTAFirmwareUpdaterTask(void *pvParams).
+     */
+    void twomes_ota_firmware_update_task(void *pvParams);
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

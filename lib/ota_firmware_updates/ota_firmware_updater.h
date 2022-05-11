@@ -23,6 +23,13 @@ namespace OTAFirmwareUpdater
     void Start();
 
     /**
+     * OTA Firmware Updater task.
+     *
+     * This is the FreeRTOS task that can be started.
+     */
+    void OTAFirmwareUpdaterTask(void *pvParams);
+
+    /**
      * Check for new firmware versions and install if found.
      */
     void Check();
