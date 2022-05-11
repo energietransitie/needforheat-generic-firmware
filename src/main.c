@@ -54,9 +54,12 @@ void app_main(void)
 #include <rtc.h>
 #include <scheduled_tasks.h>
 #include <powerpin.h>
+#include <upload.h>
 
 scheduler_t schedule[] = {
+    {heartbeatv2_task, "heartbeat1", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    {heartbeatv2_task, "heartbeat2", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskB, "task b", 4096, {0, NULL}, 1, 120}};
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
 interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
@@ -65,16 +68,22 @@ interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
 
 void my_deep_sleep(interval_t interval)
 {
+    // upload
+    upload_upload();
+
     // go in deep sleep
     ESP_LOGD("deep sleep","going in deep sleep for %i seconds",interval);
-    esp_sleep_enable_timer_wakeup(interval*1000000);
-    esp_deep_sleep_start();
+    //esp_sleep_enable_timer_wakeup(interval*1000000);
+    //esp_light_sleep_start();
+    vTaskDelay(pdMS_TO_TICKS(interval*1000));
 }
 
 #include <driver/gpio.h>
+#include <upload.h>
 
 void app_main(void)
 {
+    upload_initialize();
     powerpin_set();
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 
@@ -114,7 +123,7 @@ void app_main(void)
         powerpin_reset();
 
         // program will never reach this if the system is put in deep sleep or power off mode.
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        //vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 #endif

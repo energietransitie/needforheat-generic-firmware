@@ -5,4 +5,7 @@
 void taskA(void *);
 void taskB(void *);
 
+// real tasks
+void heartbeatv2_task(void *arg);
+
 #endif
