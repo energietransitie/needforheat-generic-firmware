@@ -148,5 +148,6 @@ bool enable_wifi(char *taskString);
 bool disconnect_wifi(char *taskString);
 bool connect_wifi(char *taskString);
 bool connect_wifi_having_802_11_mutex();
+void wait_for_wifi(char *endpoint);
 
 #endif

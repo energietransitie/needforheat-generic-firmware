@@ -1,5 +1,9 @@
 #include "http_util.h"
 
+extern "C" {
+    #include <generic_esp_32.h>
+}
+
 namespace HTTPUtil
 {
     namespace
@@ -43,6 +47,10 @@ namespace HTTPUtil
     {
         esp_err_t err = ESP_OK;
 
+        char *endpoint = const_cast<char *>("HTTPUtil::HTTPRequest");
+        
+        wait_for_wifi(endpoint);
+
         // Make sure there are no headers buffered.
         bufferedHeaders.clear();
 
@@ -61,6 +69,7 @@ namespace HTTPUtil
         if (Error::CheckAppendName(err, TAG, "An error occured when opening the HTTP connection"))
         {
             esp_http_client_cleanup(client);
+            disconnect_wifi(endpoint);
             return 400;
         }
 
@@ -71,6 +80,7 @@ namespace HTTPUtil
             {
                 ESP_LOGE(TAG, "Not all data was written.");
                 esp_http_client_cleanup(client);
+                disconnect_wifi(endpoint);
                 return 400;
             }
         }
@@ -80,6 +90,7 @@ namespace HTTPUtil
         {
             ESP_LOGE(TAG, "An error occured when fetching headers: %s", esp_err_to_name(err));
             esp_http_client_cleanup(client);
+            disconnect_wifi(endpoint);
             return 400;
         }
 
@@ -94,6 +105,8 @@ namespace HTTPUtil
         if (bytesReceived != contentLength)
         {
             ESP_LOGE(TAG, "An error occured when reading response. Expected %d but received %d", contentLength, bytesReceived);
+            esp_http_client_cleanup(client);
+            disconnect_wifi(endpoint);
             return 400;
         }
 
@@ -104,6 +117,8 @@ namespace HTTPUtil
 
         err = esp_http_client_cleanup(client);
         Error::CheckAppendName(err, TAG, "An error occured when cleaning up HTTP client");
+
+        disconnect_wifi(endpoint);
 
         return statusCode;
     }
