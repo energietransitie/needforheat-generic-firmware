@@ -39,6 +39,7 @@ void upload_upload() {
     // send json to server
     JSON_str = cJSON_Print(upload_object);
     ESP_LOGD("upload","JSON : \n%s",JSON_str);
+    upload_data_to_server(VARIABLE_UPLOAD_ENDPOINT, POST_WITH_BEARER, JSON_str, NULL, 0);
 
     // free cjson data structure
     free(JSON_str);
