@@ -57,9 +57,8 @@ void app_main(void)
 #include <upload.h>
 
 scheduler_t schedule[] = {
-    {heartbeatv2_task, "heartbeat1", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    {heartbeatv2_task, "heartbeat2", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskB, "task b", 4096, {0, NULL}, 1, 120}};
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
 interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
