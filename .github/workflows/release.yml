@@ -10,7 +10,7 @@ env:
   ARCHIVE_PREFIX: ${{ github.event.repository.name }}
   
   # Directory where the to-be-archived files are.
-  ARCHIVE_DIR: .pio/build/esp32dev
+  BUILD_DIR: .pio/build/M5STACK_COREINK
 
   # Files that need to be archived.
   ARCHIVE_FILES: bootloader.bin firmware.bin ota_data_initial.bin partitions.bin
@@ -42,7 +42,7 @@ jobs:
       
       # Build the PlatformIO project.
       - name: Build PlatformIO project
-        run: pio run
+        run: pio run -e M5STACK_COREINK
       
       # Set ARCHIVE_NAME variable from ARCHIVE_PREFIX and tag name.
       - name: Set ARCHIVE_NAME
@@ -51,9 +51,21 @@ jobs:
       # Archive binary files.
       - name: Archive binary files
         run: |
-          cd $ARCHIVE_DIR
+          cd $BUILD_DIR
           zip $ARCHIVE_NAME.zip $ARCHIVE_FILES
 #          tar -czvf $ARCHIVE_NAME.tar.gz $ARCHIVE_FILES
+
+      # Create secure_boot_signing_key.pem from GH secret TWOMES_SECURE_BOOT_SIGNING_KEY.
+      - name: Import TWOMES_SECURE_BOOT_SIGNING_KEY
+        env:
+          TWOMES_SECURE_BOOT_SIGNING_KEY: ${{ secrets.TWOMES_SECURE_BOOT_SIGNING_KEY }}
+        run: echo "$TWOMES_SECURE_BOOT_SIGNING_KEY" > ./secure_boot_signing_key.pem
+        
+      # Sign the firmware
+      - name: Sign firmware
+        uses: espressif/esp-idf-ci-action@main
+        with:
+          command: espsecure.py sign_data -v1 --keyfile secure_boot_signing_key.pem --output $BUILD_DIR/firmware-signed.bin $BUILD_DIR/firmware.bin
       
       # Create a release draft.
       - name: Create draft release
@@ -61,6 +73,7 @@ jobs:
         with:
           draft: true
           files: |
-            ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.zip
-            .pio/build/esp32dev/firmware.bin
-#            ${{ env.ARCHIVE_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz
+            ${{ env.BUILD_DIR }}/${{ env.ARCHIVE_NAME }}.zip
+            ${{ env.BUILD_DIR }}/firmware.bin
+            ${{ env.BUILD_DIR }}/firmware-signed.bin
+#            ${{ env.BUILD_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz
