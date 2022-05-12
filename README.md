@@ -7,6 +7,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 * [General info](#general-info)
 * [Deploying](#deploying)
 * [Developing](#developing) 
+* [Releasing](#releasing)
 * [Features](#features)
 * [Status](#status)
 * [License](#license)
@@ -205,6 +206,9 @@ Also note that we don't use the [POST /device/measurements/fixed-interval](https
 
 ### Other Things To Keep In Mind
 * Check the platformio.ini file in the cloned folder, look at the board_upload.flash_size, board_upload.maximum_size and board_build.partitions to check if they are right for your hardware.
+
+## Releasing
+Read more on how to create an automated release [here](RELEASING.md).
 
 ## Features
 Currently ready:
