@@ -1,6 +1,6 @@
 #ifndef RTC_H
 #define RTC_H
-#include <time.h>
+
 #include <stdbool.h>
 #include "bm8563.h"
 #include <scheduler.h>
