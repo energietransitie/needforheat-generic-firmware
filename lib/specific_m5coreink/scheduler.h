@@ -37,9 +37,9 @@ typedef struct {
   interval_t interval;
 } scheduler_t;
 
-void scheduler_init(scheduler_t *, int,interval_t);
+void scheduler_initialize(scheduler_t *, int,interval_t);
 void scheduler_execute_tasks(time_t);
-void scheduler_sleep(void (*sleep_function)(interval_t));
+void scheduler_wait(void (*sleep_function)(interval_t));
 
 extern EventGroupHandle_t scheduler_taskevents;
 

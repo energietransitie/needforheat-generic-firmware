@@ -1,7 +1,5 @@
 #include "upload.h"
-#include "cJSON.h"
 #include <generic_esp_32.h>
-#include <freertos/queue.h>
 #include <stdlib.h>
 #include <time.h>
 
