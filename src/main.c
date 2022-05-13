@@ -18,11 +18,11 @@ static const char *TAG = "Twomes ESP32 generic test device";
 #if defined ESP32DEV
 void app_main(void)
 {
-    // Check if this (re)boot booted new firmware.
-    twomes_ota_check_update_finished_successfully();
-
     twomes_device_provisioning(DEVICE_TYPE_NAME);
     // TODO: move tasks to new twomes_device_initialization() function in generic firmware library
+
+    // Check if this (re)boot booted new firmware.
+    twomes_ota_check_update_finished_successfully();
 
     ESP_LOGD(TAG, "Starting heartbeat task");
     xTaskCreatePinnedToCore(&heartbeat_task, "heartbeat_task", 4096, NULL, 1, NULL, 1);
@@ -80,11 +80,11 @@ void app_main(void)
 
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 
-    // Check if this (re)boot booted new firmware.
-    twomes_ota_check_update_finished_successfully();
-
     // twomes device provisioning
     twomes_device_provisioning(DEVICE_TYPE_NAME);
+
+    // Check if this (re)boot booted new firmware.
+    twomes_ota_check_update_finished_successfully();
 
     // initailize 
     rtc_initialize();
