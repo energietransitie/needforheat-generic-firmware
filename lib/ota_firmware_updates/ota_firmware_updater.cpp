@@ -140,12 +140,7 @@ namespace OTAFirmwareUpdater
             if (Error::CheckAppendName(err, TAG, "An error occured while performing HTTP OTA-update"))
                 return;
 
-            ESP_LOGI(TAG, "OTA firmware update was successful. Rebooting in 10 seconds.");
-
-            // Wait 10 seconds.
-            vTaskDelay(Delay::Seconds(10));
-
-            esp_restart();
+            ESP_LOGI(TAG, "OTA firmware update was successful. New firmware will be booted after reboot.");
         }
     } // namespace
 
@@ -161,8 +156,6 @@ namespace OTAFirmwareUpdater
     void OTAFirmwareUpdaterTask(void *pvParams)
     {
         ESP_LOGI(TAG, "Task started.");
-
-        CheckUpdateFinishedSuccessfully();
 
         Check();
 
