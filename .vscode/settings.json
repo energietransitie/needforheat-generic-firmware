@@ -20,7 +20,8 @@
         "esp_bt_device.h": "c",
         "esp_bt_defs.h": "c",
         "esp_gatt_common_api.h": "c",
-        "powerpin.h": "c"
+        "powerpin.h": "c",
+        "scheduler.h": "c"
     },
     "idf.port": "/dev/ttyUSB0",
     "idf.adapterTargetName": "esp32",
