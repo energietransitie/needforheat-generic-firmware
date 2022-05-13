@@ -247,8 +247,6 @@ namespace OTAFirmwareUpdater
             if (storedNew > currentVersion) // Installation of newer version was attempted, but failed.
             {
                 ESP_LOGW(TAG, "It looks like a previously attempted update installation failed.");
-                // TODO: Check why function call below creates stack overflow on task main.
-                // Calling this function somewhere else works fine, but not here.
                 LogFirmwareToBackend("booted_fw", currentVersionString);
             }
 
