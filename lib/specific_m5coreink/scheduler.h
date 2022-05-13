@@ -40,6 +40,7 @@ typedef struct {
 void scheduler_initialize(scheduler_t *, int,interval_t);
 void scheduler_execute_tasks(time_t);
 void scheduler_wait(void (*sleep_function)(interval_t));
+void scheduler_task_finish_last(uint32_t own_task_bit);
 
 extern EventGroupHandle_t scheduler_taskevents;
 

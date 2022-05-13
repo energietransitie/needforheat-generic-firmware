@@ -13,6 +13,8 @@ scheduler_t *private_schedule = NULL;
 int private_schedule_size = -1;
 interval_t private_min_tasks_interval_s;
 uint32_t private_tasks_waitbits;
+uint32_t private_blocked_tasks_bits;
+SemaphoreHandle_t private_taskbits_mutex;
 
 // initailize scheduler functions
 void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_tasks_interval_s) {
@@ -25,6 +27,8 @@ void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_task
 
   // create event group for running tasks
   scheduler_taskevents = xEventGroupCreate();
+
+  private_taskbits_mutex = xSemaphoreCreateMutex();
 }
 
 // reads out schedule and execute tasks that are due and calculate sleep time
@@ -32,8 +36,11 @@ void scheduler_execute_tasks(time_t current) {
  scheduler_t *schedule_item;
   ESP_LOGD(TAG,"execute tasks that are due ...");
   
+  xSemaphoreTake(private_taskbits_mutex,portMAX_DELAY);
+  
   // clear all task wait bits
   private_tasks_waitbits = 0;
+  private_blocked_tasks_bits = 0;
 
   // for each item on the schedule
   schedule_item = private_schedule;
@@ -57,6 +64,8 @@ void scheduler_execute_tasks(time_t current) {
         NULL);
     }
   }
+  
+  xSemaphoreGive(private_taskbits_mutex);
 }
 
 // put device in sleep after waiting that all due tasks are completed
@@ -81,4 +90,28 @@ void scheduler_wait(void (*sleep_function)(interval_t)) {
   // put system in sleep (privated_wake_up_interval)
   ESP_LOGD("sleep","there are no running task, put system to sleep");
   sleep_function(sleep_period);
+}
+
+// function put task in blocked state until the other task are ended 
+// (Use function only in tasks started by scheduler)
+void scheduler_task_finish_last(uint32_t own_task_bit) {
+ uint32_t waitbits = 0;
+  xSemaphoreTake(private_taskbits_mutex,portMAX_DELAY);
+  
+  // adminstrate task bit to prevent other blocked task to wait for blocked tasks
+  private_blocked_tasks_bits |= own_task_bit;
+
+  // calculate on which tasks to wait
+  waitbits = private_tasks_waitbits & (~private_blocked_tasks_bits);
+
+  xSemaphoreGive(private_taskbits_mutex);
+
+  // put task in blocked state
+  xEventGroupWaitBits(
+    scheduler_taskevents,
+    waitbits,
+    pdFALSE,
+    pdTRUE,
+    portMAX_DELAY
+  );
 }

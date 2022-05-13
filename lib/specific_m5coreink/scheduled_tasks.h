@@ -4,8 +4,10 @@
 // test tasks
 void taskA(void *);
 void taskB(void *);
+void taskC(void *);
 
 // real tasks
 void heartbeatv2_task(void *arg);
+void upload_task(void *arg);
 
 #endif

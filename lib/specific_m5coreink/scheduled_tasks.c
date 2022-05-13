@@ -4,20 +4,13 @@
 #include <upload.h>
 #include <cJSON.h>
 
-#define PPK2_NUM_D0 GPIO_NUM_25
-#define PPK2_NUM_D1 GPIO_NUM_26
-#define PPK2_NUM_D2 GPIO_NUM_23
-#include <driver/gpio.h>
-
 // test task A
 void taskA(void *arg)
 {
-    gpio_set_level(PPK2_NUM_D1,1);
     ESP_LOGD("taskA", "I am task A and i am running");
     ESP_LOGD("taskA", "I wait 10 seconds");
     vTaskDelay(pdMS_TO_TICKS(10000));
     ESP_LOGD("taskA", "I have done my purpuse, bye");
-    gpio_set_level(PPK2_NUM_D1,0);
 
     // tell that is stopped
     xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
@@ -27,12 +20,26 @@ void taskA(void *arg)
 // test task B
 void taskB(void *arg)
 {
-    gpio_set_level(PPK2_NUM_D2,1);
     ESP_LOGD("taskB", "I am task B and i am running");
     ESP_LOGD("taskB", "I wait 5 seconds");
     vTaskDelay(pdMS_TO_TICKS(5000));
     ESP_LOGD("taskB", "I have done my purpuse, bye");
-    gpio_set_level(PPK2_NUM_D2,0);
+
+    // tell that is stopped
+    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
+    vTaskDelete(NULL);
+}
+
+// test task C
+void taskC(void *arg) {
+    // wait for other tasks to end
+    ESP_LOGD("taskC", "I'am allive, well i wait other tasks to end");
+    scheduler_task_finish_last(GET_TASK_BIT_FROM_ARG(arg));
+    
+    // wait 5 seconds
+    ESP_LOGD("taskC", "All tasks are completed now i start to wait 5 seconds");
+    vTaskDelay(pdMS_TO_TICKS(5000));
+    ESP_LOGD("taskC", "I have done my purpuse, bye");
 
     // tell that is stopped
     xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
@@ -62,6 +69,22 @@ void heartbeatv2_task(void *arg) {
     hbcounter++;
 
     // tell that heartbeat task is completed
+    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
+    vTaskDelete(NULL);
+}
+
+// upload task
+void upload_task(void *arg) {
+    ESP_LOGD("upload task", "i am going to wait that all tasks are done");
+    // wait for other task to end
+    scheduler_task_finish_last(GET_TASK_BIT_FROM_ARG(arg));
+
+    // call upload function
+    ESP_LOGD("upload task", "call upload function");
+    upload_upload();
+
+    // tell that is stopped
+    ESP_LOGD("upload task", "i have done my job");
     xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
     vTaskDelete(NULL);
 }
