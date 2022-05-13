@@ -5,10 +5,9 @@
 #define OTA_FIRMWARE_UPDATER_H
 
 #define UPDATE_CHECK_URL "https://api.github.com/repos/energietransitie/twomes-generic-esp-firmware/releases/latest"
-#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware.bin"
+#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed.bin"
 
 #define TASK_STACK_DEPTH 16384
-#define UPDATE_CHECK_INTERVAL_MINUTES 5
 
 #define MAX_INSTALL_TRIES 10
 #define OTA_RECEIVE_TIMEOUT_MS 10000 // 10 seconds
