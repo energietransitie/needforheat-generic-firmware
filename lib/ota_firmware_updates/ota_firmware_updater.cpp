@@ -132,7 +132,11 @@ namespace OTAFirmwareUpdater
             config.buffer_size_tx = 1024;
             config.is_async = false;
 
+            char *endpoint = const_cast<char *>("OTAFirmwareUpdater::InstallUpdate");
+
+            wait_for_wifi(endpoint);
             err = esp_https_ota(&config);
+            disconnect_wifi(endpoint);
             if (Error::CheckAppendName(err, TAG, "An error occured while performing HTTP OTA-update"))
                 return;
 
