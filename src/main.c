@@ -18,6 +18,9 @@ static const char *TAG = "Twomes ESP32 generic test device";
 #if defined ESP32DEV
 void app_main(void)
 {
+    // Check if this (re)boot booted new firmware.
+    twomes_ota_check_update_finished_successfully();
+
     twomes_device_provisioning(DEVICE_TYPE_NAME);
     // TODO: move tasks to new twomes_device_initialization() function in generic firmware library
 
@@ -76,6 +79,9 @@ void app_main(void)
     powerpin_set();
 
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
+
+    // Check if this (re)boot booted new firmware.
+    twomes_ota_check_update_finished_successfully();
 
     // twomes device provisioning
     twomes_device_provisioning(DEVICE_TYPE_NAME);
