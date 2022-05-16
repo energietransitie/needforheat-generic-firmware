@@ -5,10 +5,15 @@
 
 QueueHandle_t upload_queue;
 
+// private functions
+cJSON *create_property(const char *name, cJSON **measurements);
+cJSON *create_measurement(time_t arg_timestamp, cJSON *value);
+cJSON *generate_cjson_measurement_object(measurement_t *obj);
+
 // initialize upload
 void upload_initialize() {
     // initialize queue
-    upload_queue = xQueueCreate(UPLOAD_QUEUE_MAX, sizeof(cJSON **));
+    upload_queue = xQueueCreate(UPLOAD_QUEUE_MAX, sizeof(measurement_t));
 }
 
 // send measurement data to the server
@@ -18,7 +23,7 @@ void upload_upload()
   cJSON *upload_time = NULL;
   cJSON *property_measurements = NULL;
   char *JSON_str;
-  cJSON *item = NULL;
+  measurement_t item;
     // create json object
     upload_object = cJSON_CreateObject();
 
@@ -31,8 +36,8 @@ void upload_upload()
     cJSON_AddItemToObject(upload_object, "property_measurements", property_measurements);
 
     // add object to property_measurements array
-    while (xQueueReceive(upload_queue, (void *)&item, 0) == pdTRUE) {
-        cJSON_AddItemToArray(property_measurements, item);
+    while (xQueueReceive(upload_queue, &item, 0) == pdTRUE) {
+        cJSON_AddItemToArray(property_measurements, generate_cjson_measurement_object(&item));
     }
 
     // send json to server
@@ -45,8 +50,8 @@ void upload_upload()
     cJSON_Delete(upload_object);
 }
 
-// create property object
-cJSON *upload_create_property(const char *name, cJSON **measurements) {
+// create cjson property object
+cJSON *create_property(const char *name, cJSON **measurements) {
   cJSON *property_object;
   cJSON *property_name;
     // create property object
@@ -63,8 +68,8 @@ cJSON *upload_create_property(const char *name, cJSON **measurements) {
   return property_object;
 }
 
-// create measurement object
-cJSON *upload_create_measurement(time_t arg_timestamp, cJSON *value) {
+// create cjson measurement object
+cJSON *create_measurement(time_t arg_timestamp, cJSON *value) {
   cJSON *measurement_object;
   cJSON *timestamp;
     // create measurement object
@@ -77,4 +82,29 @@ cJSON *upload_create_measurement(time_t arg_timestamp, cJSON *value) {
     // add value
     cJSON_AddItemToObject(measurement_object, "value", value);
   return measurement_object;
+}
+
+// generate cjson property_object from a measurement struct 
+cJSON *generate_cjson_measurement_object(measurement_t *obj) {
+  cJSON *measurement_object = NULL;
+  cJSON *property_object = NULL;
+  cJSON *measurements = NULL;
+  char *property_name;
+
+    // get the correct property name
+    switch (obj->property) {
+    case PROPERTY_HEARTBEAT:
+        property_name = "heartbeat";
+        break;
+    default:
+        property_name = "unknown";
+        break;
+    }
+
+    // create property object
+    property_object = create_property(property_name,&measurements);
+    measurement_object = create_measurement(time(NULL),cJSON_CreateString(obj->value));
+    cJSON_AddItemToArray(measurements,measurement_object);
+
+  return property_object;
 }
