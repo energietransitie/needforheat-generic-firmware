@@ -5,8 +5,7 @@
 #include <cJSON.h>
 
 // test task A
-void taskA(void *arg)
-{
+void taskA(void *arg) {
     ESP_LOGD("taskA", "I am task A and i am running");
     ESP_LOGD("taskA", "I wait 10 seconds");
     vTaskDelay(pdMS_TO_TICKS(10000));
@@ -18,8 +17,7 @@ void taskA(void *arg)
 }
 
 // test task B
-void taskB(void *arg)
-{
+void taskB(void *arg) {
     ESP_LOGD("taskB", "I am task B and i am running");
     ESP_LOGD("taskB", "I wait 5 seconds");
     vTaskDelay(pdMS_TO_TICKS(5000));
