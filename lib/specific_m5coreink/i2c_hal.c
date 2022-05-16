@@ -3,8 +3,7 @@
 #include <driver/gpio.h>
 #include <esp_intr_alloc.h>
 
-void i2c_hal_init()
-{
+void i2c_hal_init() {
     // config
     i2c_config_t config =
     {
@@ -21,8 +20,7 @@ void i2c_hal_init()
     i2c_driver_install(I2C_NUM_0,I2C_MODE_MASTER, 0, 0,ESP_INTR_FLAG_LEVEL3);
 }
 
-int32_t i2c_hal_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer, uint16_t size)
-{
+int32_t i2c_hal_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer, uint16_t size) {
   i2c_cmd_handle_t cmd; 
     cmd = i2c_cmd_link_create();
     
@@ -44,8 +42,7 @@ int32_t i2c_hal_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer
  return 0;
 }    
 
-int32_t i2c_hal_write(void *handle, uint8_t address, uint8_t reg, const uint8_t *buffer, uint16_t size)
-{
+int32_t i2c_hal_write(void *handle, uint8_t address, uint8_t reg, const uint8_t *buffer, uint16_t size) {
   i2c_cmd_handle_t cmd; 
     cmd = i2c_cmd_link_create();
     
