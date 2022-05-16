@@ -7,13 +7,20 @@
 
 #define UPLOAD_QUEUE_MAX 10
 
+typedef enum {
+    PROPERTY_HEARTBEAT
+} property_t;
+
+typedef struct {
+    property_t property;
+    time_t timestamp;
+    char value[20];
+} measurement_t;
+
 // public variables
 extern QueueHandle_t upload_queue;
 
 void upload_initialize();
 void upload_upload();
-
-cJSON *upload_create_property(const char *name, cJSON **measurements);
-cJSON *upload_create_measurement(time_t arg_timestamp, cJSON *value);
 
 #endif
