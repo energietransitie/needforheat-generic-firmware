@@ -47,21 +47,15 @@ void taskC(void *arg) {
 // heartbeat task
 void heartbeatv2_task(void *arg) {
   static int hbcounter = 0;
-  char hbcounter_str[80];
-  cJSON *measurement_object = NULL;
-  cJSON *property_object = NULL;
-  cJSON *measurements = NULL;
+  measurement_t heartbeat_object;
+  
+    // create measurement struct  
+    heartbeat_object.timestamp = time(NULL);
+    heartbeat_object.property = PROPERTY_HEARTBEAT;
+    sprintf(heartbeat_object.value, "%d",hbcounter);
     
-    // create property_object for heartbeat
-    property_object = upload_create_property("heartbeat",&measurements);
-
-    // add heartbeat measurement data
-    sprintf(hbcounter_str, "%d",hbcounter);
-    measurement_object = upload_create_measurement(time(NULL),cJSON_CreateString(hbcounter_str));
-    cJSON_AddItemToArray(measurements,measurement_object);
-
     // add heartbeat to the upload queue
-    xQueueSend(upload_queue,(void *) &property_object,portMAX_DELAY);
+    xQueueSend(upload_queue, (void *) &heartbeat_object,portMAX_DELAY);
 
     // increase hearthbeat counter
     hbcounter++;
