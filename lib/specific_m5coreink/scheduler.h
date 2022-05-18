@@ -34,12 +34,13 @@ typedef struct {
     int stack_depth;
     scheduler_parameter_t parameters;
     int priority;
-    interval_t interval;
+    interval_t task_interval_s;
 } scheduler_t;
 
 void scheduler_initialize(scheduler_t *, int, interval_t);
-void scheduler_execute_tasks(time_t);
-void scheduler_wait(void (*sleep_function)(interval_t));
+void scheduler_update();
+void scheduler_execute_tasks();
+void scheduler_wait();
 void scheduler_task_finish_last(uint32_t own_task_bit);
 
 extern EventGroupHandle_t scheduler_taskevents;
