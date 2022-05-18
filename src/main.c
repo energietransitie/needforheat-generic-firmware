@@ -69,27 +69,19 @@ void app_main(void)
 #include <powerpin.h>
 #include <upload.h>
 
-// test sleep function
-void my_delay(interval_t interval)
-{
-    // simulate sleep without boot up
-    ESP_LOGD("test sleep","delay for %i seconds",interval);
-    vTaskDelay(pdMS_TO_TICKS(interval*1000));
-}
-
 // schedule configuration
+const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_1M;
 scheduler_t schedule[] = {
     {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskA, "task a", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {taskB, "task b", 4096, {0, NULL}, 1, 120},
-    {upload_task, "upload_task", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    {upload_task, "upload_task", 4096, {0, NULL}, 1, min_tasks_interval_s},
     {taskC, "task c", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
     {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_1D},
 #endif
 };
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
-interval_t wakeup_interval = SCHEDULER_INTERVAL_1M;
 
 void app_main(void)
 {
@@ -110,17 +102,18 @@ void app_main(void)
     rtc_initialize();
     rtc_syncronize_rtc_time();
     upload_initialize();
-    scheduler_initialize(schedule,schedule_size,wakeup_interval);
+    scheduler_initialize(schedule,schedule_size,min_tasks_interval_s);
 
     while (1)
     {
         // start tasks that are due
-        scheduler_execute_tasks(time(NULL));
+        scheduler_execute_tasks();
 
         // wait for the end of all running tasks and then sleep
-        //scheduler_wait(rtc_set_alarm);
-        //powerpin_reset();
-        scheduler_wait(my_delay);
+        scheduler_wait();
+
+        // update
+        scheduler_update();
     }
 }
 #endif

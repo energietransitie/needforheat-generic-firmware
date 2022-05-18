@@ -2,6 +2,19 @@
 #include <generic_esp_32.h>
 #include <stdio.h>
 #include <stdint.h>
+#include "rtc.h"
+#include "powerpin.h"
+
+// calculate the power off threshold
+#define BOOT_ENERGY_MJ ((double) 2.54e2)
+#define BOOT_DURATION_S ((double) 1.523)
+#define SETUP_ENERGY_MJ ((double) 9.91e2)
+#define SETUP_DURATION_S ((double) 4.437)
+#define BOOT_SETUP_ENERGY_MJ (BOOT_ENERGY_MJ+SETUP_ENERGY_MJ)
+#define BOOT_SETUP_DURATION_S (BOOT_DURATION_S+SETUP_DURATION_S)
+#define POWER_OFF_MW ((double) 2.33e-3)
+#define LIGHT_SLEEP_MW ((double) 1.15e1)
+#define POWER_OFF_THRESHOLD_S ( (BOOT_SETUP_ENERGY_MJ - POWER_OFF_MW * BOOT_SETUP_DURATION_S) / (LIGHT_SLEEP_MW - POWER_OFF_MW))
 
 #define TAG "SCHEDULER"
 
@@ -15,6 +28,8 @@ interval_t private_min_tasks_interval_s;
 uint32_t private_tasks_waitbits;
 uint32_t private_blocked_tasks_bits;
 SemaphoreHandle_t private_taskbits_mutex;
+time_t private_current_boot_timestamp;
+time_t private_next_boot_timestamp;
 
 // initailize scheduler functions
 void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_tasks_interval_s) {
@@ -28,11 +43,22 @@ void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_task
     // create event group for running tasks
     scheduler_taskevents = xEventGroupCreate();
 
+    // update scheduler
+    scheduler_update();
+
     private_taskbits_mutex = xSemaphoreCreateMutex();
 }
 
+// update scheduler
+void scheduler_update() {
+  time_t current_time = time(NULL);
+    // calculate boot times
+    private_current_boot_timestamp = current_time - (current_time % private_min_tasks_interval_s);
+    private_next_boot_timestamp = private_current_boot_timestamp + private_min_tasks_interval_s;
+}
+
 // reads out schedule and execute tasks that are due and calculate sleep time
-void scheduler_execute_tasks(time_t current) {
+void scheduler_execute_tasks() {
   scheduler_t *schedule_item;
     ESP_LOGD(TAG,"execute tasks that are due ...");
 
@@ -46,7 +72,7 @@ void scheduler_execute_tasks(time_t current) {
     schedule_item = private_schedule;
     for(int i=0; i<private_schedule_size; i++,schedule_item++) {
         // if the task is due
-        if( (current % schedule_item->interval) < private_min_tasks_interval_s) {
+        if( (private_current_boot_timestamp % schedule_item->task_interval_s) == 0) {
             // pas task id to task
             schedule_item->parameters.id = i;
 
@@ -68,8 +94,8 @@ void scheduler_execute_tasks(time_t current) {
 }
 
 // put device in sleep after waiting that all due tasks are completed
-void scheduler_wait(void (*sleep_function)(interval_t)) {
-  time_t current_time,wake_up_time,sleep_period,current_wake_up_time;
+void scheduler_wait() {
+  time_t current_time, inactive_time_s;
     // wait that all task event bits are cleared
     xEventGroupWaitBits(
         scheduler_taskevents,
@@ -78,17 +104,29 @@ void scheduler_wait(void (*sleep_function)(interval_t)) {
         pdTRUE,
         portMAX_DELAY
     );
-
-    // calculate sleep time
-    current_time = time(NULL);
-    current_wake_up_time = (current_time - (current_time % private_min_tasks_interval_s));
-    wake_up_time = current_wake_up_time+private_min_tasks_interval_s;
-    sleep_period = wake_up_time - current_time;
-    ESP_LOGD("sleep","wake up time: %li",wake_up_time);
-
     // put system in sleep (privated_wake_up_interval)
-    ESP_LOGD("sleep","there are no running task, put system to sleep");
-    sleep_function(sleep_period);
+    ESP_LOGD(TAG,"There are no running tasks anymore");
+
+    // calculate inactive time
+    current_time = time(NULL);
+    inactive_time_s = private_next_boot_timestamp - current_time;
+    ESP_LOGD(TAG,"Inactive : %li seconds",inactive_time_s);
+
+    // Decide what to do in the inactive time 
+    if(inactive_time_s <= 0) {
+        // go to next interval
+    } else if(inactive_time_s <= POWER_OFF_THRESHOLD_S) {
+        // delay (in future use light sleep instead)
+        vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
+    } else {
+        // power off
+        rtc_set_alarm(inactive_time_s);
+        vTaskDelay(pdMS_TO_TICKS(250));
+        powerpin_reset();
+
+        // in case that device did not turn off
+        vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
+    }
 }
 
 // function put task in blocked state until the other task are ended
