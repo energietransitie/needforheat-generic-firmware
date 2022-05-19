@@ -23,6 +23,9 @@
 // public global variables
 EventGroupHandle_t scheduler_taskevents;
 
+// private functions
+void task_detect_next_interval(void *arg);
+
 // private global variables
 scheduler_t *private_schedule = NULL;
 int private_schedule_size = -1;
@@ -33,7 +36,7 @@ SemaphoreHandle_t private_taskbits_mutex;
 time_t private_current_boot_timestamp;
 time_t private_next_boot_timestamp;
 EventBits_t private_still_running;
-SemaphoreHandle_t detection_task_sem;
+SemaphoreHandle_t next_interval_sem;
 
 // initailize scheduler functions
 void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_tasks_interval_s) {
@@ -51,7 +54,7 @@ void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_task
     scheduler_update();
 
     private_taskbits_mutex = xSemaphoreCreateMutex();
-    detection_task_sem = xSemaphoreCreateBinary();
+    next_interval_sem = xSemaphoreCreateBinary();
 }
 
 // update scheduler
@@ -65,18 +68,16 @@ void scheduler_update() {
 // reads out schedule and execute tasks that are due and calculate sleep time
 void scheduler_execute_tasks(bool previous_interval_active) {
   scheduler_t *schedule_item;
-  EventBits_t event_status;
     ESP_LOGD(TAG,"execute tasks that are due ...");
 
     xSemaphoreTake(private_taskbits_mutex,portMAX_DELAY);
 
+    // when the previous interval is not active
     if(!previous_interval_active) {
         // clear all task wait bits
         private_tasks_waitbits = 0;
         private_blocked_tasks_bits = 0;
         private_still_running = 0;
-    } else {
-        // determine wich tasks are completed and unset them
     }
 
     // for each item on the schedule
@@ -85,7 +86,7 @@ void scheduler_execute_tasks(bool previous_interval_active) {
         // if the task is due and not running
         if( (private_current_boot_timestamp % schedule_item->task_interval_s) == 0 && 
             (private_still_running & BIT_TASK(i)) == 0) {
-            // pas task id to task
+            // pass the task id to task
             schedule_item->parameters.id = i;
 
             // set wait bit for this task
@@ -105,25 +106,24 @@ void scheduler_execute_tasks(bool previous_interval_active) {
     xSemaphoreGive(private_taskbits_mutex);
 }
 
+// task that triger scheduler_wait function to start new interval when there are still tasks running.
 void task_detect_next_interval(void *arg) {
   time_t current_time, time_left;
-    // calculate time left
+    // calculate when current interval ends
     current_time = time(NULL);
     time_left = private_next_boot_timestamp - current_time;
 
-    // wait
-    vTaskDelay(pdMS_TO_TICKS(time_left*1000));
-
-    // if interval still not over
-    if(xSemaphoreTake(detection_task_sem,0) == pdFALSE) {
-        ESP_LOGD(TAG,"begin alvast met volgende interval");
+    // if there are still tasks running when the interval has passed
+    if(xSemaphoreTake(next_interval_sem,pdMS_TO_TICKS(time_left*1000)) == pdFALSE) {
+        ESP_LOGD(TAG,"Start with the next interval");
 
         // register tasks that are still running
         private_still_running = (~xEventGroupGetBits(scheduler_taskevents)) & private_tasks_waitbits;
 
-        // set next bit
+        // end current interval
         xEventGroupSetBits(scheduler_taskevents, private_tasks_waitbits | BIT_INTERVAL_ENDED);
     }
+
     vTaskDelete(NULL);
 }
 
@@ -131,8 +131,9 @@ void task_detect_next_interval(void *arg) {
 void scheduler_wait() {
   time_t current_time, inactive_time_s;
   TaskHandle_t handle = NULL;
+
 wait_for_end_interval: 
-    // start end interval detection
+    // start task that detect end of current interval
     xTaskCreate(task_detect_next_interval,"interval ended detection",4024,NULL,2,&handle);
 
     // wait that all task event bits are cleared
@@ -143,19 +144,24 @@ wait_for_end_interval:
         pdTRUE,
         portMAX_DELAY
     );
-    ESP_LOGD(TAG,"There are no running tasks anymore");
 
-    // ----------
-    ESP_LOGD(TAG,"detectie taak geeindigd");
-    xSemaphoreGive(detection_task_sem);
+    // if the current interval is ended by task_detect_next_interval
     if(xEventGroupGetBits(scheduler_taskevents) & BIT_INTERVAL_ENDED) { // if next interval is detected
+        // start the new due tasks among the still running tasks
         scheduler_update();
         scheduler_execute_tasks(true);
         xEventGroupClearBits(scheduler_taskevents,private_tasks_waitbits | BIT_INTERVAL_ENDED);
         goto wait_for_end_interval;
+    } else {
+        ESP_LOGD(TAG,"There are no running tasks anymore");
+
+        // tell task_detect_next_interval the current interval is completed and handeled
+        xSemaphoreGive(next_interval_sem);
     }
 
+    // clear the taskevent bits
     xEventGroupClearBits(scheduler_taskevents,private_tasks_waitbits | BIT_INTERVAL_ENDED);
+    
     // calculate inactive time
     current_time = time(NULL);
     inactive_time_s = private_next_boot_timestamp - current_time;
