@@ -248,6 +248,7 @@ namespace OTAFirmwareUpdater
             {
                 ESP_LOGW(TAG, "It looks like a previously attempted update installation failed.");
                 LogFirmwareToBackend("booted_fw", currentVersionString);
+                NVS::Erase("twomes_storage", "new_fw");
             }
 
             return;
