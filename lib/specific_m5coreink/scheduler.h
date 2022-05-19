@@ -39,7 +39,7 @@ typedef struct {
 
 void scheduler_initialize(scheduler_t *, int, interval_t);
 void scheduler_update();
-void scheduler_execute_tasks();
+void scheduler_execute_tasks(bool);
 void scheduler_wait();
 void scheduler_task_finish_last(uint32_t own_task_bit);
 
