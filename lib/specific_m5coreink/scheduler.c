@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "rtc.h"
 #include "powerpin.h"
+#include <stdbool.h>
 
 // calculate the power off threshold
 #define BOOT_ENERGY_MJ ((double) 2.54e2)
@@ -17,6 +18,7 @@
 #define POWER_OFF_THRESHOLD_S ( (BOOT_SETUP_ENERGY_MJ - POWER_OFF_MW * BOOT_SETUP_DURATION_S) / (LIGHT_SLEEP_MW - POWER_OFF_MW))
 
 #define TAG "SCHEDULER"
+#define BIT_INTERVAL_ENDED (1 << 23)
 
 // public global variables
 EventGroupHandle_t scheduler_taskevents;
@@ -30,6 +32,8 @@ uint32_t private_blocked_tasks_bits;
 SemaphoreHandle_t private_taskbits_mutex;
 time_t private_current_boot_timestamp;
 time_t private_next_boot_timestamp;
+EventBits_t private_still_running;
+SemaphoreHandle_t detection_task_sem;
 
 // initailize scheduler functions
 void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_tasks_interval_s) {
@@ -47,6 +51,7 @@ void scheduler_initialize(scheduler_t *sched,int sched_size, interval_t min_task
     scheduler_update();
 
     private_taskbits_mutex = xSemaphoreCreateMutex();
+    detection_task_sem = xSemaphoreCreateBinary();
 }
 
 // update scheduler
@@ -58,21 +63,28 @@ void scheduler_update() {
 }
 
 // reads out schedule and execute tasks that are due and calculate sleep time
-void scheduler_execute_tasks() {
+void scheduler_execute_tasks(bool previous_interval_active) {
   scheduler_t *schedule_item;
+  EventBits_t event_status;
     ESP_LOGD(TAG,"execute tasks that are due ...");
 
     xSemaphoreTake(private_taskbits_mutex,portMAX_DELAY);
 
-    // clear all task wait bits
-    private_tasks_waitbits = 0;
-    private_blocked_tasks_bits = 0;
+    if(!previous_interval_active) {
+        // clear all task wait bits
+        private_tasks_waitbits = 0;
+        private_blocked_tasks_bits = 0;
+        private_still_running = 0;
+    } else {
+        // determine wich tasks are completed and unset them
+    }
 
     // for each item on the schedule
     schedule_item = private_schedule;
     for(int i=0; i<private_schedule_size; i++,schedule_item++) {
-        // if the task is due
-        if( (private_current_boot_timestamp % schedule_item->task_interval_s) == 0) {
+        // if the task is due and not running
+        if( (private_current_boot_timestamp % schedule_item->task_interval_s) == 0 && 
+            (private_still_running & BIT_TASK(i)) == 0) {
             // pas task id to task
             schedule_item->parameters.id = i;
 
@@ -93,20 +105,57 @@ void scheduler_execute_tasks() {
     xSemaphoreGive(private_taskbits_mutex);
 }
 
+void task_detect_next_interval(void *arg) {
+  time_t current_time, time_left;
+    // calculate time left
+    current_time = time(NULL);
+    time_left = private_next_boot_timestamp - current_time;
+
+    // wait
+    vTaskDelay(pdMS_TO_TICKS(time_left*1000));
+
+    // if interval still not over
+    if(xSemaphoreTake(detection_task_sem,0) == pdFALSE) {
+        ESP_LOGD(TAG,"begin alvast met volgende interval");
+
+        // register tasks that are still running
+        private_still_running = (~xEventGroupGetBits(scheduler_taskevents)) & private_tasks_waitbits;
+
+        // set next bit
+        xEventGroupSetBits(scheduler_taskevents, private_tasks_waitbits | BIT_INTERVAL_ENDED);
+    }
+    vTaskDelete(NULL);
+}
+
 // put device in sleep after waiting that all due tasks are completed
 void scheduler_wait() {
   time_t current_time, inactive_time_s;
+  TaskHandle_t handle = NULL;
+wait_for_end_interval: 
+    // start end interval detection
+    xTaskCreate(task_detect_next_interval,"interval ended detection",4024,NULL,2,&handle);
+
     // wait that all task event bits are cleared
     xEventGroupWaitBits(
         scheduler_taskevents,
         private_tasks_waitbits,
-        pdTRUE,
+        pdFALSE,
         pdTRUE,
         portMAX_DELAY
     );
-    // put system in sleep (privated_wake_up_interval)
     ESP_LOGD(TAG,"There are no running tasks anymore");
 
+    // ----------
+    ESP_LOGD(TAG,"detectie taak geeindigd");
+    xSemaphoreGive(detection_task_sem);
+    if(xEventGroupGetBits(scheduler_taskevents) & BIT_INTERVAL_ENDED) { // if next interval is detected
+        scheduler_update();
+        scheduler_execute_tasks(true);
+        xEventGroupClearBits(scheduler_taskevents,private_tasks_waitbits | BIT_INTERVAL_ENDED);
+        goto wait_for_end_interval;
+    }
+
+    xEventGroupClearBits(scheduler_taskevents,private_tasks_waitbits | BIT_INTERVAL_ENDED);
     // calculate inactive time
     current_time = time(NULL);
     inactive_time_s = private_next_boot_timestamp - current_time;
@@ -116,7 +165,7 @@ void scheduler_wait() {
     if(inactive_time_s <= 0) {
         // go to next interval
     } else if(inactive_time_s <= POWER_OFF_THRESHOLD_S) {
-        // delay (in future use light sleep instead)
+        // delay (in future use light sleep instead to save power)
         vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
     } else {
         // power off

@@ -19,8 +19,8 @@ void taskA(void *arg) {
 // test task B
 void taskB(void *arg) {
     ESP_LOGD("taskB", "I am task B and i am running");
-    ESP_LOGD("taskB", "I wait 5 seconds");
-    vTaskDelay(pdMS_TO_TICKS(5000));
+    ESP_LOGD("taskB", "I wait 35 seconds");
+    vTaskDelay(pdMS_TO_TICKS(35000));
     ESP_LOGD("taskB", "I have done my purpuse, bye");
 
     // tell that is stopped
