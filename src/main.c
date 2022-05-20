@@ -56,12 +56,12 @@ void app_main(void)
 #include <upload.h>
 
 // schedule configuration
-const interval_t min_tasks_interval_s = 30;
+const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_1M;
 scheduler_t schedule[] = {
-    //{heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    {taskA, "task a", 4024, {0, NULL}, 1, 30},
-    {taskB, "task b", 4024, {0, NULL}, 1, 120},
-    //{upload_task, "upload_task", 4096, {0, NULL}, 1, min_tasks_interval_s},
+    {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    //{taskA, "task a", 4024, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    //{taskB, "task b", 4024, {0, NULL}, 1, 120},
+    {upload_task, "upload_task", 4096, {0, NULL}, 1, min_tasks_interval_s},
     //{taskC, "task c", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
     {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_1D},
@@ -76,7 +76,7 @@ void app_main(void)
     ESP_LOGD(TAG, "Target is M5Stack_CoreINK");
 
     // twomes device provisioning
-    //twomes_device_provisioning(DEVICE_TYPE_NAME);
+    twomes_device_provisioning(DEVICE_TYPE_NAME);
 
     // initailize 
     rtc_initialize();

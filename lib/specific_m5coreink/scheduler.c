@@ -63,6 +63,7 @@ void scheduler_update() {
     // calculate boot times
     private_current_boot_timestamp = current_time - (current_time % private_min_tasks_interval_s);
     private_next_boot_timestamp = private_current_boot_timestamp + private_min_tasks_interval_s;
+    ESP_LOGD("interval","go to interval : %li <-> %li",private_current_boot_timestamp,private_next_boot_timestamp);
 }
 
 // reads out schedule and execute tasks that are due and calculate sleep time
@@ -175,6 +176,7 @@ wait_for_end_interval:
         vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
     } else {
         // power off
+        ESP_LOGD("power off","power off for %li seconds",inactive_time_s);
         rtc_set_alarm(inactive_time_s);
         vTaskDelay(pdMS_TO_TICKS(250));
         powerpin_reset();
