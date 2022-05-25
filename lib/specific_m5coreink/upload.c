@@ -8,7 +8,7 @@ QueueHandle_t upload_queue;
 // private functions
 cJSON *create_property(const char *name, cJSON **measurements);
 cJSON *create_measurement(time_t arg_timestamp, cJSON *value);
-cJSON *generate_cjson_measurement_object(measurement_t *obj);
+cJSON *generate_property_object(measurement_t *obj);
 
 // initialize upload
 void upload_initialize() {
@@ -37,7 +37,7 @@ void upload_upload()
 
     // add object to property_measurements array
     while (xQueueReceive(upload_queue, &item, 0) == pdTRUE) {
-        cJSON_AddItemToArray(property_measurements, generate_cjson_measurement_object(&item));
+        cJSON_AddItemToArray(property_measurements, generate_property_object(&item));
     }
 
     // send json to server
@@ -85,7 +85,7 @@ cJSON *create_measurement(time_t arg_timestamp, cJSON *value) {
 }
 
 // generate cjson property_object from a measurement struct 
-cJSON *generate_cjson_measurement_object(measurement_t *obj) {
+cJSON *generate_property_object(measurement_t *obj) {
   cJSON *measurement_object = NULL;
   cJSON *property_object = NULL;
   cJSON *measurements = NULL;
