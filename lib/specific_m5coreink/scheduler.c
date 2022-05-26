@@ -7,15 +7,15 @@
 #include <stdbool.h>
 
 // calculate the power off threshold
-#define BOOT_ENERGY_MJ ((double) 2.54e2)
-#define BOOT_DURATION_S ((double) 1.523)
-#define SETUP_ENERGY_MJ ((double) 9.91e2)
-#define SETUP_DURATION_S ((double) 4.437)
-#define BOOT_SETUP_ENERGY_MJ (BOOT_ENERGY_MJ+SETUP_ENERGY_MJ)
-#define BOOT_SETUP_DURATION_S (BOOT_DURATION_S+SETUP_DURATION_S)
-#define POWER_OFF_MW ((double) 2.33e-3)
-#define LIGHT_SLEEP_MW ((double) 1.15e1)
-#define POWER_OFF_THRESHOLD_S ( (BOOT_SETUP_ENERGY_MJ - POWER_OFF_MW * BOOT_SETUP_DURATION_S) / (LIGHT_SLEEP_MW - POWER_OFF_MW))
+#define BOOT_ENERGY_mJ ((double) 2.54e2)
+#define BOOT_DURATION_s ((double) 1.523)
+#define SETUP_ENERGY_mJ ((double) 9.91e2)
+#define SETUP_DURATION_s ((double) 4.437)
+#define BOOT_SETUP_ENERGY_mJ (BOOT_ENERGY_mJ+SETUP_ENERGY_mJ)
+#define BOOT_SETUP_DURATION_s (BOOT_DURATION_s+SETUP_DURATION_s)
+#define POWER_OFF_mW ((double) 2.33e-3)
+#define LIGHT_SLEEP_mW ((double) 1.15e1)
+#define POWER_OFF_THRESHOLD_s ( (BOOT_SETUP_ENERGY_mJ - POWER_OFF_mW * BOOT_SETUP_DURATION_s) / (LIGHT_SLEEP_mW - POWER_OFF_mW))
 
 #define TAG "SCHEDULER"
 #define BIT_INTERVAL_ENDED (1 << 23)
@@ -171,7 +171,7 @@ wait_for_end_interval:
     // Decide what to do in the inactive time 
     if(inactive_time_s <= 0) {
         // go to next interval
-    } else if(inactive_time_s <= POWER_OFF_THRESHOLD_S) {
+    } else if(inactive_time_s <= POWER_OFF_THRESHOLD_s) {
         // delay (in future use light sleep instead to save power)
         vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
     } else {
