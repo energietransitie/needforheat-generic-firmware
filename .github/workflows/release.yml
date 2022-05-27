@@ -9,15 +9,20 @@ env:
   # Name of the archive .zip and .tar.gz archives without extension. Tag will be appended to this.
   ARCHIVE_PREFIX: ${{ github.event.repository.name }}
   
-  # Directory where the to-be-archived files are.
-  BUILD_DIR: .pio/build/M5STACK_COREINK
-
   # Files that need to be archived.
   ARCHIVE_FILES: bootloader.bin firmware.bin ota_data_initial.bin partitions.bin
 
 jobs:
   build-and-draft-release:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # List all of the PlatformIO platforms to build
+        platformio_env: [ESP32DEV, M5STACK_COREINK]
+    env:
+      # Directory where the to-be-archived files are.
+      BUILD_DIR: .pio/build/${{ matrix.platformio_env }}
+
     steps:
       # Checkout repository.
       - name: Checkout code
@@ -42,18 +47,19 @@ jobs:
       
       # Build the PlatformIO project.
       - name: Build PlatformIO project
-        run: pio run -e M5STACK_COREINK
+        env:
+          PLATFORMIO_ENV: ${{ matrix.platformio_env }}
+        run: pio run -e $PLATFORMIO_ENV
       
       # Set ARCHIVE_NAME variable from ARCHIVE_PREFIX and tag name.
       - name: Set ARCHIVE_NAME
-        run: echo "ARCHIVE_NAME=${ARCHIVE_PREFIX}_${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+        run: echo "ARCHIVE_NAME=${ARCHIVE_PREFIX}_${{ matrix.platformio_env }}_${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
 
       # Archive binary files.
       - name: Archive binary files
         run: |
           cd $BUILD_DIR
           zip $ARCHIVE_NAME.zip $ARCHIVE_FILES
-#          tar -czvf $ARCHIVE_NAME.tar.gz $ARCHIVE_FILES
 
       # Create secure_boot_signing_key.pem from GH secret TWOMES_SECURE_BOOT_SIGNING_KEY.
       - name: Import TWOMES_SECURE_BOOT_SIGNING_KEY
@@ -65,7 +71,7 @@ jobs:
       - name: Sign firmware
         uses: espressif/esp-idf-ci-action@main
         with:
-          command: espsecure.py sign_data -v1 --keyfile secure_boot_signing_key.pem --output $BUILD_DIR/firmware-signed.bin $BUILD_DIR/firmware.bin
+          command: espsecure.py sign_data -v1 --keyfile secure_boot_signing_key.pem --output $BUILD_DIR/firmware-signed_${{ matrix.platformio_env }}.bin $BUILD_DIR/firmware.bin
       
       # Create a release draft.
       - name: Create draft release
@@ -74,6 +80,4 @@ jobs:
           draft: true
           files: |
             ${{ env.BUILD_DIR }}/${{ env.ARCHIVE_NAME }}.zip
-            ${{ env.BUILD_DIR }}/firmware.bin
-            ${{ env.BUILD_DIR }}/firmware-signed.bin
-#            ${{ env.BUILD_DIR }}/${{ env.ARCHIVE_NAME }}.tar.gz
+            ${{ env.BUILD_DIR }}/firmware-signed_${{ matrix.platformio_env }}.bin

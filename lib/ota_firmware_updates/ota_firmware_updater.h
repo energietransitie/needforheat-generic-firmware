@@ -5,7 +5,12 @@
 #define OTA_FIRMWARE_UPDATER_H
 
 #define UPDATE_CHECK_URL "https://api.github.com/repos/energietransitie/twomes-generic-esp-firmware/releases/latest"
-#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed.bin"
+
+#if defined ESP32DEV
+#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed_ESP32DEV.bin"
+#elif defined M5STACK_COREINK
+#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed_M5STACK_COREINK.bin"
+#endif
 
 #define TASK_STACK_DEPTH 16384
 
