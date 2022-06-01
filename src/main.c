@@ -7,9 +7,19 @@
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #define DEVICE_TYPE_NAME "Presence-Detector"
 static const char *TAG = "Twomes ESP32 presence detector";
+#define DEVICE_TYPE_OTA_ORG "energietransitie"
+#define DEVICE_TYPE_OTA_REPO "twomes-generic-esp-firmware"
 #else
 #define DEVICE_TYPE_NAME "Generic-Test"
+#define DEVICE_TYPE_OTA_ORG "energietransitie"
+#define DEVICE_TYPE_OTA_REPO "twomes-generic-esp-firmware"
 static const char *TAG = "Twomes ESP32 generic test device";
+#endif
+
+#if defined ESP32DEV
+#define DEVICE_TYPE_OTA_FILENAME "firmware-signed_ESP32DEV.bin"
+#elif defined M5STACK_COREINK
+#define DEVICE_TYPE_OTA_FILENAME "firmware-signed_M5STACK_COREINK.bin"
 #endif
 
 #define BOOT_STARTUP_INTERVAL_MS (10 * 1000) // milliseconds ( 10 s * 1000 ms/s)
@@ -37,6 +47,7 @@ void app_main(void)
     vTaskDelay(BOOT_STARTUP_INTERVAL_MS / portTICK_PERIOD_MS);
 
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+    twomes_ota_set_location(DEVICE_TYPE_OTA_ORG, DEVICE_TYPE_OTA_REPO, DEVICE_TYPE_OTA_FILENAME);
     twomes_ota_start();
 #endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
@@ -87,8 +98,11 @@ void app_main(void)
     // twomes device provisioning
     twomes_device_provisioning(DEVICE_TYPE_NAME);
 
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+    twomes_ota_set_location(DEVICE_TYPE_OTA_ORG, DEVICE_TYPE_OTA_REPO, DEVICE_TYPE_OTA_FILENAME);
     // Check if this (re)boot booted new firmware.
     twomes_ota_check_update_finished_successfully();
+#endif
 
     // initailize 
     rtc_initialize();

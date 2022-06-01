@@ -33,6 +33,25 @@ namespace OTAFirmwareUpdater
     {
         const char *TAG = "OTA Firmware Updater";
 
+        std::string updateCheckURL("");
+        std::string updateDownloadURL("");
+
+        template <typename... Args>
+        std::string Format(const std::string &fmt, Args... args)
+        {
+            auto size = std::snprintf(nullptr, 0, fmt.c_str(), args...);
+
+            std::string result;
+            result.resize(size + 1);
+
+            std::snprintf(&result[0], result.size(), fmt.c_str(), args...);
+            
+            // Remove null-terminator (not needed for std::string).
+            result.pop_back();
+
+            return result;
+        }
+
         void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
         {
             std::string url = TWOMES_SERVER + std::string(VARIABLE_UPLOAD_ENDPOINT);
@@ -66,7 +85,7 @@ namespace OTAFirmwareUpdater
             ESP_LOGI(TAG, "Checking for available updates.");
 
             esp_http_client_config_t config{};
-            config.url = UPDATE_CHECK_URL;
+            config.url = updateCheckURL.c_str();
             config.cert_pem = github_root_pem_start;
             config.transport_type = HTTP_TRANSPORT_OVER_SSL;
             config.is_async = false;
@@ -144,6 +163,13 @@ namespace OTAFirmwareUpdater
         }
     } // namespace
 
+    void SetLocation(const char *org, const char *repo, const char *fileName)
+    {
+        updateCheckURL = Format(UPDATE_CHECK_URL, org, repo, fileName);
+        updateDownloadURL = Format(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
+        ESP_LOGD(TAG, "Set update check URL to: %s\nSet update download URL to: %s", updateCheckURL.c_str(), updateDownloadURL.c_str());
+    }
+
     void Start()
     {
         BaseType_t status = xTaskCreatePinnedToCore(OTAFirmwareUpdaterTask, "ota_firmware_updater_task", TASK_STACK_DEPTH, nullptr, 1, nullptr, APP_CPU_NUM);
@@ -215,7 +241,7 @@ namespace OTAFirmwareUpdater
         LogFirmwareToBackend("new_fw", version);
 
         // Insert version number into the URL.
-        auto downloadURL = std::regex_replace(UPDATE_DOWNLOAD_URL, std::regex("%s"), version);
+        auto downloadURL = Format(updateDownloadURL, version.c_str());
 
         InstallUpdate(downloadURL);
     }
