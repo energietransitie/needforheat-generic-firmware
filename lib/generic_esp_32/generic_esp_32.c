@@ -1,5 +1,7 @@
 #include <generic_esp_32.h>
 
+#include <esp_ota_ops.h>
+
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 
 bool activation = false;
@@ -155,7 +157,7 @@ void blink(void *args) {
 } //void blink;
 
 void initialize_generic_firmware() {
-    ESP_LOGD(TAG, "Generic Firmware Version: %s", VERSION);
+    ESP_LOGD(TAG, "Generic Firmware Version: %s", esp_ota_get_app_description()->version);
 
     wireless_802_11_mutex = xSemaphoreCreateMutex();
 
