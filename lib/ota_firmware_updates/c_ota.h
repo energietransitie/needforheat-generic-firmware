@@ -9,6 +9,13 @@ extern "C"
 #endif // __cplusplus
 
     /**
+     * Set the update check and download location.
+     *
+     * @see OTAFirmwareUpdater::SetLocation(const char *org, const char *repo, const char *fileName).
+     */
+    void twomes_ota_set_location(const char *org, const char *repo, const char *fileName);
+
+    /**
      * Start the OTAFirmwareUpdater task.
      *
      * @see OTAFirmwareUpdater::Start().

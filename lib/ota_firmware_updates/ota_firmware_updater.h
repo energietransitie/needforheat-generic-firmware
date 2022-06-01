@@ -4,13 +4,8 @@
 #ifndef OTA_FIRMWARE_UPDATER_H
 #define OTA_FIRMWARE_UPDATER_H
 
-#define UPDATE_CHECK_URL "https://api.github.com/repos/energietransitie/twomes-generic-esp-firmware/releases/latest"
-
-#if defined ESP32DEV
-#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed_ESP32DEV.bin"
-#elif defined M5STACK_COREINK
-#define UPDATE_DOWNLOAD_URL "https://github.com/energietransitie/twomes-generic-esp-firmware/releases/download/%s/firmware-signed_M5STACK_COREINK.bin"
-#endif
+#define UPDATE_CHECK_URL "https://api.github.com/repos/%s/%s/releases/latest"
+#define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
 
 #define TASK_STACK_DEPTH 16384
 
@@ -20,6 +15,15 @@
 namespace OTAFirmwareUpdater
 {
     using update_available_t = std::pair<bool, std::string>;
+
+    /**
+     * Set the update check and download location.
+     * 
+     * @param org GitHub organisation name.
+     * @param repo GitHub repository name.
+     * @param fileName Name of the GitHub release asset to download.
+     */
+    void SetLocation(const char *org, const char *repo, const char *fileName);
 
     /**
      * Start the OTAFirmwareUpdater task.

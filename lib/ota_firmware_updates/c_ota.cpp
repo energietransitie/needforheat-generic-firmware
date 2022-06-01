@@ -8,6 +8,11 @@ extern "C"
 {
 #endif // __cplusplus
     
+    void twomes_ota_set_location(const char *org, const char *repo, const char *fileName)
+    {
+        OTAFirmwareUpdater::SetLocation(org, repo, fileName);
+    }
+
     void twomes_ota_start()
     {
         OTAFirmwareUpdater::Start();
