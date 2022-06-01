@@ -10,6 +10,7 @@ Follow the steps below to start the GitHub actions workflow which build the bina
 ### Prerequisites
 - [Git](https://git-scm.com/downloads)
 - [Git GPG signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) (recommended)
+- [Singing key secret set up in GitHub Actions](SECURE_BOOT.md#github-actions-workflow)
 
 ### Steps
 1. If you have not already cloned the repository, do this now:
