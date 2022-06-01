@@ -51,11 +51,11 @@ jobs:
           PLATFORMIO_ENV: ${{ matrix.platformio_env }}
         run: pio run -e $PLATFORMIO_ENV
 
-      # Create secure_boot_signing_key.pem from GH secret TWOMES_SECURE_BOOT_SIGNING_KEY.
-      - name: Import TWOMES_SECURE_BOOT_SIGNING_KEY
+      # Create secure_boot_signing_key.pem from GH secret WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY.
+      - name: Import WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY
         env:
-          TWOMES_SECURE_BOOT_SIGNING_KEY: ${{ secrets.TWOMES_SECURE_BOOT_SIGNING_KEY }}
-        run: echo "$TWOMES_SECURE_BOOT_SIGNING_KEY" > ./secure_boot_signing_key.pem
+          WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY: ${{ secrets.WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY }}
+        run: echo "$WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY" > ./secure_boot_signing_key.pem
         
       # Sign the firmware
       - name: Sign firmware
