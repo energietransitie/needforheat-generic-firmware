@@ -73,8 +73,9 @@ jobs:
           cd $BUILD_DIR
           zip $ARCHIVE_NAME.zip $ARCHIVE_FILES
       
-      # Create a release draft.
+      # Create a release draft if this tag is on the main branch.
       - name: Create draft release
+        if: ${{ github.ref == 'refs/heads/main' }}
         uses: softprops/action-gh-release@v1
         with:
           draft: true
