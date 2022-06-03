@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <regex>
 #include <cstdio>
+#include <utility>
 
 // This is necessary for define statements from generic_esp_32 which is C code.
 extern "C"
@@ -26,6 +27,14 @@ extern "C"
 #include <esp_ota_ops.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+
+#define UPDATE_CHECK_URL "https://api.github.com/repos/%s/%s/releases/latest"
+#define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
+
+#define TASK_STACK_DEPTH 16384
+
+#define MAX_INSTALL_TRIES 10
+#define OTA_RECEIVE_TIMEOUT_MS 10000 // 10 seconds
 
 namespace OTAFirmwareUpdater
 {

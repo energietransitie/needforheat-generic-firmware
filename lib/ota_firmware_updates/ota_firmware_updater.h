@@ -1,16 +1,7 @@
-#include <string>
-#include <utility>
-
 #ifndef OTA_FIRMWARE_UPDATER_H
 #define OTA_FIRMWARE_UPDATER_H
 
-#define UPDATE_CHECK_URL "https://api.github.com/repos/%s/%s/releases/latest"
-#define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
-
-#define TASK_STACK_DEPTH 16384
-
-#define MAX_INSTALL_TRIES 10
-#define OTA_RECEIVE_TIMEOUT_MS 10000 // 10 seconds
+#include <string>
 
 namespace OTAFirmwareUpdater
 {
