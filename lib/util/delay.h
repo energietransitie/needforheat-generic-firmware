@@ -39,6 +39,17 @@ namespace Delay
         // amount [min] * 60 [s/min] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
         return amount * 60 * 1000 / portTICK_PERIOD_MS;
     }
+
+    /**
+     * Convert hours to FreeRTOS ticks.
+     *
+     * @returns amount of hours, converted to FreeRTOS ticks.
+     */
+    constexpr TickType_t Hours(TickType_t amount)
+    {
+        // amount [hrs] * 60 [m/hour] * 60 [s/min] * 1000 [ms/s] /  portTICK_PERIOD_MS [ticks/ms] = [ticks]
+        return amount * 60 * 60 * 1000 / portTICK_PERIOD_MS;
+    }
 }
 
 #endif // DELAY_H

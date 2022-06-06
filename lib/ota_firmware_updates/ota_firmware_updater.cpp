@@ -54,7 +54,7 @@ namespace OTAFirmwareUpdater
             result.resize(size + 1);
 
             std::snprintf(&result[0], result.size(), fmt.c_str(), args...);
-            
+
             // Remove null-terminator (not needed for std::string).
             result.pop_back();
 
@@ -194,9 +194,13 @@ namespace OTAFirmwareUpdater
 
         Check();
 
+#if defined M5STACK_COREINK
         // Signal that the task is done.
         xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(pvParams));
         vTaskDelete(NULL);
+#elif defined ESP32DEV
+        vTaskDelay(Delay::Hours(24));
+#endif // defined M5STACK_COREINK
     }
 
     void Check()
