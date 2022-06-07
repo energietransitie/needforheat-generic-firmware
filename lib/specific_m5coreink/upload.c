@@ -89,21 +89,18 @@ cJSON *generate_property_object(measurement_t *obj) {
   cJSON *measurement_object = NULL;
   cJSON *property_object = NULL;
   cJSON *measurements = NULL;
-  char *property_name;
+  const char *property_name;
+  char formated_value[80];
 
     // get the correct property name
-    switch (obj->property) {
-    case PROPERTY_HEARTBEAT:
-        property_name = "heartbeat";
-        break;
-    default:
-        property_name = "unknown";
-        break;
-    }
+    property_name = name_of_property[obj->property];
+
+    // format value
+    sprintf(formated_value,format_property[obj->property],obj->value);
 
     // create property object
     property_object = create_property(property_name,&measurements);
-    measurement_object = create_measurement(time(NULL),cJSON_CreateString(obj->value));
+    measurement_object = create_measurement(time(NULL),cJSON_CreateString(formated_value));
     cJSON_AddItemToArray(measurements,measurement_object);
 
   return property_object;
