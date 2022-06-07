@@ -7,14 +7,15 @@
 
 #define UPLOAD_QUEUE_MAX 10
 
-typedef enum {
-    PROPERTY_HEARTBEAT
-} property_t;
+#include "property_format.h"
 
 typedef struct {
     property_t property;
     time_t timestamp;
-    char value[20];
+    union {
+        int _int;
+        float _float;
+    } value;
 } measurement_t;
 
 // public variables

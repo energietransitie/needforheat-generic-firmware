@@ -52,7 +52,7 @@ void heartbeatv2_task(void *arg) {
     // create measurement struct  
     heartbeat_object.timestamp = time(NULL);
     heartbeat_object.property = PROPERTY_HEARTBEAT;
-    sprintf(heartbeat_object.value, "%d",hbcounter);
+    heartbeat_object.value._int = hbcounter;
     
     // add heartbeat to the upload queue
     xQueueSend(upload_queue, (void *) &heartbeat_object,portMAX_DELAY);
