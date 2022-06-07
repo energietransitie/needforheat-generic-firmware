@@ -96,7 +96,7 @@ cJSON *generate_property_object(measurement_t *obj) {
     property_name = name_of_property[obj->property];
 
     // format value
-    sprintf(formated_value,format_property[obj->property],obj->value);
+    format_function_of_property[obj->property](obj,formated_value);
 
     // create property object
     property_object = create_property(property_name,&measurements);

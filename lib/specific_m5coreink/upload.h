@@ -14,6 +14,7 @@ typedef struct {
     time_t timestamp;
     union {
         int _int;
+        uint16_t _uint16;
         float _float;
     } value;
 } measurement_t;
