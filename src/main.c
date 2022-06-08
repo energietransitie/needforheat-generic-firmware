@@ -60,7 +60,7 @@ const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_1M;
 scheduler_t schedule[] = {
     {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     {twomes_scd41_task, "twomes scd41", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    //{taskA, "task a", 4024, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
+    {taskA, "task a", 4024, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
     //{taskB, "task b", 4024, {0, NULL}, 1, 120},
     {upload_task, "upload_task", 4096, {0, NULL}, 1, min_tasks_interval_s},
     //{taskC, "task c", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
