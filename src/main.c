@@ -10,7 +10,7 @@ static const char *TAG = "Twomes ESP32 presence detector";
 #define DEVICE_TYPE_OTA_ORG "energietransitie"
 #define DEVICE_TYPE_OTA_REPO "twomes-generic-esp-firmware"
 #else
-#define DEVICE_TYPE_NAME "Generic-Test"
+#define DEVICE_TYPE_NAME "CO2-meter-SCD4x"
 #define DEVICE_TYPE_OTA_ORG "energietransitie"
 #define DEVICE_TYPE_OTA_REPO "twomes-generic-esp-firmware"
 static const char *TAG = "Twomes ESP32 generic test device";
