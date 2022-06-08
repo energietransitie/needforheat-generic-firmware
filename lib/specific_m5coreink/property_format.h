@@ -12,6 +12,6 @@ typedef enum {
 // Constants that tell how format data for each property type for sending to server
 extern const char *format_property[];
 extern const char *name_of_property[];
-extern void (*format_function_of_property[])(void *, char *);
+extern void (* const format_function_of_property[])(void *, char *);
 
 #endif
