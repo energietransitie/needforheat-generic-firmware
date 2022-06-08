@@ -2,6 +2,7 @@
 #include <driver/i2c.h>
 #include <driver/gpio.h>
 #include <esp_intr_alloc.h>
+#define LOG_LOCAL_LEVEL ESP_LOG_NONE
 #include <esp_log.h>
 
 void i2c_hal_init() {
