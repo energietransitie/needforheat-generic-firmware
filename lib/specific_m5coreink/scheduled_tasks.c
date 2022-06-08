@@ -4,10 +4,14 @@
 #include <upload.h>
 #include <cJSON.h>
 #include <twomes_scd41.h>
+#include <rtc.h>
 
 // test task A
 void taskA(void *arg) {
     ESP_LOGD("taskA", "I am task A and i am running");
+    ESP_LOGD("taskA", "Ask rtc what time is it");
+    rtc_print_time();
+    
     ESP_LOGD("taskA", "I wait 10 seconds");
     vTaskDelay(pdMS_TO_TICKS(10000));
     ESP_LOGD("taskA", "I have done my purpuse, bye");
