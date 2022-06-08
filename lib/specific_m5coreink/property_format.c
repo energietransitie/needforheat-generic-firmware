@@ -13,7 +13,7 @@ const char *format_property[] = {
 const char *name_of_property[] = {
     "heartbeat",    // PROPERTY_HEARTBEAT
     "CO2concentration", // CO2_CONCENTRATION
-    "roomTempCO2", // ROOM_TEMP_CO2
+    "roomTemp", // ROOM_TEMP_CO2
     "relativeHumidity" // HUMIDITY
 };
 
