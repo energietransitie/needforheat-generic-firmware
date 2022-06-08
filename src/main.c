@@ -8,7 +8,7 @@
 #define DEVICE_TYPE_NAME "Presence-Detector"
 static const char *TAG = "Twomes ESP32 presence detector";
 #else
-#define DEVICE_TYPE_NAME "Generic-Test"
+#define DEVICE_TYPE_NAME "CO2-meter-SCD4x"
 static const char *TAG = "Twomes ESP32 generic test device";
 #endif
 
