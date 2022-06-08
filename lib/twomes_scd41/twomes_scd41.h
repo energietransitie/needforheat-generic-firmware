@@ -9,11 +9,8 @@
 #define _TWOMES_CO2SENSOR_H
 
 #include "driver/i2c.h"
-#include "esp_log.h"
 #include "driver/gpio.h"
 #include <i2c_hal.h>
-
-#define LOG_LOCAL_LEVEL ESP_LOG_WARN
 
 #define SCD41_INIT_DELAY_MS 1000        // milliseconds
 #define SCD41_WAIT_MS 2                 // milliseconds

@@ -1,4 +1,6 @@
 #include "twomes_scd41.h"
+#define LOG_LOCAL_LEVEL ESP_LOG_NONE
+#include "esp_log.h"
 
 #define SCD41_CMD_SERIALNUM     0x36, 0x82 //0x3682
 #define SCD41_CMD_SET_ASC_EN    0x24, 0x16 //0x2416
