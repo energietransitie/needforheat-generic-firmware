@@ -5,7 +5,7 @@
 #include <freertos/queue.h>
 #include <cJSON.h>
 
-#define UPLOAD_QUEUE_MAX 10
+#define UPLOAD_QUEUE_MAX 50
 
 #include "property_format.h"
 
