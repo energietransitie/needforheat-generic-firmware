@@ -258,3 +258,4 @@ Product owner:
 We use and gratefully acknowlegde the efforts of the makers of the following source code and libraries:
 * [ESP-IDF](https://github.com/espressif/esp-idf), by Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
 * [bm8563](https://github.com/tuupola/bm8563), by [Mika Tuupola](https://github.com/tuupola), licensed under [MIT License](https://github.com/tuupola/bm8563/blob/master/LICENSE)
+* [cJSON](https://github.com/DaveGamble/cJSON), by [Dave Gamble and cJSON contributors](https://github.com/DaveGamble/cJSON/graphs/contributors), licensed under [MIT License](https://github.com/DaveGamble/cJSON/blob/master/LICENSE)
