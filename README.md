@@ -164,7 +164,7 @@ Open the project in PlatformIO:
   6. Change the code in `src/main.c` as you see fit.
   7. Click the PlatformIO Icon (the little alien in the left of the screen).
   8. Unfold `M5STACK_COREINK` when building for M5CoreINK, for other platforms unfold `ESP32DEV`.
-NOTE: Do not use the 'ESP32DEV' environment for the M5CoreINK board! It does work, but some features specific to the M5CoreINK will not be included in the firmware what cause problems during run-time.  
+> NOTE: Do not use the 'ESP32DEV' environment for M5CoreINK board! It does work, but some features specific to the M5CoreINK will not be included in the firmware, which cause problems during run-time.
   9. Click `Upload and Monitor`. 
 NOTE: The first time might take a while because PlatformIO needs to install and build the ESP-IDF before it can upload the firmwware.
   10. When it is done uploading, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
