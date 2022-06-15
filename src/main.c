@@ -56,14 +56,11 @@ void app_main(void)
 #include <upload.h>
 
 // schedule configuration
-const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_1M;
+const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_5M;
 scheduler_t schedule[] = {
-    {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    {twomes_scd41_task, "twomes scd41", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    {taskA, "task a", 4024, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
-    //{taskB, "task b", 4024, {0, NULL}, 1, 120},
+    {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_5M},
+    {twomes_scd41_task, "twomes scd41", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_5M},
     {upload_task, "upload_task", 4096, {0, NULL}, 1, min_tasks_interval_s},
-    //{taskC, "task c", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_1M},
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
     {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_1D},
 #endif

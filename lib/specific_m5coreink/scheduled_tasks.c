@@ -6,49 +6,6 @@
 #include <twomes_scd41.h>
 #include <rtc.h>
 
-// test task A
-void taskA(void *arg) {
-    ESP_LOGD("taskA", "I am task A and i am running");
-    ESP_LOGD("taskA", "Ask rtc what time is it");
-    rtc_print_time();
-    
-    ESP_LOGD("taskA", "I wait 10 seconds");
-    vTaskDelay(pdMS_TO_TICKS(10000));
-    ESP_LOGD("taskA", "I have done my purpuse, bye");
-
-    // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
-    vTaskDelete(NULL);
-}
-
-// test task B
-void taskB(void *arg) {
-    ESP_LOGD("taskB", "I am task B and i am running");
-    ESP_LOGD("taskB", "I wait 35 seconds");
-    vTaskDelay(pdMS_TO_TICKS(35000));
-    ESP_LOGD("taskB", "I have done my purpuse, bye");
-
-    // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
-    vTaskDelete(NULL);
-}
-
-// test task C
-void taskC(void *arg) {
-    // wait for other tasks to end
-    ESP_LOGD("taskC", "I'am allive, well i wait other tasks to end");
-    scheduler_task_finish_last(GET_TASK_BIT_FROM_ARG(arg));
-    
-    // wait 5 seconds
-    ESP_LOGD("taskC", "All tasks are completed now i start to wait 5 seconds");
-    vTaskDelay(pdMS_TO_TICKS(5000));
-    ESP_LOGD("taskC", "I have done my purpuse, bye");
-
-    // tell that is stopped
-    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
-    vTaskDelete(NULL);
-}
-
 // heartbeat task
 void heartbeatv2_task(void *arg) {
   static int hbcounter = 0;
