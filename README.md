@@ -227,7 +227,7 @@ scheduler_t schedule[] = {
 
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
 ```
-NOTE: make sure the upload queue is large enough to hold all measurements data for at least two intervals, to prevent that measurements get lost. You can modift the upload queue size in the `upload.h` file.
+NOTE: Make sure the upload queue is large enough to hold all measurements data for at least two intervals, to prevent that measurements get lost. You can modify the upload queue size in the `upload.h` file.
 ### Create new task (M5CoreINK only)
 #### Normal task blueprint
 ```c
