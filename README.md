@@ -17,7 +17,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 
 ![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
 
-Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
+Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) and [M5-CoreInk](https://github.com/m5stack/M5-CoreInk). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
 
 ## Deploying
 This section describes how you can deploy binary releases of the firmware, i.e. without changing the source code, without a development environment and without needing to compile the source code.
@@ -231,6 +231,7 @@ scheduler_t schedule[] = {
 
 int schedule_size = sizeof(schedule)/sizeof(scheduler_t);
 ```
+NOTE: make sure the upload queue is large enough to hold all measurements data for at least two intervals, to prevent that measurements get lost. You can modift the upload queue size in the `upload.h` file.
 ### Create new task (M5CoreINK only)
 #### Normal task blueprint
 ```c
@@ -285,6 +286,7 @@ If no corresponding property has yet been defined for the quantity that you want
 3. Add to the array `format_property` a format string for the new property on the same row than you did by the enum. This is also true for the following two steps.
 4. Next add to the `name_of_property` array the name of the new property as string
 5. Add to the `format_function_of_property` array the function that correctly process the `measurement_t` object for that new property.
+NOTE: The new property needs also be defined on server side for each device type where you want to use it, otherwise the server will reject the property. [Click Here](https://github.com/energietransitie/twomes-backoffice-api#deploying-new-properties-to-apitstenergietransitiewindesheimnl) to read about it. 
 
 ## Releasing
 Read more on how to create an automated release [here](RELEASING.md).
