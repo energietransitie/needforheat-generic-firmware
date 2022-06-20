@@ -241,6 +241,7 @@ This software is available under the [Apache 2.0 license](./LICENSE.md), Copyrig
 ## Credits
 This software is made by:
 * Kevin Jansen ·  [@KevinJan18](https://github.com/KevinJan18)
+* Nick van Ravenzwaaij ·  [@n-vr](https://github.com/n-vr)
 
 Thanks also go to:
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
