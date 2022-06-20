@@ -10,6 +10,7 @@
 #define GET_TASK_BIT_FROM_ARG(ARG) (1 << ((scheduler_parameter_t *)ARG)->id)
 
 typedef enum {
+    // intervals for production use
     SCHEDULER_INTERVAL_10S = 10,
     SCHEDULER_INTERVAL_30S = 30,
     SCHEDULER_INTERVAL_1M = 60,
@@ -20,7 +21,11 @@ typedef enum {
     SCHEDULER_INTERVAL_2U = 7200,
     SCHEDULER_INTERVAL_6U = 21600,
     SCHEDULER_INTERVAL_12U = 43200,
-    SCHEDULER_INTERVAL_1D = 86400
+    SCHEDULER_INTERVAL_1D = 86400,
+    // intervals for test use
+    SCHEDULER_INTERVAL_2M = 120,
+    SCHEDULER_INTERVAL_4M = 240,
+    SCHEDULER_INTERVAL_6M = 360
 } interval_t;
 
 typedef struct {
