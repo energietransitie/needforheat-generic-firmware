@@ -71,7 +71,6 @@ static void IRAM_ATTR gpio_isr_handler(void *arg) {
     xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
 } //gpio_isr_handler
 
-//Function to initialise the buttons and LEDs on the device, with interrupts on the buttons
 void initGPIO() {
     gpio_config_t io_conf;
     //CONFIGURE OUTPUTS:
@@ -90,11 +89,6 @@ void initGPIO() {
     gpio_config(&io_conf);
 }
 
-/**
- * Check for input of buttons and the duration
- * if the press duration was more than 10 seconds, erase the flash memory to restart provisioning
- * otherwise, blink the status LED (and possibly run another task (sensor provisioning?))
-*/
 void buttonPressHandlerGeneric(void *args) {
     uint32_t io_num;
     while (1) {
@@ -134,11 +128,6 @@ void buttonPressHandlerGeneric(void *args) {
 } // buttonPressHandlerGEneric
 #endif
 
-/**Blink LEDs to test GPIO:
- * Pass two arguments in uint8_t array:
- * argument[0] = amount of blinks
- * argument[1] = pin to blink on (LED_STATUS or RED_LED_ERROR)
- */
 void blink(void *args) {
     uint8_t *arguments = (uint8_t *)args;
     uint8_t amount = arguments[0];
@@ -478,10 +467,6 @@ void get_device_service_name(char *service_name, size_t max) {
         ssid_prefix, eth_mac[3], eth_mac[4], eth_mac[5]);
 }
 
-/* Handler for the optional provisioning activate_device_endpoint registered by the application.
- * The data format can be chosen by applications. Here, we are using plain ascii text.
- * Applications can choose to use other formats like protobuf, JSON, XML, etc.
- */
 esp_err_t custom_prov_data_handler(uint32_t session_id, const uint8_t *inbuf, ssize_t inlen,
     uint8_t **outbuf, ssize_t *outlen, void *priv_data) {
     if (inbuf) {
@@ -511,10 +496,6 @@ void initialize_sntp(void) {
 
 void obtain_time(void) {
     ESP_LOGD(TAG, "Initializing SNTP");
-    /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-     * Read "Establishing Wi-Fi or Ethernet Connection" section in
-     * examples/protocols/README.md for more information about this function.
-     */
 
     if (sntp_enabled()) {
         ESP_LOGD(TAG, "SNTP already initialized; no need to initialize again");
@@ -723,7 +704,7 @@ void activate_device() {
     ESP_LOGD(TAG, "Return from device activation endpoint!");
 
     // this section of code first retrieves the bearer from the JSON-formatted response.
-    // TODO: replace with a call to a propre json parser.
+    // TODO: replace with a call to a proper json parser.
     if (https_response_status != HTTPSTATUS_OK) { //change everywhere in code to HttpStatus_Ok when including esp_http_client.h library of 19 Nov 2020 or later
         ESP_LOGE(TAG, "Failed to activate device: response is not %i but %i", HTTPSTATUS_OK, https_response_status);
     }
@@ -1184,10 +1165,6 @@ void initialize_nvs() {
     }
 }
 
-// Function:    initialise_wifi()
-// Params:      N/A
-// Returns:     N/A
-// Description: used to intialize Wi-Fi for HTTPS
 void twomes_device_provisioning(const char *device_type_name) {
     initialize_nvs();
     initialize_generic_firmware();

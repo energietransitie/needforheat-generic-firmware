@@ -245,6 +245,7 @@ This software is made by:
 Thanks also go to:
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
 * Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
+* Nick van Ravenzwaaij · [@n-vr](https://github.com/n-vr)
 
 Product owner:
 * Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
