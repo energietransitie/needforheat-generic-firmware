@@ -1,0 +1,34 @@
+{
+    "name": "PlatformIO",
+
+    // Download container from GitHub Container Registry.
+    // "image": "ghcr.io/n-vr/platformio-devcontainer:latest",
+    
+    "build": {
+        "dockerfile": "Dockerfile",
+    },
+
+    // Install platformIO extension.
+    "extensions": [
+        "platformio.platformio-ide",
+    ],
+
+    // Expose PlatformIO Home port.
+    "forwardPorts": [
+        8010
+    ],
+
+    // Update your PlatformIO dependencies the first time the container is created.
+    "onCreateCommand": "pio run --target clean && pio platform update",
+
+    // Do not run as root.
+    "remoteUser": "vscode",
+
+    // Uncommend the 6 lines below to use COM-ports (Linux and MacOS only)
+    "mounts": [
+        "source=/dev,target=/dev,type=bind,consistency=consistent"
+    ],
+    "runArgs": [
+        "--privileged"
+    ]
+}

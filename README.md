@@ -134,6 +134,8 @@ If you want to repurpose and existing device (e.g. use it in another home), you 
 ## Developing 
 This section describes how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be deployed, either via the development environment, or via the method described in the section [Deploying](#deploying).
 
+> See [this](.devcontainer/README.md) section if you prefer to use a devcontainer.
+
 ### Prerequisites
 Prerequisites for deploying, plus:
 *	[Visual Studio Code](https://code.visualstudio.com/download) installed
