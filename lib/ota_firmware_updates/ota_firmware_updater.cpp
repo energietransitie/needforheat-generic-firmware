@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <regex>
 #include <cstdio>
+#include <utility>
 
 // This is necessary for define statements from generic_esp_32 which is C code.
 extern "C"
@@ -27,11 +28,38 @@ extern "C"
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 
+#define UPDATE_CHECK_URL "https://api.github.com/repos/%s/%s/releases/latest"
+#define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
+
+#define TASK_STACK_DEPTH 16384
+
+#define MAX_INSTALL_TRIES 10
+#define OTA_RECEIVE_TIMEOUT_MS 10000 // 10 seconds
+
 namespace OTAFirmwareUpdater
 {
     namespace
     {
         const char *TAG = "OTA Firmware Updater";
+
+        std::string updateCheckURL("");
+        std::string updateDownloadURL("");
+
+        template <typename... Args>
+        std::string Format(const std::string &fmt, Args... args)
+        {
+            auto size = std::snprintf(nullptr, 0, fmt.c_str(), args...);
+
+            std::string result;
+            result.resize(size + 1);
+
+            std::snprintf(&result[0], result.size(), fmt.c_str(), args...);
+
+            // Remove null-terminator (not needed for std::string).
+            result.pop_back();
+
+            return result;
+        }
 
         void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
         {
@@ -66,7 +94,7 @@ namespace OTAFirmwareUpdater
             ESP_LOGI(TAG, "Checking for available updates.");
 
             esp_http_client_config_t config{};
-            config.url = UPDATE_CHECK_URL;
+            config.url = updateCheckURL.c_str();
             config.cert_pem = github_root_pem_start;
             config.transport_type = HTTP_TRANSPORT_OVER_SSL;
             config.is_async = false;
@@ -132,18 +160,24 @@ namespace OTAFirmwareUpdater
             config.buffer_size_tx = 1024;
             config.is_async = false;
 
+            char *endpoint = const_cast<char *>("OTAFirmwareUpdater::InstallUpdate");
+
+            wait_for_wifi(endpoint);
             err = esp_https_ota(&config);
+            disconnect_wifi(endpoint);
             if (Error::CheckAppendName(err, TAG, "An error occured while performing HTTP OTA-update"))
                 return;
 
-            ESP_LOGI(TAG, "OTA firmware update was successful. Rebooting in 10 seconds.");
-
-            // Wait 10 seconds.
-            vTaskDelay(Delay::Seconds(10));
-
-            esp_restart();
+            ESP_LOGI(TAG, "OTA firmware update was successful. New firmware will be booted after reboot.");
         }
     } // namespace
+
+    void SetLocation(const char *org, const char *repo, const char *fileName)
+    {
+        updateCheckURL = Format(UPDATE_CHECK_URL, org, repo, fileName);
+        updateDownloadURL = Format(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
+        ESP_LOGD(TAG, "Set update check URL to: %s\nSet update download URL to: %s", updateCheckURL.c_str(), updateDownloadURL.c_str());
+    }
 
     void Start()
     {
@@ -158,13 +192,15 @@ namespace OTAFirmwareUpdater
     {
         ESP_LOGI(TAG, "Task started.");
 
-        CheckUpdateFinishedSuccessfully();
-
         Check();
 
+#if defined M5STACK_COREINK
         // Signal that the task is done.
         xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(pvParams));
         vTaskDelete(NULL);
+#elif defined ESP32DEV
+        vTaskDelay(Delay::Hours(24));
+#endif // defined M5STACK_COREINK
     }
 
     void Check()
@@ -218,7 +254,7 @@ namespace OTAFirmwareUpdater
         LogFirmwareToBackend("new_fw", version);
 
         // Insert version number into the URL.
-        auto downloadURL = std::regex_replace(UPDATE_DOWNLOAD_URL, std::regex("%s"), version);
+        auto downloadURL = Format(updateDownloadURL, version.c_str());
 
         InstallUpdate(downloadURL);
     }
@@ -250,9 +286,8 @@ namespace OTAFirmwareUpdater
             if (storedNew > currentVersion) // Installation of newer version was attempted, but failed.
             {
                 ESP_LOGW(TAG, "It looks like a previously attempted update installation failed.");
-                // TODO: Check why function call below creates stack overflow on task main.
-                // Calling this function somewhere else works fine, but not here.
                 LogFirmwareToBackend("booted_fw", currentVersionString);
+                NVS::Erase("twomes_storage", "new_fw");
             }
 
             return;

@@ -5,15 +5,24 @@
 #include <freertos/queue.h>
 #include <cJSON.h>
 
-#define UPLOAD_QUEUE_MAX 10
+#define UPLOAD_QUEUE_MAX 50
+
+#include "property_format.h"
+
+typedef struct {
+    property_t property;
+    time_t timestamp;
+    union {
+        int _int;
+        uint16_t _uint16;
+        float _float;
+    } value;
+} measurement_t;
 
 // public variables
 extern QueueHandle_t upload_queue;
 
 void upload_initialize();
 void upload_upload();
-
-cJSON *upload_create_property(const char *name, cJSON **measurements);
-cJSON *upload_create_measurement(time_t arg_timestamp, cJSON *value);
 
 #endif
