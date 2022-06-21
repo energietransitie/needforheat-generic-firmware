@@ -169,6 +169,8 @@ namespace OTAFirmwareUpdater
                 return;
 
             ESP_LOGI(TAG, "OTA firmware update was successful. New firmware will be booted after reboot.");
+
+            scheduler_request_restart();
         }
     } // namespace
 
@@ -210,7 +212,10 @@ namespace OTAFirmwareUpdater
         std::tie(updateFound, version) = FindUpdates();
 
         if (!updateFound)
+        {
+            ESP_LOGD(TAG, "No new update was found.");
             return;
+        }
 
         std::string storedNewFirmware;
         auto err = NVS::Get("twomes_storage", "new_fw", storedNewFirmware);

@@ -19,6 +19,7 @@
 
 #define TAG "SCHEDULER"
 #define BIT_INTERVAL_ENDED (1 << 23)
+#define BIT_RESTART_REQUESTED (1 << 22)
 
 // public global variables
 EventGroupHandle_t scheduler_taskevents;
@@ -160,6 +161,12 @@ wait_for_end_interval:
         xSemaphoreGive(next_interval_sem);
     }
 
+    // Check if restart is requested
+    if (xEventGroupGetBits(scheduler_taskevents) & BIT_RESTART_REQUESTED) {
+        ESP_LOGD(TAG, "A restart was requested. Restarting now...");
+        esp_restart();
+    }
+
     // clear the taskevent bits
     xEventGroupClearBits(scheduler_taskevents,private_tasks_waitbits | BIT_INTERVAL_ENDED);
     
@@ -175,12 +182,7 @@ wait_for_end_interval:
         // delay (in future use light sleep instead to save power)
         vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
     } else {
-        // power off
-        ESP_LOGD("power off","power off for %li seconds",inactive_time_s);
-        rtc_set_alarm(inactive_time_s);
-        vTaskDelay(pdMS_TO_TICKS(250));
-        powerpin_reset();
-
+        scheduler_power_off(inactive_time_s);
         // in case that device did not turn off
         vTaskDelay(pdMS_TO_TICKS(inactive_time_s*1000));
     }
@@ -208,4 +210,15 @@ void scheduler_task_finish_last(uint32_t own_task_bit) {
         pdTRUE,
         portMAX_DELAY
     );
+}
+
+void scheduler_request_restart() {
+    xEventGroupSetBits(scheduler_taskevents, BIT_RESTART_REQUESTED);
+}
+
+void scheduler_power_off(time_t inactive_time) {
+    ESP_LOGD("power off","power off for %li seconds",inactive_time);
+    rtc_set_alarm(inactive_time);
+    vTaskDelay(pdMS_TO_TICKS(250));
+    powerpin_reset();
 }

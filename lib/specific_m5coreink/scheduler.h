@@ -47,6 +47,8 @@ void scheduler_update();
 void scheduler_execute_tasks(bool);
 void scheduler_wait();
 void scheduler_task_finish_last(uint32_t own_task_bit);
+void scheduler_request_restart();
+void scheduler_power_off(time_t inactive_time);
 
 extern EventGroupHandle_t scheduler_taskevents;
 
