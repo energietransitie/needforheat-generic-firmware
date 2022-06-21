@@ -320,10 +320,10 @@ This software is available under the [Apache 2.0 license](./LICENSE.md), Copyrig
 This software is made by:
 * Kevin Jansen ·  [@KevinJan18](https://github.com/KevinJan18)
 * Nick van Ravenzwaaij ·  [@n-vr](https://github.com/n-vr)
+* Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
 
 Thanks also go to:
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
-* Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
 
 Product owner:
 * Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
