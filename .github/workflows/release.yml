@@ -75,7 +75,6 @@ jobs:
       
       # Create a release draft if this tag is on the main branch.
       - name: Create draft release
-        if: ${{ github.ref == 'refs/heads/main' }}
         uses: softprops/action-gh-release@v1
         with:
           draft: true
