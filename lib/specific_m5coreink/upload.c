@@ -105,3 +105,15 @@ cJSON *generate_property_object(measurement_t *obj) {
 
   return property_object;
 }
+
+// put a value with its property on the upload queue
+void upload_measurement(property_t property, union value_t value) {
+ measurement_t measurement; 
+    // create measurement object
+    measurement.timestamp = time(NULL);
+    measurement.property = property;
+    measurement.value = value;
+
+    // put it on the upload queue
+    xQueueSend(upload_queue, (void *) &measurement,portMAX_DELAY);
+}

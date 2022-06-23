@@ -6,7 +6,8 @@ typedef enum {
     PROPERTY_HEARTBEAT = 0,
     CO2_CONCENTRATION,
     ROOM_TEMP_CO2,
-    HUMIDITY
+    HUMIDITY,
+    PROPERTY_BATTERY_VOLTAGE
 } property_t;
 
 // Constants that tell how format data for each property type for sending to server

@@ -6,7 +6,8 @@ const char *format_property[] = {
     "%d", // PROPERTY_HEARTBEAT
     "%u", // CO2_CONCENTRATION
     "%.1f", // ROOM_TEMP_CO2
-    "%.1f" // HUMIDITY
+    "%.1f", // HUMIDITY
+    "%1.1f" // PROPERTY_BATTERY_VOLTAGE
 };
 
 // list that tells for each property its name in string format
@@ -14,7 +15,8 @@ const char *name_of_property[] = {
     "heartbeat",    // PROPERTY_HEARTBEAT
     "CO2concentration", // CO2_CONCENTRATION
     "roomTemp", // ROOM_TEMP_CO2
-    "relativeHumidity" // HUMIDITY
+    "relativeHumidity", // HUMIDITY
+    "batteryVoltage" // PROPERTY_BATTERY_VOLTAGE
 };
 
 // functions that format value to string
@@ -38,5 +40,6 @@ void (*const format_function_of_property[])(void *, char *) = {
     format_int,    // PROPERTY_HEARTBEAT
     format_uint16, // CO2_CONCENTRATION
     format_float, // ROOM_TEMP_CO2
-    format_float // HUMIDITY
+    format_float, // HUMIDITY
+    format_float // PROPERTY_BATTERY_VOLTAGE
 };
