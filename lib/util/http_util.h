@@ -14,8 +14,6 @@
 #include "certs.h"
 #include "error.h"
 
-#define USER_AGENT_VALUE "github.com/energietransitie/twomes-generic-esp-firmware"
-
 namespace HTTPUtil
 {
     using buffer_t = std::string;
@@ -33,7 +31,6 @@ namespace HTTPUtil
      * @returns HTTP status code.
      */
     int HTTPRequest(esp_http_client_config_t config, headers_t &headersReceive, buffer_t &dataReceive, headers_t headersSend, buffer_t dataSend);
-    // esp_err_t PerformGETRequest(esp_http_client_config_t config, buffer_t &buffer, headers_t &headers);
 
     /**
      * Performs an HTTP request and receives data and headers.

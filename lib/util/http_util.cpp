@@ -41,6 +41,13 @@ namespace HTTPUtil
             }
             return ESP_OK;
         }
+
+        int Cleanup(esp_http_client_handle_t &client, char *endpoint)
+        {
+            esp_http_client_cleanup(client);
+            disconnect_wifi(endpoint);
+            return 400;
+        }
     }
 
     int HTTPRequest(esp_http_client_config_t config, headers_t &headersReceive, buffer_t &dataReceive, headers_t headersSend, buffer_t dataSend)
@@ -68,9 +75,7 @@ namespace HTTPUtil
         err = esp_http_client_open(client, dataSend.size());
         if (Error::CheckAppendName(err, TAG, "An error occured when opening the HTTP connection"))
         {
-            esp_http_client_cleanup(client);
-            disconnect_wifi(endpoint);
-            return 400;
+            return Cleanup(client, endpoint);
         }
 
         if (dataSend.size() > 0)
@@ -79,9 +84,7 @@ namespace HTTPUtil
             if (bytesSent < dataSend.size())
             {
                 ESP_LOGE(TAG, "Not all data was written.");
-                esp_http_client_cleanup(client);
-                disconnect_wifi(endpoint);
-                return 400;
+                return Cleanup(client, endpoint);
             }
         }
 
@@ -89,9 +92,7 @@ namespace HTTPUtil
         if (contentLength < 0)
         {
             ESP_LOGE(TAG, "An error occured when fetching headers: %s", esp_err_to_name(err));
-            esp_http_client_cleanup(client);
-            disconnect_wifi(endpoint);
-            return 400;
+            return Cleanup(client, endpoint);
         }
 
         // Reserve memory for response + null-termination char.
@@ -105,9 +106,7 @@ namespace HTTPUtil
         if (bytesReceived != contentLength)
         {
             ESP_LOGE(TAG, "An error occured when reading response. Expected %d but received %d", contentLength, bytesReceived);
-            esp_http_client_cleanup(client);
-            disconnect_wifi(endpoint);
-            return 400;
+            return Cleanup(client, endpoint);
         }
 
         // copy buffered headers from HTTPEventHandler.

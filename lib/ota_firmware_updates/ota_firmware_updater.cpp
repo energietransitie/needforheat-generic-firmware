@@ -31,6 +31,9 @@ extern "C"
 #define UPDATE_CHECK_URL "https://api.github.com/repos/%s/%s/releases/latest"
 #define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
 
+// Set the user-agent to the repository, so GitHub can reach out if necessary.
+#define USER_AGENT_VALUE "github.com/energietransitie/twomes-generic-esp-firmware"
+
 #define TASK_STACK_DEPTH 16384
 
 #define MAX_INSTALL_TRIES 10
