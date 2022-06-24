@@ -306,7 +306,7 @@ namespace OTAFirmwareUpdater
         ESP_LOGD(TAG, "OTA partition is pending verification.");
 
         auto appDescription = esp_ota_get_app_description();
-        LogFirmwareToBackend("booted_fm", appDescription->version);
+        LogFirmwareToBackend("booted_fw", appDescription->version);
 
         // TODO: Other checks can be added here, but if this function is called after any other tasks have started,
         // this point will not have been reached if one of those tasks crashed the ESP32.
