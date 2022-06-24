@@ -3,9 +3,7 @@
 
 #include <cstdint>
 #include <string>
-#include <regex>
 
-#define REGEX_STRING "v?(\\d+)\\.(\\d+)\\.(\\d+)"
 
 /**
  * Semantic version object.

@@ -1,5 +1,9 @@
 #include "semantic_version.h"
 
+#include <regex>
+
+#define REGEX_STRING "v?(\\d+)\\.(\\d+)\\.(\\d+)-?(.*)"
+
 SemanticVersion::SemanticVersion(const std::string &versionString)
 {
     std::regex regexString(REGEX_STRING);
@@ -31,7 +35,7 @@ std::string SemanticVersion::String()
         return std::string("v" + std::to_string(m_major) + "." + std::to_string(m_minor) + "." + std::to_string(m_patch) + "\0");
     }
 
-    return std::string("v" + std::to_string(m_major) + "." + std::to_string(m_minor) + "." + std::to_string(m_patch) + m_extra + "\0");
+    return std::string("v" + std::to_string(m_major) + "." + std::to_string(m_minor) + "." + std::to_string(m_patch) + "-" + m_extra + "\0");
 }
 
 const char *SemanticVersion::CString()
