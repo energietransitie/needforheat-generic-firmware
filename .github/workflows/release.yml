@@ -12,6 +12,7 @@ env:
 jobs:
   build-and-draft-release:
     runs-on: ubuntu-latest
+    environment: production
     strategy:
       matrix:
         # List all of the PlatformIO platforms to build
