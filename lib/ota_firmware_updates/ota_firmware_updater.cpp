@@ -221,7 +221,7 @@ namespace OTAFirmwareUpdater
         }
 
         std::string storedNewFirmware;
-        auto err = NVS::Get("twomes_storage", "new_fw", storedNewFirmware);
+        auto err = NVS::GetOrInit("twomes_storage", "new_fw", storedNewFirmware);
         if (err == ESP_OK)
         {
             SemanticVersion storedNew(storedNewFirmware);
@@ -231,7 +231,7 @@ namespace OTAFirmwareUpdater
             {
                 // This version was found before.
                 int installCount = 12;
-                NVS::Get("twomes_storage", "install_count", installCount);
+                NVS::GetOrInit("twomes_storage", "install_count", installCount);
                 if (installCount >= MAX_INSTALL_TRIES)
                 {
                     ESP_LOGE(TAG, "Installation of firmware update %s was already tried %d times. Skipping install.", version.c_str(), installCount);
@@ -283,7 +283,7 @@ namespace OTAFirmwareUpdater
             ESP_LOGD(TAG, "OTA partition is valid. This partition is not pending verification after an OTA firmware update.");
 
             std::string storedNewFirmware;
-            err = NVS::Get("twomes_storage", "new_fw", storedNewFirmware);
+            err = NVS::GetOrInit("twomes_storage", "new_fw", storedNewFirmware);
             if (Error::CheckAppendName(err, TAG, "An error occured when reading new_fw from NVS"))
                 return;
 
