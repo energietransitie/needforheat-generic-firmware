@@ -57,13 +57,40 @@ namespace NVS
 
     /**
      * Erase key value pair of given key.
-     * 
+     *
      * @param ns NVS namespace.
      * @param key Key to erase.
-     * 
+     *
      * @returns ESP error.
      */
     esp_err_t Erase(const char *ns, const char *key);
+
+    /**
+     * Get value for given key from NVS. If the key is not found, it is created and initialized to the type's zero-value.
+     *
+     * @param ns NVS namespace.
+     * @param key Key to set.
+     * @param outVal Read value.
+     *
+     * @returns ESP error.
+     */
+    template <typename T>
+    esp_err_t GetOrInit(const char *ns, const char *key, T &outVal)
+    {
+        T value;
+        auto err = Get(ns, key, value);
+        if (err == ESP_ERR_NVS_NOT_FOUND)
+        {
+            value = T();
+
+            ESP_LOGD("NVSUtil", "Key \"%s\" was not found. Initializing it to its zero-value.", key);
+
+            outVal = value;
+            return Set(ns, key, value);
+        }
+
+        return err;
+    }
 
     /**
      * Increment value at the given key.
