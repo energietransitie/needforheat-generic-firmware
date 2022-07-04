@@ -1,4 +1,4 @@
-#include "ota_firmware_updater.h"
+#include "ota_firmware_updater.hpp"
 
 #include <vector>
 #include <map>
@@ -15,12 +15,12 @@ extern "C"
 #include <scheduler.h>
 }
 
-#include <http_util.h>
-#include <semantic_version.h>
-#include <error.h>
-#include <delay.h>
-#include <measurements.h>
-#include <nvs.h>
+#include <http_util.hpp>
+#include <semantic_version.hpp>
+#include <error.hpp>
+#include <delay.hpp>
+#include <measurements.hpp>
+#include <nvs.hpp>
 
 #include <esp_log.h>
 #include <esp_http_client.h>

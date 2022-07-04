@@ -1,5 +1,5 @@
-#ifndef MEASUREMENTS_H
-#define MEASUREMENTS_H
+#ifndef MEASUREMENTS_HPP
+#define MEASUREMENTS_HPP
 
 #include <string>
 #include <sstream>
@@ -39,4 +39,4 @@ namespace Measurements
     std::string CreateRequestBodyVariable(const std::string propertyName, MeasurementValue measurementValue);
 }
 
-#endif // MEASUREMENTS_H
+#endif // MEASUREMENTS_HPP

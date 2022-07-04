@@ -1,5 +1,5 @@
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef ERROR_HPP
+#define ERROR_HPP
 
 #include <esp_err.h>
 #include <esp_log.h>
@@ -30,4 +30,4 @@ namespace Error
     bool CheckAppendName(esp_err_t err, const char *TAG, const char *message);
 }
 
-#endif // ERROR_H
+#endif // ERROR_HPP

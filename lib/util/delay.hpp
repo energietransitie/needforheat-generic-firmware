@@ -1,5 +1,5 @@
-#ifndef DELAY_H
-#define DELAY_H
+#ifndef DELAY_HPP
+#define DELAY_HPP
 
 // These function definitions need to be inside the header file, because of the use of constexpr.
 
@@ -52,4 +52,4 @@ namespace Delay
     }
 }
 
-#endif // DELAY_H
+#endif // DELAY_HPP

@@ -1,5 +1,5 @@
-#ifndef NVS_H
-#define NVS_H
+#ifndef NVS_HPP
+#define NVS_HPP
 
 #include <cstdint>
 #include <string>
@@ -115,4 +115,4 @@ namespace NVS
     }
 }
 
-#endif // NVS_H
+#endif // NVS_HPP

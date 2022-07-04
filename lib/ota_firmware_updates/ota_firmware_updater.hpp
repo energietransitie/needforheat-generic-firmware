@@ -1,5 +1,5 @@
-#ifndef OTA_FIRMWARE_UPDATER_H
-#define OTA_FIRMWARE_UPDATER_H
+#ifndef OTA_FIRMWARE_UPDATER_HPP
+#define OTA_FIRMWARE_UPDATER_HPP
 
 #include <string>
 
@@ -39,4 +39,4 @@ namespace OTAFirmwareUpdater
     void CheckUpdateFinishedSuccessfully();
 } // namespace OTAFirmwareUpdater
 
-#endif // OTA_FIRMWARE_UPDATE_H
+#endif // OTA_FIRMWARE_UPDATER_HPP

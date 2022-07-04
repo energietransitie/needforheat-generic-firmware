@@ -1,5 +1,5 @@
-#ifndef HTTP_UTIL_H
-#define HTTP_UTIL_H
+#ifndef HTTP_UTIL_HPP
+#define HTTP_UTIL_HPP
 
 #include <string>
 #include <map>
@@ -12,7 +12,7 @@
 #include <esp_https_ota.h>
 
 #include "certs.h"
-#include "error.h"
+#include "error.hpp"
 
 namespace HTTPUtil
 {
@@ -56,4 +56,4 @@ namespace HTTPUtil
     int HTTPRequest(esp_http_client_config_t config, headers_t &headersReceive, buffer_t &dataReceive);
 }
 
-#endif // HTTP_UTIL_H
+#endif // HTTP_UTIL_HPP

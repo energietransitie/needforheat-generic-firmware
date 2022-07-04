@@ -1,5 +1,5 @@
 #include "c_ota.h"
-#include "ota_firmware_updater.h"
+#include "ota_firmware_updater.hpp"
 
 // This is an adapter so this C++ code can be called by C code.
 

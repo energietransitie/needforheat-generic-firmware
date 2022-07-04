@@ -1,6 +1,6 @@
-#include "nvs.h"
+#include "nvs.hpp"
 
-#include "error.h"
+#include "error.hpp"
 
 namespace NVS
 {

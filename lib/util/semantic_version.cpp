@@ -1,4 +1,4 @@
-#include "semantic_version.h"
+#include "semantic_version.hpp"
 
 #include <regex>
 

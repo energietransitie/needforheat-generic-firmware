@@ -1,5 +1,5 @@
-#ifndef SEMANTIC_VERSION_H
-#define SEMANTIC_VERSION_H
+#ifndef SEMANTIC_VERSION_HPP
+#define SEMANTIC_VERSION_HPP
 
 #include <cstdint>
 #include <string>
@@ -56,4 +56,4 @@ bool operator<(const SemanticVersion &sv1, const SemanticVersion &sv2);
 bool operator>=(const SemanticVersion &sv1, const SemanticVersion &sv2);
 bool operator<=(const SemanticVersion &sv1, const SemanticVersion &sv2);
 
-#endif // SEMANTIC_VERSION_H
+#endif // SEMANTIC_VERSION_HPP
