@@ -809,8 +809,9 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
             status_code = esp_http_client_get_status_code(client);
             content_length = esp_http_client_get_content_length(client);
             if (content_length > 0) {
-                response = malloc(sizeof(char) * content_length); //DONE: checked that malloc() is balanced by free()
+                response = malloc(sizeof(char) * content_length + 1);
                 esp_http_client_read(client, response, content_length);
+                response[content_length] = '\0';
                 if (status_code != HTTPSTATUS_OK) {
                     ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
                         content_length);
