@@ -3,10 +3,7 @@
 
 // enum with all property types
 typedef enum {
-    PROPERTY_HEARTBEAT = 0,
-    CO2_CONCENTRATION,
-    ROOM_TEMP_CO2,
-    HUMIDITY
+    PROPERTY_HEARTBEAT = 0
 } property_t;
 
 // Constants that tell how format data for each property type for sending to server

@@ -3,18 +3,12 @@
 
 // list that tells for each property its format string
 const char *format_property[] = {
-    "%d", // PROPERTY_HEARTBEAT
-    "%u", // CO2_CONCENTRATION
-    "%.1f", // ROOM_TEMP_CO2
-    "%.1f" // HUMIDITY
+    "%d" // PROPERTY_HEARTBEAT
 };
 
 // list that tells for each property its name in string format
 const char *name_of_property[] = {
-    "heartbeat",    // PROPERTY_HEARTBEAT
-    "CO2concentration", // CO2_CONCENTRATION
-    "roomTemp", // ROOM_TEMP_CO2
-    "relativeHumidity" // HUMIDITY
+    "heartbeat" // PROPERTY_HEARTBEAT
 };
 
 // functions that format value to string
@@ -35,8 +29,5 @@ void format_float(void *object, char *formated_value) {
 
 // list that tells for each property which function to use for formatting value to string
 void (*const format_function_of_property[])(void *, char *) = {
-    format_int,    // PROPERTY_HEARTBEAT
-    format_uint16, // CO2_CONCENTRATION
-    format_float, // ROOM_TEMP_CO2
-    format_float // HUMIDITY
+    format_int // PROPERTY_HEARTBEAT
 };
