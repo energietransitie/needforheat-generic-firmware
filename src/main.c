@@ -73,7 +73,6 @@ void app_main(void)
 const interval_t min_tasks_interval_s = SCHEDULER_INTERVAL_2M;
 scheduler_t schedule[] = {
     {heartbeatv2_task, "heartbeat", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_2M},
-    {twomes_scd41_task, "twomes scd41", 4096, {0, NULL}, 1, SCHEDULER_INTERVAL_4M},
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
     {twomes_ota_firmware_update_task, "firmware update", 16384, {0, NULL}, 1, SCHEDULER_INTERVAL_6M},
 #endif

@@ -3,7 +3,6 @@
 #include <scheduler.h>
 #include <upload.h>
 #include <cJSON.h>
-#include <twomes_scd41.h>
 #include <rtc.h>
 
 // heartbeat task
@@ -39,43 +38,6 @@ void upload_task(void *arg) {
 
     // tell that is stopped
     ESP_LOGD("upload task", "i have done my job");
-    xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
-    vTaskDelete(NULL);
-}
-
-// task that measure with SCD41
-void twomes_scd41_task(void *arg) {
-  measurement_t object;
-  time_t timestamp;
-    ESP_LOGD("SCD41 task", "I go to work");
-    // initailize co2
-    co2_init(SCD41_ADDR);
-
-    // perform measurements
-    uint16_t measurement_data[3] = {};
-    for(int i=0; i < 3; i++) {
-        co2_read(SCD41_ADDR,measurement_data);
-    }
-
-    // add CO2 measurement to the upload queue
-    timestamp = time(NULL);
-    object.property = CO2_CONCENTRATION;
-    object.timestamp = timestamp;
-    object.value._uint16 = measurement_data[0];
-    xQueueSend(upload_queue, (void *) &object,portMAX_DELAY); 
-
-    // add room temprature measurement to the upload queue
-    object.property = ROOM_TEMP_CO2;
-    object.value._float = scd41_temp_raw_to_celsius(measurement_data[1]);
-    xQueueSend(upload_queue, (void *) &object,portMAX_DELAY);
-
-    // add humidity measurement to the upload queue
-    object.property = HUMIDITY;
-    object.value._float = scd41_rh_raw_to_percent(measurement_data[2]);
-    xQueueSend(upload_queue, (void *) &object,portMAX_DELAY);
-
-    // tell that is stopped
-    ESP_LOGD("SCD41 task", "I have done my job");
     xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(arg));
     vTaskDelete(NULL);
 }
