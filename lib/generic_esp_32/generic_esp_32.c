@@ -1,5 +1,9 @@
 #include <generic_esp_32.h>
 
+#include <esp_ota_ops.h>
+
+#include <certs.h>
+
 static const char *TAG = "Twomes Generic Firmware Library ESP32";
 
 bool activation = false;
@@ -18,38 +22,6 @@ xSemaphoreHandle wireless_802_11_mutex;
 // we use the ISRG Root X1 certificate found at https://letsencrypt.org/certs/isrgrootx1.pem
 // this certificate was translated to ESP32 code
 // by adding " at the befinning each line and \n" at the end of each line in the code
-
-const char *isrgrootx1 = "-----BEGIN CERTIFICATE-----\n"
-"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\n"
-"-----END CERTIFICATE-----\n";
 
 bool wifi_initialized = false;
 bool wifi_autoconnect = true;
@@ -144,7 +116,7 @@ void blink(void *args) {
 } //void blink;
 
 void initialize_generic_firmware() {
-    ESP_LOGD(TAG, "Generic Firmware Version: %s", VERSION);
+    ESP_LOGD(TAG, "Generic Firmware Version: %s", esp_ota_get_app_description()->version);
 
     wireless_802_11_mutex = xSemaphoreCreateMutex();
 
@@ -734,10 +706,8 @@ void activate_device() {
 }
 
 int post_https(char *endpoint, bool use_bearer, bool already_connected, char *data, char *response_buf, uint8_t resp_buf_size) {
-    int connect_retry_counter = 0;
     int upload_retry_counter = 0;
     int content_length = 0;
-    bool connect_success = false;
     int status_code = 0;
     char *response = NULL;
     char *urlString = NULL;
@@ -752,7 +722,7 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
     esp_http_client_config_t config = {
         .url = urlString,
         .transport_type = HTTP_TRANSPORT_OVER_SSL,
-        .cert_pem = isrgrootx1,
+        .cert_pem = isrg_root_pem_start,
         .event_handler = http_event_handler,
         .is_async = false };
     esp_http_client_handle_t client = esp_http_client_init(&config);
@@ -787,32 +757,8 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
     esp_http_client_set_post_field(client, data, strlen(data));
     ESP_LOGD(TAG, "Free heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT));
 
-    if (!already_connected) {
-        connect_success = connect_wifi(endpoint);
-        while (!connect_success && ++connect_retry_counter < WIFI_CONNECT_RETRIES) {
-            ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", connect_retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
-            connect_success = connect_wifi(endpoint);
-        }
-
-        if (!connect_success) {
-            //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
-            ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
-            for (int i = 10; i >= 0; i--) {
-                ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
-                vTaskDelay(1000 / portTICK_PERIOD_MS);
-            }
-            ESP_LOGE(TAG, "Restarting now.");
-            fflush(stdout);
-            esp_restart();
-        }
-
-        ESP_LOGD(TAG, "Waiting for IP connection...");
-        xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
-        ESP_LOGD(TAG, "Waiting for IP connection... done");
-
-        //Wait to make extra sure Wi-Fi is connected and stable
-        vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
-    }
+    if (!already_connected)
+        wait_for_wifi(endpoint);
 
     ESP_LOGD(TAG, "Initiating call to endpoint %s with payload: %s", endpoint, data);
 
@@ -833,8 +779,9 @@ int post_https(char *endpoint, bool use_bearer, bool already_connected, char *da
             status_code = esp_http_client_get_status_code(client);
             content_length = esp_http_client_get_content_length(client);
             if (content_length > 0) {
-                response = malloc(sizeof(char) * content_length); //DONE: checked that malloc() is balanced by free()
+                response = malloc(sizeof(char) * content_length + 1);
                 esp_http_client_read(client, response, content_length);
+                response[content_length] = '\0';
                 if (status_code != HTTPSTATUS_OK) {
                     ESP_LOGE(TAG, "Status Code: %d Response Length: %d", status_code,
                         content_length);
@@ -1150,6 +1097,34 @@ bool connect_wifi(char *taskString) {
         ESP_LOGE(TAG, "%s failed to get access to 802_11 resource witin %s", taskString, MAX_WAIT_802_11_TXT);
         return false;
     }
+}
+
+void wait_for_wifi(char *endpoint)
+{
+    bool connect_success = connect_wifi(endpoint);
+    for (int retry_counter = 0; !connect_success && retry_counter < WIFI_CONNECT_RETRIES; retry_counter++) {
+        ESP_LOGE(TAG, "Failed to connect to Wi-Fi (%d/%d) at %s", retry_counter, WIFI_CONNECT_RETRIES, esp_log_system_timestamp());
+        connect_success = connect_wifi(endpoint);
+    }
+
+    if (!connect_success) {
+        //if still not managed to upload data after many retries; then a reset may be needed to avoid worse...
+        ESP_LOGD(TAG, "Minimum free heap size: %d bytes", esp_get_minimum_free_heap_size());
+        for (int i = 10; i >= 0; i--) {
+            ESP_LOGE(TAG, "Could still not get connection; restarting in %d seconds...", i);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+        ESP_LOGE(TAG, "Restarting now.");
+        fflush(stdout);
+        esp_restart();
+    }
+
+    ESP_LOGD(TAG, "Waiting for IP connection...");
+    xEventGroupWaitBits(wifi_event_group, WIFI_CONNECTED_EVENT, false, true, portMAX_DELAY);
+    ESP_LOGD(TAG, "Waiting for IP connection... done");
+
+    //Wait to make extra sure Wi-Fi is connected and stable
+    vTaskDelay(HTTPS_PRE_WAIT_MS / portTICK_PERIOD_MS);
 }
 
 void initialize_nvs() {
