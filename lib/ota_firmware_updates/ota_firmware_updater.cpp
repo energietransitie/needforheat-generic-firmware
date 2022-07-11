@@ -21,6 +21,7 @@ extern "C"
 #include <delay.hpp>
 #include <measurements.hpp>
 #include <nvs.hpp>
+#include <format.hpp>
 
 #include <esp_log.h>
 #include <esp_http_client.h>
@@ -47,22 +48,6 @@ namespace OTAFirmwareUpdater
 
         std::string updateCheckURL("");
         std::string updateDownloadURL("");
-
-        template <typename... Args>
-        std::string Format(const std::string &fmt, Args... args)
-        {
-            auto size = std::snprintf(nullptr, 0, fmt.c_str(), args...);
-
-            std::string result;
-            result.resize(size + 1);
-
-            std::snprintf(&result[0], result.size(), fmt.c_str(), args...);
-
-            // Remove null-terminator (not needed for std::string).
-            result.pop_back();
-
-            return result;
-        }
 
         void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
         {
@@ -179,8 +164,8 @@ namespace OTAFirmwareUpdater
 
     void SetLocation(const char *org, const char *repo, const char *fileName)
     {
-        updateCheckURL = Format(UPDATE_CHECK_URL, org, repo, fileName);
-        updateDownloadURL = Format(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
+        updateCheckURL = Format::String(UPDATE_CHECK_URL, org, repo, fileName);
+        updateDownloadURL = Format::String(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
         ESP_LOGD(TAG, "Set update check URL to: %s\nSet update download URL to: %s", updateCheckURL.c_str(), updateDownloadURL.c_str());
     }
 
@@ -262,7 +247,7 @@ namespace OTAFirmwareUpdater
         LogFirmwareToBackend("new_fw", version);
 
         // Insert version number into the URL.
-        auto downloadURL = Format(updateDownloadURL, version.c_str());
+        auto downloadURL = Format::String(updateDownloadURL, version.c_str());
 
         InstallUpdate(downloadURL);
     }
