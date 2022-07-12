@@ -47,6 +47,20 @@ namespace NVS
         return CloseNVS(handle);
     }
 
+    esp_err_t Set(const char *ns, const char *key, uint32_t val)
+    {
+        nvs_handle_t handle;
+        auto err = OpenNVS(ns, NVS_READWRITE, handle);
+        if (err != ESP_OK)
+            return err;
+
+        err = nvs_set_u32(handle, key, val);
+        if (err != ESP_OK)
+            return err;
+
+        return CloseNVS(handle);
+    }
+
     esp_err_t Get(const char *ns, const char *key, std::string &outVal)
     {
         nvs_handle_t handle;
