@@ -89,6 +89,16 @@ namespace NVS
         return nvs_get_i32(handle, key, &outVal);
     }
 
+    esp_err_t Get(const char *ns, const char *key, uint32_t &outVal)
+    {
+        nvs_handle_t handle;
+        auto err = OpenNVS(ns, NVS_READONLY, handle);
+        if (err != ESP_OK)
+            return err;
+
+        return nvs_get_u32(handle, key, &outVal);
+    }
+
     esp_err_t Erase(const char *ns, const char *key)
     {
         nvs_handle_t handle;

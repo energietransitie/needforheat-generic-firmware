@@ -67,6 +67,17 @@ namespace NVS
     esp_err_t Get(const char *ns, const char *key, int32_t &outVal);
 
     /**
+     * Get uint32_t value for given key from NVS.
+     *
+     * @param ns NVS namespace.
+     * @param key Key to set.
+     * @param outVal Read value.
+     *
+     * @returns ESP error.
+     */
+    esp_err_t Get(const char *ns, const char *key, uint32_t &outVal);
+
+    /**
      * Erase key value pair of given key.
      *
      * @param ns NVS namespace.
