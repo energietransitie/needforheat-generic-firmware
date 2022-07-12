@@ -12,6 +12,13 @@
 namespace NVS
 {
     /**
+     * Initialize NVS.
+     * 
+     * This function will only initialize NVS once.
+     */
+    void Initialize();
+
+    /**
      * Set string value for given key in NVS.
      *
      * @param ns NVS namespace.
