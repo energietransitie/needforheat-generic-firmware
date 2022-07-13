@@ -42,10 +42,9 @@ namespace HTTPUtil
             return ESP_OK;
         }
 
-        int Cleanup(esp_http_client_handle_t &client, char *endpoint)
+        int Cleanup(esp_http_client_handle_t &client)
         {
             esp_http_client_cleanup(client);
-            disconnect_wifi(endpoint);
             return 400;
         }
     }
@@ -53,10 +52,6 @@ namespace HTTPUtil
     int HTTPRequest(esp_http_client_config_t config, headers_t &headersReceive, buffer_t &dataReceive, headers_t headersSend, buffer_t dataSend)
     {
         esp_err_t err = ESP_OK;
-
-        char *endpoint = const_cast<char *>("HTTPUtil::HTTPRequest");
-        
-        wait_for_wifi(endpoint);
 
         // Make sure there are no headers buffered.
         bufferedHeaders.clear();
@@ -75,7 +70,7 @@ namespace HTTPUtil
         err = esp_http_client_open(client, dataSend.size());
         if (Error::CheckAppendName(err, TAG, "An error occured when opening the HTTP connection"))
         {
-            return Cleanup(client, endpoint);
+            return Cleanup(client);
         }
 
         if (dataSend.size() > 0)
@@ -84,7 +79,7 @@ namespace HTTPUtil
             if (bytesSent < dataSend.size())
             {
                 ESP_LOGE(TAG, "Not all data was written.");
-                return Cleanup(client, endpoint);
+                return Cleanup(client);
             }
         }
 
@@ -92,7 +87,7 @@ namespace HTTPUtil
         if (contentLength < 0)
         {
             ESP_LOGE(TAG, "An error occured when fetching headers: %s", esp_err_to_name(err));
-            return Cleanup(client, endpoint);
+            return Cleanup(client);
         }
 
         // Reserve memory for response + null-termination char.
@@ -106,7 +101,7 @@ namespace HTTPUtil
         if (bytesReceived != contentLength)
         {
             ESP_LOGE(TAG, "An error occured when reading response. Expected %d but received %d", contentLength, bytesReceived);
-            return Cleanup(client, endpoint);
+            return Cleanup(client);
         }
 
         // copy buffered headers from HTTPEventHandler.
@@ -116,8 +111,6 @@ namespace HTTPUtil
 
         err = esp_http_client_cleanup(client);
         Error::CheckAppendName(err, TAG, "An error occured when cleaning up HTTP client");
-
-        disconnect_wifi(endpoint);
 
         return statusCode;
     }
