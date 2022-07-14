@@ -1,9 +1,5 @@
 #include "http_util.hpp"
 
-extern "C" {
-    #include <generic_esp_32.h>
-}
-
 namespace HTTPUtil
 {
     namespace
