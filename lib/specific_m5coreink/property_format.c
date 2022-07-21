@@ -7,7 +7,7 @@ const char *format_property[] = {
     "%u", // CO2_CONCENTRATION
     "%.1f", // ROOM_TEMP_CO2
     "%.1f", // HUMIDITY
-    "%1.1f" // PROPERTY_BATTERY_VOLTAGE
+    "%.2f" // PROPERTY_BATTERY_VOLTAGE
 };
 
 // list that tells for each property its name in string format
