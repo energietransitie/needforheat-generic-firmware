@@ -1,5 +1,10 @@
 #include "http_util.hpp"
 
+#include <delay.hpp>
+
+constexpr int HTTPS_CONNECTION_RETRIES = 10;
+constexpr int HTTPS_RETRY_WAIT_MS = 1 * 1000; // 1 second.
+
 namespace HTTPUtil
 {
     namespace
@@ -63,10 +68,27 @@ namespace HTTPUtil
             Error::CheckAppendName(err, TAG, "An error occured when setting header");
         }
 
-        err = esp_http_client_open(client, dataSend.size());
-        if (Error::CheckAppendName(err, TAG, "An error occured when opening the HTTP connection"))
+        for (int tries = 1; tries <= HTTPS_CONNECTION_RETRIES; tries++)
         {
-            return Cleanup(client);
+            err = esp_http_client_open(client, dataSend.size());
+            if (err == ESP_OK)
+                break;
+
+            ESP_LOGE(TAG,
+                     "Failed to open HTTP(S) connection %s (%d/%d) at %s",
+                     esp_err_to_name(err),
+                     tries,
+                     HTTPS_CONNECTION_RETRIES,
+                     esp_log_system_timestamp());
+
+            vTaskDelay(Delay::MilliSeconds(HTTPS_RETRY_WAIT_MS));
+        }
+
+        if (err != ESP_OK)
+        {
+            // We were not able to connect after HTTPS_CONNECTION_RETRIES.
+            // Reboot to avoid worse.
+            esp_restart();
         }
 
         if (dataSend.size() > 0)
