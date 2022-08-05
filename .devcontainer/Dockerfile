@@ -8,6 +8,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install --no-install-recommends -y \
     git \
     gnupg \
+    cmake \
     curl \
     sudo \
     libusb-1.0-0 \
