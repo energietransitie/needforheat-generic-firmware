@@ -1,7 +1,7 @@
 #include "rtc.h"
 #include <time.h>
 #include <sys/time.h>
-#include "i2c_hal.h"
+#include <i2c_hal.h>
 #include "esp_log.h"
 
 // private global variables
@@ -48,47 +48,31 @@ void rtc_print_time() {
 }
 
 // set rtc alarm for next wake up
-void rtc_set_alarm(interval_t interval) {
- time_t unix_time;
- struct tm rtc_time, *new_time;
+void rtc_set_alarm(time_t alarm_time) {
   uint8_t reg;
   // clear alarm and timer flag
   bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
   reg &= ~(BM8563_AF | BM8563_TF);
   bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &reg);
 
-  // Decide to use timer or alarm based on given interval
-  if (interval >= SCHEDULER_INTERVAL_10S && interval < SCHEDULER_INTERVAL_1M) { // use timer
-    // enable timer interrupt and disable alarm interrupt
-    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
-    reg &= ~(BM8563_AIE);
-    reg |= (BM8563_TIE);
-    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &reg);
-    
-    // set timer count register
-    bm8563_ioctl(&bm8563, BM8563_TIMER_WRITE, &interval);
-    
-    // enable timer and set clock frequency to 1 Hz
-    reg = 0 | (BM8563_TIMER_ENABLE | BM8563_TIMER_1HZ);
-    bm8563_ioctl(&bm8563, BM8563_TIMER_CONTROL_WRITE, &reg);
-  }
-  else if (interval >= SCHEDULER_INTERVAL_1M && interval <= SCHEDULER_INTERVAL_12U) { // use alarm
-    // enable alarm interrupt and disable timer interrupt
-    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
-    reg |= (BM8563_AIE);
-    reg &= ~(BM8563_TIE);
-    bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &reg);
+  // enable alarm interrupt and disable timer interrupt
+  bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_READ, &reg);
+  reg |= (BM8563_AIE);
+  reg &= ~(BM8563_TIE);
+  bm8563_ioctl(&bm8563, BM8563_CONTROL_STATUS2_WRITE, &reg);
 
-    // add interval to currrent time
-    unix_time = time(NULL);
-    unix_time += interval;
-    new_time = localtime(&unix_time);
+  struct tm rtc_time = *(localtime(&alarm_time));
 
-    // set rtc alarm with this new time
-    rtc_time.tm_wday = BM8563_ALARM_NONE;
-    rtc_time.tm_mday = BM8563_ALARM_NONE;
-    rtc_time.tm_min = new_time->tm_min;
-    rtc_time.tm_hour = new_time->tm_hour;
-    bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_time);
-  }
+  // set rtc alarm.
+  bm8563_ioctl(&bm8563, BM8563_ALARM_SET, &rtc_time);
+}
+
+// get the time that the RTC alarm was set to
+time_t rtc_get_alarm() {
+  struct tm rtc_time;
+
+  // read the rtc alarm
+  bm8563_ioctl(&bm8563, BM8563_ALARM_READ, &rtc_time);
+
+  return mktime(&rtc_time);
 }

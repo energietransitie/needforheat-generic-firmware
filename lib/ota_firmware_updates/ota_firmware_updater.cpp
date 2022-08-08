@@ -8,19 +8,16 @@
 #include <cstdio>
 #include <utility>
 
-// This is necessary for define statements from generic_esp_32 which is C code.
-extern "C"
-{
-#include <generic_esp_32.h>
-#include <scheduler.h>
-}
-
 #include <http_util.hpp>
 #include <semantic_version.hpp>
 #include <error.hpp>
 #include <delay.hpp>
 #include <measurements.hpp>
 #include <nvs.hpp>
+#include <format.hpp>
+#include <secure_upload.hpp>
+#include <scheduler.hpp>
+#include <measurements.hpp>
 
 #include <esp_log.h>
 #include <esp_http_client.h>
@@ -48,48 +45,12 @@ namespace OTAFirmwareUpdater
         std::string updateCheckURL("");
         std::string updateDownloadURL("");
 
-        template <typename... Args>
-        std::string Format(const std::string &fmt, Args... args)
-        {
-            auto size = std::snprintf(nullptr, 0, fmt.c_str(), args...);
-
-            std::string result;
-            result.resize(size + 1);
-
-            std::snprintf(&result[0], result.size(), fmt.c_str(), args...);
-
-            // Remove null-terminator (not needed for std::string).
-            result.pop_back();
-
-            return result;
-        }
+        auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 
         void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
         {
-            std::string url = TWOMES_SERVER + std::string(VARIABLE_UPLOAD_ENDPOINT);
-
-            esp_http_client_config_t config{};
-            config.url = url.c_str();
-            config.cert_pem = isrg_root_pem_start;
-            config.method = HTTP_METHOD_POST;
-            config.transport_type = HTTP_TRANSPORT_OVER_SSL;
-            config.is_async = false;
-
-            HTTPUtil::headers_t headersSend;
-            headersSend["user-agent"] = "ota_firmware_updater";
-            headersSend["accept"] = "*/*";
-            headersSend["Authorization"] = "Bearer " + std::string(get_bearer());
-            headersSend["Content-Type"] = "application/json";
-
-            HTTPUtil::buffer_t dataSend = Measurements::CreateRequestBodyVariable(propertyName, Measurements::MeasurementValue(version));
-
-            ESP_LOGD(TAG, "Sending meta measurement value to backend with length: %d, data:\n%s", dataSend.size(), dataSend.c_str());
-
-            HTTPUtil::headers_t headersReceive;
-            HTTPUtil::buffer_t dataReceive;
-
-            auto statusCode = HTTPUtil::HTTPRequest(config, headersReceive, dataReceive, headersSend, dataSend);
-            ESP_LOGI(TAG, "Status code: %d, Response:\n%s", statusCode, dataReceive.data());
+            Measurements::Measurement measurement(propertyName, version);
+            secureUploadQueue.AddMeasurement(measurement);
         }
 
         update_available_t FindUpdates()
@@ -163,24 +124,20 @@ namespace OTAFirmwareUpdater
             config.buffer_size_tx = 1024;
             config.is_async = false;
 
-            char *endpoint = const_cast<char *>("OTAFirmwareUpdater::InstallUpdate");
-
-            wait_for_wifi(endpoint);
             err = esp_https_ota(&config);
-            disconnect_wifi(endpoint);
             if (Error::CheckAppendName(err, TAG, "An error occured while performing HTTP OTA-update"))
                 return;
 
             ESP_LOGI(TAG, "OTA firmware update was successful. New firmware will be booted after reboot.");
 
-            scheduler_request_restart();
+            Scheduler::RequestRestart();
         }
     } // namespace
 
     void SetLocation(const char *org, const char *repo, const char *fileName)
     {
-        updateCheckURL = Format(UPDATE_CHECK_URL, org, repo, fileName);
-        updateDownloadURL = Format(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
+        updateCheckURL = Format::String(UPDATE_CHECK_URL, org, repo, fileName);
+        updateDownloadURL = Format::String(UPDATE_DOWNLOAD_URL, org, repo, "%s", fileName);
         ESP_LOGD(TAG, "Set update check URL to: %s\nSet update download URL to: %s", updateCheckURL.c_str(), updateDownloadURL.c_str());
     }
 
@@ -195,17 +152,11 @@ namespace OTAFirmwareUpdater
 
     void OTAFirmwareUpdaterTask(void *pvParams)
     {
-        ESP_LOGI(TAG, "Task started.");
+        // Initialize Measurement formatters.
+        Measurements::Measurement::AddFormatter("booted_fw", "%s");
+        Measurements::Measurement::AddFormatter("new_fw", "%s");
 
         Check();
-
-#if defined M5STACK_COREINK
-        // Signal that the task is done.
-        xEventGroupSetBits(scheduler_taskevents, GET_TASK_BIT_FROM_ARG(pvParams));
-        vTaskDelete(NULL);
-#elif defined ESP32DEV
-        vTaskDelay(Delay::Hours(24));
-#endif // defined M5STACK_COREINK
     }
 
     void Check()
@@ -262,7 +213,7 @@ namespace OTAFirmwareUpdater
         LogFirmwareToBackend("new_fw", version);
 
         // Insert version number into the URL.
-        auto downloadURL = Format(updateDownloadURL, version.c_str());
+        auto downloadURL = Format::String(updateDownloadURL, version.c_str());
 
         InstallUpdate(downloadURL);
     }

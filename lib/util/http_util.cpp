@@ -1,8 +1,9 @@
 #include "http_util.hpp"
 
-extern "C" {
-    #include <generic_esp_32.h>
-}
+#include <delay.hpp>
+
+constexpr int HTTPS_CONNECTION_RETRIES = 10;
+constexpr int HTTPS_RETRY_WAIT_MS = 1 * 1000; // 1 second.
 
 namespace HTTPUtil
 {
@@ -42,10 +43,9 @@ namespace HTTPUtil
             return ESP_OK;
         }
 
-        int Cleanup(esp_http_client_handle_t &client, char *endpoint)
+        int Cleanup(esp_http_client_handle_t &client)
         {
             esp_http_client_cleanup(client);
-            disconnect_wifi(endpoint);
             return 400;
         }
     }
@@ -53,10 +53,6 @@ namespace HTTPUtil
     int HTTPRequest(esp_http_client_config_t config, headers_t &headersReceive, buffer_t &dataReceive, headers_t headersSend, buffer_t dataSend)
     {
         esp_err_t err = ESP_OK;
-
-        char *endpoint = const_cast<char *>("HTTPUtil::HTTPRequest");
-        
-        wait_for_wifi(endpoint);
 
         // Make sure there are no headers buffered.
         bufferedHeaders.clear();
@@ -72,10 +68,27 @@ namespace HTTPUtil
             Error::CheckAppendName(err, TAG, "An error occured when setting header");
         }
 
-        err = esp_http_client_open(client, dataSend.size());
-        if (Error::CheckAppendName(err, TAG, "An error occured when opening the HTTP connection"))
+        for (int tries = 1; tries <= HTTPS_CONNECTION_RETRIES; tries++)
         {
-            return Cleanup(client, endpoint);
+            err = esp_http_client_open(client, dataSend.size());
+            if (err == ESP_OK)
+                break;
+
+            ESP_LOGE(TAG,
+                     "Failed to open HTTP(S) connection %s (%d/%d) at %s",
+                     esp_err_to_name(err),
+                     tries,
+                     HTTPS_CONNECTION_RETRIES,
+                     esp_log_system_timestamp());
+
+            vTaskDelay(Delay::MilliSeconds(HTTPS_RETRY_WAIT_MS));
+        }
+
+        if (err != ESP_OK)
+        {
+            // We were not able to connect after HTTPS_CONNECTION_RETRIES.
+            // Reboot to avoid worse.
+            esp_restart();
         }
 
         if (dataSend.size() > 0)
@@ -84,7 +97,7 @@ namespace HTTPUtil
             if (bytesSent < dataSend.size())
             {
                 ESP_LOGE(TAG, "Not all data was written.");
-                return Cleanup(client, endpoint);
+                return Cleanup(client);
             }
         }
 
@@ -92,7 +105,7 @@ namespace HTTPUtil
         if (contentLength < 0)
         {
             ESP_LOGE(TAG, "An error occured when fetching headers: %s", esp_err_to_name(err));
-            return Cleanup(client, endpoint);
+            return Cleanup(client);
         }
 
         // Reserve memory for response + null-termination char.
@@ -106,7 +119,7 @@ namespace HTTPUtil
         if (bytesReceived != contentLength)
         {
             ESP_LOGE(TAG, "An error occured when reading response. Expected %d but received %d", contentLength, bytesReceived);
-            return Cleanup(client, endpoint);
+            return Cleanup(client);
         }
 
         // copy buffered headers from HTTPEventHandler.
@@ -116,8 +129,6 @@ namespace HTTPUtil
 
         err = esp_http_client_cleanup(client);
         Error::CheckAppendName(err, TAG, "An error occured when cleaning up HTTP client");
-
-        disconnect_wifi(endpoint);
 
         return statusCode;
     }
