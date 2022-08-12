@@ -1,5 +1,6 @@
+#include <specific_m5coreink/powerpin.h>
+
 #include <driver/gpio.h>
-#include "powerpin.h"
 
 // setup and set GPIO 12
 void powerpin_set() {

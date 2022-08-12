@@ -1,7 +1,7 @@
-#include "rtc.h"
+#include <specific_m5coreink/rtc.h>
 #include <time.h>
 #include <sys/time.h>
-#include "../i2c_hal/i2c_hal.h"
+#include <i2c_hal.h>
 #include <esp_log.h>
 
 // private global variables

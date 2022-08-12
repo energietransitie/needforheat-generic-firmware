@@ -4,7 +4,7 @@
 
 extern "C"
 {
-    #include "../specific_m5coreink/powerpin.h"
+    #include <specific_m5coreink/powerpin.h>
 }
 
 constexpr gpio_num_t PIN_BUZZER = GPIO_NUM_2;

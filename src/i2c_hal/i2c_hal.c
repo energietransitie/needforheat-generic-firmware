@@ -1,4 +1,4 @@
-#include "i2c_hal.h"
+#include <i2c_hal.h>
 #include <driver/i2c.h>
 #include <driver/gpio.h>
 #include <esp_intr_alloc.h>

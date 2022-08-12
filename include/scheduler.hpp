@@ -4,11 +4,6 @@
 
 #include <freertos/FreeRTOS.h>
 
-extern "C"
-{
-#include "../src/specific_m5coreink/rtc.h"
-}
-
 namespace Scheduler
 {
 	/**

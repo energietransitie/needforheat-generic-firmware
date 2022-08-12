@@ -16,8 +16,8 @@
 
 extern "C"
 {
-#include "../specific_m5coreink/powerpin.h"
-#include "../specific_m5coreink/rtc.h"
+#include <specific_m5coreink/powerpin.h>
+#include <specific_m5coreink/rtc.h>
 }
 
 constexpr const char *TAG = "Scheduler";
