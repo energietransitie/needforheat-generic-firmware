@@ -221,6 +221,17 @@ namespace Scheduler
 		id++;
 	}
 
+	Task *GetTask(const std::string &name)
+	{
+		for (auto &task : s_tasks)
+		{
+			if (task.name == name)
+				return &task;
+		}
+		
+		return nullptr;
+	}
+
 	void Start()
 	{
 		xTaskCreatePinnedToCore(SchedulerTask,

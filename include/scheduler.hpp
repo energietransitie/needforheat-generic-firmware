@@ -107,6 +107,18 @@ namespace Scheduler
 				 Interval interval_s);
 
 	/**
+	 * Get a task that was added to the scheduler.
+	 * This can be used to edit a task.
+	 * 
+	 * DO NOT CALL THIS OR USE THE POINTER AFTER CALLING Scheduler::Start()!
+	 * 
+	 * @param name The task name.
+	 * 
+	 * @returns A pointer to the added task. nullptr if the task name was not found.
+	 */
+	Task *GetTask(const std::string &name);
+
+	/**
 	 * Start the scheduler.
 	 *
 	 * This will start the tasks according to their scheduled interval.
