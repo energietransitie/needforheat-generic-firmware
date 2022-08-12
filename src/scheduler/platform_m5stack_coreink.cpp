@@ -13,12 +13,8 @@
 #include <freertos/task.h>
 
 #include <util/delay.hpp>
-
-extern "C"
-{
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
-}
 
 constexpr const char *TAG = "Scheduler";
 

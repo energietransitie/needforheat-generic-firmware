@@ -21,12 +21,8 @@
 #include <util/format.hpp>
 #include <util/delay.hpp>
 #include <util/buttons.hpp>
-
-extern "C"
-{
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
-}
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>

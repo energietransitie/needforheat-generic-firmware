@@ -1,6 +1,11 @@
 #ifndef RTC_H
 #define RTC_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif // __cplusplus
+
 #include <stdbool.h>
 #include <bm8563.h>
 
@@ -12,5 +17,9 @@ void rtc_syncronize_sys_time();
 void rtc_print_time();
 void rtc_set_alarm(time_t);
 time_t rtc_get_alarm();
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
 
 #endif
