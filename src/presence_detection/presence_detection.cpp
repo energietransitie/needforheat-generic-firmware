@@ -2,14 +2,12 @@
 
 #include <cstdlib>
 #include <vector>
-#include <string>
 #include <set>
 #include <regex>
 #include <string>
 
 #include <esp_log.h>
 #include <esp_bt.h>
-#include <esp_bt_defs.h>
 #include <esp_bt_main.h>
 #include <esp_gatt_common_api.h>
 #include <esp_gap_bt_api.h>
@@ -124,9 +122,7 @@ namespace PresenceDetection
 		// Define them here. You can use an array initializer of string:
 		// MACAddress({0xfa, 0xfa, 0xfa, 0xfa, 0xfa, 0xfa}),
 		// MACAddress("fa:fa:fa:fa:fa:fa"),
-		static std::vector<MACAddress> s_macAddresses = {
-
-		};
+		static std::vector<MACAddress> s_macAddresses;
 
 		static bool s_initialized = false;
 
@@ -210,6 +206,16 @@ namespace PresenceDetection
 			return ESP_OK;
 		}
 	} // namespace
+
+	void AddMacAddress(const esp_bd_addr_t &mac)
+	{
+		s_macAddresses.push_back(mac);
+	}
+
+	void AddMacAddress(const std::string &mac)
+	{
+		s_macAddresses.push_back(mac);
+	}
 
 	void PresenceDetectionTask(void *taskInfo)
 	{
