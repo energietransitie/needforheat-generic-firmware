@@ -1,0 +1,42 @@
+{
+    "name": "twomes-generic-esp-firmware",
+    "version": "1.0.0",
+    "description": "Generic firmware library for Twomes devices",
+    "keywords": "twomes, m5stack, espidf",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/energietransitie/twomes-generic-esp-firmware.git"
+    },
+    "authors": [
+        {
+            "name": "Henri ter Hofte",
+            "url": "https://github.com/henriterhofte",
+            "maintainer": true
+        },
+        {
+            "name": "Kevin Jansen",
+            "url": "https://github.com/KevinJan18"
+        },
+        {
+            "name": "Nick van Ravenzwaaij",
+            "url": "https://github.com/n-vr"
+        },
+        {
+            "name": "Tiemen Molenaar",
+            "url": "https://github.com/Tiemen-M"
+        }
+    ],
+    "license": "Apache-2.0",
+    "homepage": "https://www.energietransitiewindesheim.nl/",
+    "examples": [
+        {
+            "name": "Presence detector",
+            "base": "examples/presence_detector"
+        }
+    ],
+    "dependencies": {
+        "bm8563": "https://github.com/tuupola/bm8563"
+    },
+    "frameworks": "espidf",
+    "platforms": "esp32"
+}
