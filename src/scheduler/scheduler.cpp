@@ -235,6 +235,11 @@ namespace Scheduler
 		return nullptr;
 	}
 
+	void ClearTasks()
+	{
+		s_tasks.clear();
+	}
+
 	void Start()
 	{
 		xTaskCreatePinnedToCore(SchedulerTask,

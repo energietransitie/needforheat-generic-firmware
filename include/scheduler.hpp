@@ -114,6 +114,11 @@ namespace Scheduler
 	Task *GetTask(const std::string &name);
 
 	/**
+	 * Clear all tasks that were added to the scheduler.
+	 */
+	void ClearTasks();
+
+	/**
 	 * Start the scheduler.
 	 *
 	 * This will start the tasks according to their scheduled interval.
