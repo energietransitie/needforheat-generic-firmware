@@ -23,6 +23,7 @@
 #include <util/buttons.hpp>
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
+#include <scheduler.hpp>
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
@@ -71,6 +72,8 @@ namespace GenericESP32Firmware
 
         static EventGroupHandle_t s_wifiEventGroup;
         static bool s_wifiInitialized = false;
+
+        static bool s_postProvisioningNeeded = false;
 
         static Buttons::ButtonPressHandler *s_buttonPressHandler;
 
@@ -405,6 +408,9 @@ namespace GenericESP32Firmware
         {
             // Immediately sync time.
             InitializeTimeSync();
+
+            // Run all tasks in the scheduler once.
+            Scheduler::RunAll();
         }
 
         /**
@@ -512,7 +518,8 @@ namespace GenericESP32Firmware
             // WiFi was initialized during provisioning.
             s_wifiInitialized = true;
 
-            PostProvisioning();
+            // Signal that provisioning just happened.
+            s_postProvisioningNeeded = true;
 
             return ESP_OK;
         }
@@ -620,6 +627,9 @@ namespace GenericESP32Firmware
 #endif
 
         ActivateDevice();
+
+        if (s_postProvisioningNeeded)
+            PostProvisioning();
 
         ESP_LOGI(TAG, "Finished initialization.");
     }
