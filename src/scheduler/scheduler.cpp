@@ -136,6 +136,8 @@ namespace Scheduler
 		 */
 		void SchedulerTask(void *pvParams)
 		{
+			auto runImmediately = static_cast<int>(reinterpret_cast<int>(pvParams));
+
 			while (true)
 			{
 				ESP_LOGD(TAG, "Starting scheduler.");
@@ -147,8 +149,9 @@ namespace Scheduler
 				// Loop over every task.
 				for (const auto &task : s_tasks)
 				{
-					// Check if the bootMinute is exactly a multiple of the interval.
-					if (GetCurrentTaskTime() % static_cast<time_t>(task.interval_s) == 0)
+					// Check if the bootMinute is exactly a multiple of the interval
+					// or tasks need to run immediately.
+					if (GetCurrentTaskTime() % static_cast<time_t>(task.interval_s) == 0 || runImmediately)
 					{
 						ESP_LOGD(TAG, "Starting task \"%s\".", task.name.c_str());
 
@@ -228,7 +231,7 @@ namespace Scheduler
 			if (task.name == name)
 				return &task;
 		}
-		
+
 		return nullptr;
 	}
 
@@ -237,10 +240,54 @@ namespace Scheduler
 		xTaskCreatePinnedToCore(SchedulerTask,
 								"Scheduler task",
 								4096,
-								nullptr,
+								reinterpret_cast<void *>(false),
 								configMAX_PRIORITIES - 1,
 								nullptr,
 								APP_CPU_NUM);
+	}
+
+	void RunAll()
+	{
+		// Reset started task bits and count.
+		s_startedTaskBits = 0;
+		int startedTasks = 0;
+
+		// Loop over every task.
+		for (const auto &task : s_tasks)
+		{
+			ESP_LOGD(TAG, "Starting task \"%s\".", task.name.c_str());
+
+			// Add the task we are about to start to the started task bits.
+			s_startedTaskBits |= 1 << task.id;
+
+			// Create information that the TaskWrapper needs.
+			// This will be deleted by the TaskWrapper.
+			auto info = new TaskWrapperInfo({task.function, task.name, task.params, task.id});
+
+			// Start the FreeRTOS task inside the TaskWrapper.
+			// We do not need the handle, so it is nullptr.
+			xTaskCreatePinnedToCore(TaskWrapper,
+									task.name.c_str(),
+									task.stackDepth,
+									info,
+									task.priority,
+									nullptr,
+									APP_CPU_NUM);
+
+			startedTasks++;
+		}
+
+		if (startedTasks == 0)
+		{
+			ESP_LOGD(TAG, "No tasks were added to the scheduler.");
+			return;
+		}
+
+		// Wait for all the bits to be set,
+		// which means all tasks are done.
+		xEventGroupWaitBits(s_tasksEventGroup, s_startedTaskBits, pdTRUE, pdTRUE, portMAX_DELAY);
+
+		ESP_LOGD(TAG, "All tasks have finished running.");
 	}
 
 	time_t GetCurrentTaskTime()

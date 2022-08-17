@@ -121,6 +121,12 @@ namespace Scheduler
 	void Start();
 
 	/**
+	 * Immediately run all the tasks that were added to the scheduler once
+	 * and wait for them to finish.
+	 */
+	void RunAll();
+
+	/**
 	 * Get the current task time.
 	 *
 	 * This is the time when this task interval was started.
