@@ -25,6 +25,10 @@
 #include <specific_m5coreink/rtc.h>
 #include <scheduler.hpp>
 
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#include <ota_firmware_updater.hpp>
+#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
 #endif // CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
@@ -408,6 +412,11 @@ namespace GenericESP32Firmware
         {
             // Immediately sync time.
             InitializeTimeSync();
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+            // Log the booted firmware version to the backend.
+            auto appDescription = esp_ota_get_app_description();
+            OTAFirmwareUpdater::LogFirmwareToBackend("booted_fw", appDescription->version);
+#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
             // Run all tasks in the scheduler once.
             Scheduler::RunAll();
@@ -590,6 +599,10 @@ namespace GenericESP32Firmware
         // otherwise booting by the RTC signal will not succeed.
         powerpin_set();
 #endif // M5STACK_COREINK
+
+#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+        OTAFirmwareUpdater::CheckUpdateFinishedSuccessfully();
+#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
         s_deviceTypeName = deviceTypeName;
 
