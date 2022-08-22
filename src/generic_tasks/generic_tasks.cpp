@@ -5,6 +5,10 @@
 #include <secure_upload.hpp>
 #include <generic_esp_32.hpp>
 
+#ifdef M5STACK_COREINK
+#include <specific_m5coreink/battery_voltage.hpp>
+#endif // M5STACK_COREINK
+
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
 #include <presence_detection.hpp>
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
@@ -61,6 +65,13 @@ namespace GenericTasks
 						   nullptr,
 						   1,
 						   Scheduler::Interval::HOURS_24);
+
+		Scheduler::AddTask(M5CoreInkSpecific::BatteryVoltageTask,
+						   "Battery voltage task",
+						   4096,
+						   nullptr,
+						   1,
+						   Scheduler::Interval::MINUTES_10);
 #endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
