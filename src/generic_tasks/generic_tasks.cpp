@@ -52,6 +52,8 @@ namespace GenericTasks
 
 	void AddTasksToScheduler()
 	{
+		Scheduler::ClearTasks();
+
 #ifdef M5STACK_COREINK
 		Scheduler::AddTask(TimeSyncTask,
 						   "Time sync task",

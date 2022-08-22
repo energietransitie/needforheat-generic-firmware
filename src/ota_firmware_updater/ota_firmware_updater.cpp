@@ -46,12 +46,6 @@ namespace OTAFirmwareUpdater
 
         auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 
-        void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
-        {
-            Measurements::Measurement measurement(propertyName, version);
-            secureUploadQueue.AddMeasurement(measurement);
-        }
-
         update_available_t FindUpdates()
         {
             ESP_LOGI(TAG, "Checking for available updates.");
@@ -273,5 +267,14 @@ namespace OTAFirmwareUpdater
             // If marking valid fails, mark invalid.
             esp_ota_mark_app_invalid_rollback_and_reboot();
         }
+    }
+
+    void LogFirmwareToBackend(const std::string propertyName, const std::string &version)
+    {
+        // Initialize Measurement formatter.
+        Measurements::Measurement::AddFormatter(propertyName, "%s");
+
+        Measurements::Measurement measurement(propertyName, version.c_str());
+        secureUploadQueue.AddMeasurement(measurement);
     }
 } // namespace OTAFirmwareUpdater

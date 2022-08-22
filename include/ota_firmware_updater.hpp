@@ -9,7 +9,7 @@ namespace OTAFirmwareUpdater
 
     /**
      * Set the update check and download location.
-     * 
+     *
      * @param org GitHub organisation name.
      * @param repo GitHub repository name.
      * @param fileName Name of the GitHub release asset to download.
@@ -37,6 +37,14 @@ namespace OTAFirmwareUpdater
      * Check if the booted firmware needs to be veriefied or rolled back.
      */
     void CheckUpdateFinishedSuccessfully();
+
+    /**
+     * Log firmware version to twomes backend.
+     * 
+     * @param propertyName The name of the property. Can be "booted_fw" or "new_fw".
+     * @param version The version as a string.
+     */
+    void LogFirmwareToBackend(const std::string propertyName, const std::string &version);
 } // namespace OTAFirmwareUpdater
 
 #endif // OTA_FIRMWARE_UPDATER_HPP
