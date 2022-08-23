@@ -35,7 +35,8 @@
         }
     ],
     "dependencies": {
-        "bm8563": "https://github.com/tuupola/bm8563"
+        "bm8563": "https://github.com/tuupola/bm8563",
+        "twomes-provisioning-tools": "https://github.com/energietransitie/twomes-provisioning-tools"
     },
     "frameworks": "espidf",
     "platforms": "esp32"
