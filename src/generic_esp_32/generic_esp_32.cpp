@@ -371,8 +371,8 @@ namespace GenericESP32Firmware
             auto dat = GetDat();
 
             // Log the QR code.
-            auto deviceServiceName = GetDeviceServiceName().c_str();
-            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, deviceServiceName, dat);
+            auto deviceServiceName = GetDeviceServiceName();
+            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, deviceServiceName.c_str(), dat);
             ESP_LOGI(TAG,
                      "QR Code Payload: \n"
                      "\n\n%s\n\n",
@@ -385,7 +385,7 @@ namespace GenericESP32Firmware
 
             // Log the post /device payload.
             auto postDevicePayload = Format::String(POST_DEVICE_PAYLOAD_TEMPLATE,
-                                                    deviceServiceName,
+                                                    deviceServiceName.c_str(),
                                                     s_deviceTypeName.c_str(),
                                                     dat);
             ESP_LOGI(TAG,
@@ -530,9 +530,9 @@ namespace GenericESP32Firmware
 #endif // CONFIG_TWOMES_PROV_TRANSPORT_BLE
 
             wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
-            auto datStr = std::to_string(GetDat()).c_str();
-            auto serviceName = GetDeviceServiceName().c_str();
-            err = wifi_prov_mgr_start_provisioning(security, datStr, serviceName, datStr);
+            auto datStr = std::to_string(GetDat());
+            auto serviceName = GetDeviceServiceName();
+            err = wifi_prov_mgr_start_provisioning(security, datStr.c_str(), serviceName.c_str(), datStr.c_str());
             if (Error::Check(err, TAG))
                 return err;
 
@@ -676,7 +676,8 @@ namespace GenericESP32Firmware
     std::string GetDeviceServiceName()
     {
         uint8_t eth_mac[6];
-        esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
+        auto err = esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
+        Error::CheckAppendName(err, TAG, "An error occured when getting ETH MAC");
 
         return Format::String("%s%02X%02X%02X", DEVICE_SERVICE_NAME_PREFIX, eth_mac[3], eth_mac[4], eth_mac[5]);
     }
