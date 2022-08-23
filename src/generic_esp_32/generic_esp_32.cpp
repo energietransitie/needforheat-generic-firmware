@@ -38,6 +38,7 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
+#include <twomes_provisioning_tools.h>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -67,6 +68,15 @@ constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"dev
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"activation_token\":\"%u\"}";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
+
+// Screen and QR definitions
+constexpr int SCREEN_WIDTH = 200;
+constexpr int SCREEN_HEIGHT = 200;
+constexpr int QR_WHITESPACE = 16;
+
+// Espressif Unified Provisioning
+constexpr const char *EUP_VERSION = "v1";
+constexpr int EUP_POP_LENGTH = 100;
 
 namespace GenericESP32Firmware
 {
@@ -368,6 +378,11 @@ namespace GenericESP32Firmware
                      "\n\n%s\n\n",
                      qrCodePayload.c_str());
 
+#if M5STACK_COREINK
+            // Show QR code on screen.
+            display_qr(qrCodePayload.c_str(), QR_WHITESPACE);
+#endif // M5STACK_COREINK
+
             // Log the post /device payload.
             auto postDevicePayload = Format::String(POST_DEVICE_PAYLOAD_TEMPLATE,
                                                     deviceServiceName,
@@ -625,6 +640,11 @@ namespace GenericESP32Firmware
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeGPIO()");
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
 
+#ifdef M5STACK_COREINK
+        init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+        clear_display();
+#endif // M5STACK_COREINK
+
         err = InitializeProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeProvisioning()");
 
@@ -643,6 +663,12 @@ namespace GenericESP32Firmware
 
         if (s_postProvisioningNeeded)
             PostProvisioning();
+
+        #ifdef M5STACK_COREINK
+        // Show information about what this device does on the screen.
+        display_qr("https://edu.nl/4pujw", QR_WHITESPACE);
+        
+        #endif // M5STACK_COREINK
 
         ESP_LOGI(TAG, "Finished initialization.");
     }
