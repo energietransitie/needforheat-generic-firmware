@@ -103,7 +103,12 @@ namespace NVS
         // Allocate size for the string.
         outVal.resize(length);
 
-        return nvs_get_str(handle, key, &outVal[0], &length);
+        err = nvs_get_str(handle, key, &outVal[0], &length);
+
+        // Remove null-terminator (not needed for std::string).
+        outVal.pop_back();
+
+        return err;
     }
 
     esp_err_t Get(const char *ns, const char *key, int32_t &outVal)

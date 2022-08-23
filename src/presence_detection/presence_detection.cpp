@@ -21,8 +21,11 @@
 #include <util/error.hpp>
 #include <util/delay.hpp>
 #include <util/format.hpp>
+#include <util/nvs.hpp>
+#include <util/strings.hpp>
 
 constexpr const char *TAG = "Presence detection";
+constexpr const char *NVS_NAMESPACE = "twomes_storage";
 
 constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 
@@ -118,10 +121,7 @@ namespace PresenceDetection
 			uint8_t m_octet1, m_octet2, m_octet3, m_octet4, m_octet5, m_octet6;
 		};
 
-		// MAC-addresses are not saved in NVS (yet).
-		// Define them here. You can use an array initializer of string:
-		// MACAddress({0xfa, 0xfa, 0xfa, 0xfa, 0xfa, 0xfa}),
-		// MACAddress("fa:fa:fa:fa:fa:fa"),
+		// List of MAC-addresses to check, retrieved from NVS.
 		static std::vector<MACAddress> s_macAddresses;
 
 		static bool s_initialized = false;
@@ -139,11 +139,6 @@ namespace PresenceDetection
 		{
 			if (event == ESP_BT_GAP_READ_REMOTE_NAME_EVT)
 			{
-				std::string remoteName = reinterpret_cast<const char *>(param->read_rmt_name.rmt_name);
-
-				if (remoteName.empty())
-					return;
-
 				s_responseCount++;
 
 				// When the amount of responses match the amount of MAC-addresses, we are done.
@@ -190,6 +185,38 @@ namespace PresenceDetection
 		}
 
 		/**
+		 * Retrieve MAC-addresses from NVS.
+		 */
+		esp_err_t InitializeMacAddresses()
+		{
+			std::string macAddressList;
+			auto err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList);
+			if (err == ESP_ERR_NVS_NOT_FOUND)
+			{
+				ESP_LOGW(TAG, "Retrieving Bluetooth MAC-addresses for presence detection from NVS was unsuccessful. "
+							  "It is possible that no MAC-addresses were added to NVS storage.");
+				// Not critical and we already logged this. Return ESP_OK.
+				return ESP_OK;
+			}
+			else if (err != ESP_OK)
+			{
+				ESP_LOGE(TAG, "An error occured when reading MAC-addresses from NVS.");
+				return err;
+			}
+
+			auto macAddressStrings = Strings::Split(macAddressList, ';');
+
+			// Add all MAC-address strings to s_macAddresses,
+			// which converts them to esp_bd_addr_t.
+			for (const auto &address : macAddressStrings)
+			{
+				s_macAddresses.push_back(MACAddress(address));
+			}
+
+			return ESP_OK;
+		}
+
+		/**
 		 * Send BT name requests to all addresses in s_macAddresses.
 		 */
 		esp_err_t SendNameRequests()
@@ -225,6 +252,9 @@ namespace PresenceDetection
 		{
 			err = InitializeBluetooth();
 			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
+
+			err = InitializeMacAddresses();
+			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");
 
 			// Add a formatted for the countPresence property.
 			Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%d");
