@@ -139,11 +139,6 @@ namespace PresenceDetection
 		{
 			if (event == ESP_BT_GAP_READ_REMOTE_NAME_EVT)
 			{
-				std::string remoteName = reinterpret_cast<const char *>(param->read_rmt_name.rmt_name);
-
-				if (remoteName.empty())
-					return;
-
 				s_responseCount++;
 
 				// When the amount of responses match the amount of MAC-addresses, we are done.
@@ -213,7 +208,7 @@ namespace PresenceDetection
 
 			// Add all MAC-address strings to s_macAddresses,
 			// which converts them to esp_bd_addr_t.
-			for (const auto &address: macAddressStrings)
+			for (const auto &address : macAddressStrings)
 			{
 				s_macAddresses.push_back(MACAddress(address));
 			}
