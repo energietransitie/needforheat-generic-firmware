@@ -66,6 +66,7 @@ constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"activation_token\":\"%u\"}";
+constexpr const char *POST_PROVISIONING_INFO_LINK = "https://edu.nl/4pujw";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
 
@@ -378,11 +379,6 @@ namespace GenericESP32Firmware
                      "\n\n%s\n\n",
                      qrCodePayload.c_str());
 
-#if M5STACK_COREINK
-            // Show QR code on screen.
-            display_qr(qrCodePayload.c_str(), QR_WHITESPACE);
-#endif // M5STACK_COREINK
-
             // Log the post /device payload.
             auto postDevicePayload = Format::String(POST_DEVICE_PAYLOAD_TEMPLATE,
                                                     deviceServiceName.c_str(),
@@ -508,6 +504,13 @@ namespace GenericESP32Firmware
 
                 return ESP_OK;
             }
+
+#if M5STACK_COREINK
+            // Show QR code on screen.
+            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, GetDeviceServiceName().c_str(), GetDat());
+
+            display_qr(qrCodePayload.c_str(), QR_WHITESPACE);
+#endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
             /* This step is only useful when scheme is wifi_prov_scheme_ble. This will
@@ -642,7 +645,6 @@ namespace GenericESP32Firmware
 
 #ifdef M5STACK_COREINK
         init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-        clear_display();
 #endif // M5STACK_COREINK
 
         err = InitializeProvisioning();
@@ -650,6 +652,11 @@ namespace GenericESP32Firmware
 
         err = StartProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::StartProvisioning()");
+
+#ifdef M5STACK_COREINK
+        // Show information about what this device does on the screen.
+        display_qr(POST_PROVISIONING_INFO_LINK, QR_WHITESPACE);
+#endif // M5STACK_COREINK
 
         err = StartWireless();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::StartWireless()");
@@ -663,12 +670,6 @@ namespace GenericESP32Firmware
 
         if (s_postProvisioningNeeded)
             PostProvisioning();
-
-        #ifdef M5STACK_COREINK
-        // Show information about what this device does on the screen.
-        display_qr("https://edu.nl/4pujw", QR_WHITESPACE);
-        
-        #endif // M5STACK_COREINK
 
         ESP_LOGI(TAG, "Finished initialization.");
     }
