@@ -27,12 +27,17 @@
 constexpr const char *TAG = "Presence detection";
 constexpr const char *NVS_NAMESPACE = "twomes_storage";
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+constexpr int RESPONSE_MAX_WAIT_MS = 20 * 1000; // 20 seconds.
+#else
 constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
+#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
 constexpr const char *MEASUREMENT_PROPERTY_NAME = "countPresence";
 
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
+constexpr EventBits_t EVENT_RESPONSE_RECEIVED = 1 << 1;
 
 namespace PresenceDetection
 {
@@ -139,9 +144,15 @@ namespace PresenceDetection
 		{
 			if (event == ESP_BT_GAP_READ_REMOTE_NAME_EVT)
 			{
-				s_responseCount++;
+				std::string remoteName = reinterpret_cast<const char *>(param->read_rmt_name.rmt_name);
 
-				// When the amount of responses match the amount of MAC-addresses, we are done.
+				if (!remoteName.empty())
+					s_responseCount++;
+
+				// Signal that a response came in.
+				xEventGroupSetBits(s_events, EVENT_RESPONSE_RECEIVED);
+
+				// Signal that ALL responses have come in.
 				if (s_responseCount == s_macAddresses.size())
 				{
 					xEventGroupSetBits(s_events, EVENT_RESPONSES_FINISHED);
@@ -226,6 +237,11 @@ namespace PresenceDetection
 				auto err = esp_bt_gap_read_remote_name(macAddress);
 				if (Error::CheckAppendName(err, TAG, "An error occured when sending BT name request"))
 					return err;
+
+#ifndef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+				// Wait for the current name request to respond or timeout.
+				xEventGroupWaitBits(s_events, EVENT_RESPONSE_RECEIVED, pdTRUE, pdTRUE, Delay::MilliSeconds(RESPONSE_MAX_WAIT_MS));
+#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 			}
 
 			ESP_LOGD(TAG, "Sent %d name request(s).", s_macAddresses.size());
@@ -268,8 +284,10 @@ namespace PresenceDetection
 		err = SendNameRequests();
 		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::SendNameRequests()");
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 		// Wait for all requests to return or timeout.
 		xEventGroupWaitBits(s_events, EVENT_RESPONSES_FINISHED, pdTRUE, pdTRUE, Delay::MilliSeconds(RESPONSE_MAX_WAIT_MS));
+#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
 		ESP_LOGD(TAG, "Received %d name request response(s).", s_responseCount);
 
