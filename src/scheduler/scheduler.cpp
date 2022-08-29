@@ -217,6 +217,13 @@ namespace Scheduler
 			return;
 		}
 
+		if (GetTask(name) != nullptr)
+		{
+			// Task is already added. We can skip this.
+			ESP_LOGD(TAG, "Task with name \"%s\" was already started. Skipping now.", name.c_str());
+			return;
+		}
+
 		Task task = {function, name, stackDepth, params, priority, interval_s, id};
 
 		s_tasks.push_back(std::move(task));
