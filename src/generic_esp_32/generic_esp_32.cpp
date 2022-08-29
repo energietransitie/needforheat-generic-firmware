@@ -38,6 +38,7 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
+#include <twomes_provisioning_tools.h>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -65,8 +66,18 @@ constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"activation_token\":\"%u\"}";
+constexpr const char *POST_PROVISIONING_INFO_LINK = "https://edu.nl/4pujw";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
+
+// Screen and QR definitions
+constexpr int SCREEN_WIDTH = 200;
+constexpr int SCREEN_HEIGHT = 200;
+constexpr int QR_WHITESPACE = 16;
+
+// Espressif Unified Provisioning
+constexpr const char *EUP_VERSION = "v1";
+constexpr int EUP_POP_LENGTH = 100;
 
 namespace GenericESP32Firmware
 {
@@ -361,8 +372,8 @@ namespace GenericESP32Firmware
             auto dat = GetDat();
 
             // Log the QR code.
-            auto deviceServiceName = GetDeviceServiceName().c_str();
-            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, deviceServiceName, dat);
+            auto deviceServiceName = GetDeviceServiceName();
+            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, deviceServiceName.c_str(), dat);
             ESP_LOGI(TAG,
                      "QR Code Payload: \n"
                      "\n\n%s\n\n",
@@ -370,7 +381,7 @@ namespace GenericESP32Firmware
 
             // Log the post /device payload.
             auto postDevicePayload = Format::String(POST_DEVICE_PAYLOAD_TEMPLATE,
-                                                    deviceServiceName,
+                                                    deviceServiceName.c_str(),
                                                     s_deviceTypeName.c_str(),
                                                     dat);
             ESP_LOGI(TAG,
@@ -494,6 +505,13 @@ namespace GenericESP32Firmware
                 return ESP_OK;
             }
 
+#if M5STACK_COREINK
+            // Show QR code on screen.
+            auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, GetDeviceServiceName().c_str(), GetDat());
+
+            display_qr(qrCodePayload.c_str(), QR_WHITESPACE);
+#endif // M5STACK_COREINK
+
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
             /* This step is only useful when scheme is wifi_prov_scheme_ble. This will
              * set a custom 128 bit UUID which will be included in the BLE advertisement
@@ -515,9 +533,9 @@ namespace GenericESP32Firmware
 #endif // CONFIG_TWOMES_PROV_TRANSPORT_BLE
 
             wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
-            auto datStr = std::to_string(GetDat()).c_str();
-            auto serviceName = GetDeviceServiceName().c_str();
-            err = wifi_prov_mgr_start_provisioning(security, datStr, serviceName, datStr);
+            auto datStr = std::to_string(GetDat());
+            auto serviceName = GetDeviceServiceName();
+            err = wifi_prov_mgr_start_provisioning(security, datStr.c_str(), serviceName.c_str(), datStr.c_str());
             if (Error::Check(err, TAG))
                 return err;
 
@@ -625,11 +643,20 @@ namespace GenericESP32Firmware
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeGPIO()");
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
 
+#ifdef M5STACK_COREINK
+        init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
+#endif // M5STACK_COREINK
+
         err = InitializeProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeProvisioning()");
 
         err = StartProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::StartProvisioning()");
+
+#ifdef M5STACK_COREINK
+        // Show information about what this device does on the screen.
+        display_qr(POST_PROVISIONING_INFO_LINK, QR_WHITESPACE);
+#endif // M5STACK_COREINK
 
         err = StartWireless();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::StartWireless()");
@@ -650,7 +677,8 @@ namespace GenericESP32Firmware
     std::string GetDeviceServiceName()
     {
         uint8_t eth_mac[6];
-        esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
+        auto err = esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
+        Error::CheckAppendName(err, TAG, "An error occured when getting ETH MAC");
 
         return Format::String("%s%02X%02X%02X", DEVICE_SERVICE_NAME_PREFIX, eth_mac[3], eth_mac[4], eth_mac[5]);
     }
