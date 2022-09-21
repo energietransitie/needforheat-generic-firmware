@@ -87,6 +87,7 @@ namespace GenericESP32Firmware
 
         static EventGroupHandle_t s_wifiEventGroup;
         static bool s_wifiInitialized = false;
+        static int s_wifiConnectRetries = 0;
 
         static bool s_postProvisioningNeeded = false;
 
@@ -140,8 +141,17 @@ namespace GenericESP32Firmware
                     esp_wifi_connect();
                     break;
                 case WIFI_EVENT_STA_DISCONNECTED:
-                    ESP_LOGD(TAG, "Disconnected.");
-                    xEventGroupSetBits(s_wifiEventGroup, WIFI_DISCONNECTED_EVENT);
+                    if (s_wifiConnectRetries < WIFI_MAX_CONNECT_TRIES)
+                    {
+                        ESP_LOGI(TAG, "Connect to AP retry.");
+                        esp_wifi_connect();
+                        s_wifiConnectRetries++;
+                    }
+                    else
+                    {
+                        ESP_LOGD(TAG, "Disconnected.");
+                        xEventGroupSetBits(s_wifiEventGroup, WIFI_DISCONNECTED_EVENT);
+                    }
                     break;
                 default:
                     break;
@@ -155,6 +165,7 @@ namespace GenericESP32Firmware
                     ESP_LOGD(TAG, "Connected with IP Address:" IPSTR,
                              IP2STR(&((ip_event_got_ip_t *)eventData)->ip_info.ip));
                     xEventGroupSetBits(s_wifiEventGroup, WIFI_CONNECTED_EVENT);
+                    s_wifiConnectRetries = 0;
                     break;
                 default:
                     break;
