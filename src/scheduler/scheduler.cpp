@@ -316,18 +316,27 @@ namespace Scheduler
 
 	std::string GetName(void *&taskInfo)
 	{
+		if (taskInfo == nullptr)
+			return "";
+
 		auto info = reinterpret_cast<TaskWrapperInfo *>(taskInfo);
 		return info->name;
 	}
 
 	void *GetParams(void *&taskInfo)
 	{
+		if (taskInfo == nullptr)
+			return nullptr;
+
 		auto info = reinterpret_cast<TaskWrapperInfo *>(taskInfo);
 		return info->params;
 	}
 
 	uint32_t GetID(void *&taskInfo)
 	{
+		if (taskInfo == nullptr)
+			return -1;
+
 		auto info = reinterpret_cast<TaskWrapperInfo *>(taskInfo);
 		return info->id;
 	}
@@ -349,6 +358,9 @@ namespace Scheduler
 
 	void WaitForOtherTasks(void *&taskInfo)
 	{
+		if (taskInfo == nullptr)
+			return;
+
 		WaitForOtherTasks(GetID(taskInfo));
 	}
 
