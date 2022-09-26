@@ -24,6 +24,9 @@
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
 #include <scheduler.hpp>
+#include <generic_tasks.hpp>
+#include <measurements.hpp>
+#include <secure_upload.hpp>
 
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 #include <ota_firmware_updater.hpp>
@@ -439,6 +442,14 @@ namespace GenericESP32Firmware
             auto appDescription = esp_ota_get_app_description();
             OTAFirmwareUpdater::LogFirmwareToBackend("booted_fw", appDescription->version);
 #endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+
+            ESP_LOGD(TAG, "Sending a heartbeat once.");
+            // Add a measurement formatter for the heartbeat property.
+            Measurements::Measurement::AddFormatter("heartbeat", "%d");
+
+            Measurements::Measurement measurement("heartbeat", 0, time(nullptr));
+            SecureUpload::Queue::GetInstance().AddMeasurement(measurement);
+            GenericTasks::UploadTask(nullptr);
 
             // Run all tasks in the scheduler once.
             Scheduler::RunAll();
