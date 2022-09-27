@@ -52,7 +52,7 @@ namespace Buttons
                     vTaskDelay(Delay::MilliSeconds(500));
 
                     // Call the buttons callback based on the duration of the press.
-                    if (halfSeconds >= LONG_BUTTON_PRESS_DURATION)
+                    if (halfSeconds == LONG_BUTTON_PRESS_DURATION)
                     {
                         if (button->longPressCallback == nullptr)
                         {
