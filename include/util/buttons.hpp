@@ -11,9 +11,6 @@
 
 namespace Buttons
 {
-    // Forward declare so the Button struct can use it.
-    class ButtonPressHandler;
-
     using ButtonCallback_t = void (*)();
 
     /**
@@ -21,7 +18,6 @@ namespace Buttons
      */
     struct Button
     {
-        ButtonPressHandler *handler;
         gpio_num_t gpioNum;
         std::string name;
         int trigger;
@@ -35,14 +31,8 @@ namespace Buttons
      * Handles buttons using interrupts.
      * Can detect short or long presses and use callbacks.
      */
-    class ButtonPressHandler
+    namespace ButtonPressHandler
     {
-    public:
-        /**
-         * Initialize ButtonPressHandler.
-         */
-        ButtonPressHandler();
-
         /**
          * Add a new button to the handler.
          *
@@ -59,31 +49,5 @@ namespace Buttons
                             int trigger,
                             ButtonCallback_t cbShort,
                             ButtonCallback_t cbLong);
-
-    private:
-        /**
-         * FreeRTOS task that is used to handle button presses.
-         *
-         * @param pvParams Task parameters.
-         */
-        friend void ButtonPressHandlerTask(void *pvParams);
-
-        /**
-         * Interrupt service handler for button presses.
-         *
-         * @param pvParams Task parameters.
-         */
-        friend void IRAM_ATTR ISRHandlerGPIO(void *pvParams);
-
-    private:
-        /**
-         * Event queue used by the ISR and handler task.
-         */
-        xQueueHandle m_gpioEventQueue;
-
-        /**
-         * Vector to keep track of all buttons.
-         */
-        std::vector<std::unique_ptr<Button>> m_buttons;
     };
 } // namespace Buttons
