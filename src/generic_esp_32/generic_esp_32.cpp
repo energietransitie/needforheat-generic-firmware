@@ -94,8 +94,6 @@ namespace GenericESP32Firmware
 
         static bool s_postProvisioningNeeded = false;
 
-        static Buttons::ButtonPressHandler *s_buttonPressHandler;
-
         /**
          * Blink an LED on the device.
          *
@@ -340,8 +338,6 @@ namespace GenericESP32Firmware
 #ifndef CONFIG_TWOMES_CUSTOM_GPIO
             ESP_LOGD(TAG, "Initializing GPIO.");
 
-            s_buttonPressHandler = new Buttons::ButtonPressHandler();
-
 #ifdef ESP32DEV
             auto err = ESP32Dev::InitializeGPIO();
 #endif // ESP32DEV
@@ -352,7 +348,7 @@ namespace GenericESP32Firmware
             if (Error::CheckAppendName(err, TAG, "An error occured when initializing GPIO"))
                 return err;
 
-            err = s_buttonPressHandler->AddButton(BUTTON_WIFI_RESET, "Wi-Fi reset", 0, nullptr, ResetWireless);
+            err = Buttons::ButtonPressHandler::AddButton(BUTTON_WIFI_RESET, "Wi-Fi reset", 0, nullptr, ResetWireless);
             if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
                 return err;
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
