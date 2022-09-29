@@ -21,6 +21,7 @@
 #include <util/format.hpp>
 #include <util/delay.hpp>
 #include <util/buttons.hpp>
+#include <util/screen.hpp>
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
 #include <scheduler.hpp>
@@ -41,7 +42,6 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
-#include <twomes_provisioning_tools.h>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -70,17 +70,14 @@ constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"activation_token\":\"%u\"}";
 constexpr const char *POST_PROVISIONING_INFO_LINK = "https://edu.nl/4pujw";
+constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan voor info";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
 
 // Screen and QR definitions
 constexpr int SCREEN_WIDTH = 200;
 constexpr int SCREEN_HEIGHT = 200;
-constexpr int QR_WHITESPACE = 16;
-
-// Espressif Unified Provisioning
-constexpr const char *EUP_VERSION = "v1";
-constexpr int EUP_POP_LENGTH = 100;
+constexpr int QR_PADDING = 16;
 
 namespace GenericESP32Firmware
 {
@@ -93,6 +90,10 @@ namespace GenericESP32Firmware
         static int s_wifiConnectRetries = 0;
 
         static bool s_postProvisioningNeeded = false;
+
+#ifdef M5STACK_COREINK
+        static Screen s_screen;
+#endif // M5STACK_COREINK
 
         /**
          * Blink an LED on the device.
@@ -527,7 +528,7 @@ namespace GenericESP32Firmware
             // Show QR code on screen.
             auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, GetDeviceServiceName().c_str(), GetDat());
 
-            display_qr(qrCodePayload.c_str(), QR_WHITESPACE);
+            s_screen.DisplayQR(qrCodePayload, QR_PADDING);
 #endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
@@ -661,10 +662,6 @@ namespace GenericESP32Firmware
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeGPIO()");
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
 
-#ifdef M5STACK_COREINK
-        init_display(SCREEN_WIDTH, SCREEN_HEIGHT);
-#endif // M5STACK_COREINK
-
         err = InitializeProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeProvisioning()");
 
@@ -673,7 +670,7 @@ namespace GenericESP32Firmware
 
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.
-        display_qr(POST_PROVISIONING_INFO_LINK, QR_WHITESPACE);
+        s_screen.DisplayQR(POST_PROVISIONING_INFO_LINK, QR_PADDING, POST_PROVISIONING_INFO_TEXT);
 #endif // M5STACK_COREINK
 
         err = StartWireless();
