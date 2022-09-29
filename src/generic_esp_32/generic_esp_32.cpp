@@ -21,6 +21,7 @@
 #include <util/format.hpp>
 #include <util/delay.hpp>
 #include <util/buttons.hpp>
+#include <util/buzzer.hpp>
 #include <util/screen.hpp>
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
@@ -113,6 +114,14 @@ namespace GenericESP32Firmware
                 gpio_set_level(gpioNum, level);
                 vTaskDelay(200 / portTICK_PERIOD_MS);
             }
+        }
+
+        void PowerOff()
+        {
+            // Buzz the buzzer 500ms to signal power off.
+            Buzzer::Buzz(500);
+
+            powerpin_reset();
         }
 
         /**
@@ -350,6 +359,10 @@ namespace GenericESP32Firmware
                 return err;
 
             err = Buttons::ButtonPressHandler::AddButton(BUTTON_WIFI_RESET, "Wi-Fi reset", 0, nullptr, ResetWireless);
+            if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
+                return err;
+
+            err = Buttons::ButtonPressHandler::AddButton(BUTTON_ON_OFF, "On-off button", 0, nullptr, PowerOff);
             if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
                 return err;
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
