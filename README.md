@@ -17,7 +17,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 
 ![Twomes generic firmwaer functions overview](twomes-generic-firmware-functions.png)
 
-Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) and [M5-CoreInk](https://github.com/m5stack/M5-CoreInk). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
+Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) and [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
 
 ## Deploying
 This section describes how you can deploy binary releases of the firmware, i.e. without changing the source code, without a development environment and without needing to compile the source code.
@@ -340,21 +340,21 @@ Currently ready:
 * Unified Provisioning over Bluetooth Low Energy (BLE; ESP32 only) and SoftAP
 * Time synchronisation using NTP
 * Secure transport over TLS/SSL (ESP32 only), using the [ISRG Root X1 certificate](https://crt.sh/?id=9314791)
-* Heartbeats: hourly measurement and upload of timestamped measurment data with property `heartbeat`
-* Long button press to erase only Wi-Fi provisioning data 
+* Heartbeats: regular measurement and upload of timestamped measurment data with property `heartbeat`
+* Wi-Fi reset via long button press
 * Example code
-* Presence Detection (compile time provisioning of tracked Bluetooth addresses)
+* Over-the-Air (OTA) firmware updates
+* Diaplay provisioning QR-code on e-ink screen (M5Stack CoreInk only)
+* Presence Detection (device preparation-time defintion of tracked Bluetooth addresses)
 
 To-do:
 
-* Visual indication via the red and/or green LEDs that allows the end user to recognize various device states
- 	* ready for device activation: blinking green LED 
- 	* device activation: turning green LED on for a few seconds
- 	* sending a heartbeat: blink green LED rapidly two times
-NOTE: For the M5CoreINK you can also use the buzzer. But use the buzzer only during the activation stage, it can potentially annoy people!  
+* Visual indication via the LEDs, buzzer and/or the e-ink screen that allows the end user to recognize various device states
+ 	* ready for device activation
+ 	* device activation
+ 	* (last time) a heartbeat was sent
 * Persistent buffering of measurement data
-* Presence Detection (provisioning of tracked Bluetooth addresses during device provisioning)
-* Presence Detection (runtime Bluetooth addresses provisioning)
+* Presence Detection (runtime definition of tracked Bluetooth addresses)
 * Support for ESP8266
 
 ## Status
@@ -371,6 +371,8 @@ This software is made by:
 
 Thanks also go to:
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
+* Stijn Wingens · [@stijnwingens](https://github.com/stijnwingens)
+* Jorrin Kievit · [@JorrinKievit](https://github.com/JorrinKievit)
 
 Product owner:
 * Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
