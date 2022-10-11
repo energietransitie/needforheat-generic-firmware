@@ -1,0 +1,60 @@
+# Site information
+site_name: Twomes generic ESP32 firmware documentation
+site_description: Documentation for the Twomes generic firmware library.
+site_url: https://energietransitie.github.io/twomes-generic-esp-firmware
+
+# Repository
+repo_url: https://github.com/energietransitie/twomes-generic-esp-firmware
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright 2022 Research group Energy Transition, Windesheim University of Applied Sciences
+
+# Theme
+theme:
+  name: material
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    edit: material/file-edit-outline
+  features:
+    - navigation.top
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - content.code.annotate
+    - content.tabs.link
+
+# Extensions
+markdown_extensions:
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+# Navigation pages
+nav:
+  - Home: index.md
+#  - Getting started: getting-started.md
+  - Library installation:
+    - Create a new project: library-installation/new-project.md
+    - Integrate with an existing project: library-installation/existing-project.md
+  - Library reference:
+    - Measurements and uploading: library-reference/measurements-and-uploading.md
+    - Scheduler: library-reference/scheduler.md
+    - Tasks: library-reference/tasks.md
+  - Procedures:
+    - Device preparation: procedures/device-preparation.md
