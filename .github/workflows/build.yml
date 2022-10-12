@@ -2,8 +2,11 @@ name: Build CI
 # Trigger on any change that is not markdown and not in the main branch.
 on:
   push:
-    branches-ignore:
-      - main
+    branches: [ main ]
+    paths-ignore:
+      - '*.md'
+  pull_request:
+    branches: [ main ]
     paths-ignore:
       - '*.md'
 

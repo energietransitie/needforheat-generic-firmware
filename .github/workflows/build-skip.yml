@@ -3,9 +3,8 @@ name: Build CI
 # Useful when CI is a required check for a PR.
 # This will allow the status check to complete when only markdown files are changed. 
 on:
-  push:
-    branches-ignore:
-      - main
+  pull_request:
+    branches: [ main ]
     paths:
       - '*.md'
 
