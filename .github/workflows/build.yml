@@ -39,6 +39,12 @@ jobs:
       # Setup PlatformIO.
       - name: Setup PlatformIO
         run: pip install platformio
+        
+      # Change library from github to local directory in platformio.ini.
+      - name: Use local library version
+        env:
+          EXAMPLE_DIR: ${{ matrix.example_dir }}
+        run: sed -i 's=https://github.com/energietransitie/twomes-generic-esp-firmware=../../=g' $EXAMPLE_DIR/platformio.ini
       
       # Build the PlatformIO project.
       - name: Build PlatformIO project
