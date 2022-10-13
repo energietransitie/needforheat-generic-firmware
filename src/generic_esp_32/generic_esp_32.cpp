@@ -354,15 +354,15 @@ namespace GenericESP32Firmware
 
 #ifdef M5STACK_COREINK
             auto err = M5StackCoreInk::InitializeGPIO();
+
+            err = Buttons::ButtonPressHandler::AddButton(BUTTON_ON_OFF, "On-off button", 0, nullptr, PowerOff);
+            if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
+                return err;
 #endif // M5STACK_COREINK
             if (Error::CheckAppendName(err, TAG, "An error occured when initializing GPIO"))
                 return err;
 
             err = Buttons::ButtonPressHandler::AddButton(BUTTON_WIFI_RESET, "Wi-Fi reset", 0, nullptr, ResetWireless);
-            if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
-                return err;
-
-            err = Buttons::ButtonPressHandler::AddButton(BUTTON_ON_OFF, "On-off button", 0, nullptr, PowerOff);
             if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
                 return err;
 #endif // CONFIG_TWOMES_CUSTOM_GPIO
