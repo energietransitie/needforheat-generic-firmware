@@ -1,10 +1,10 @@
 # Integrate with an existing project
 
-We recommend to [start with a new project](new-project.md) and to copy an example, but for those who would rather integrate the library into their existing project, read the steps below.
+For most cases, we recommend to [start with a new project](new-project.md). Should you rather integrate the twomes-generic-esp-firmware library into an existing project, read the steps below.
 
 ## PlatformIO project
 
-The Twomes generic ESP32 firmware library can be easily added to your PlatformIO project by declaring this repository as a dependency in your `platformio.ini` file:
+The twomes-generic-esp-firmware library can be added to your PlatformIO project by declaring this repository as a dependency in your `platformio.ini` file:
 
 ```ini title="platformio.ini"
 lib_deps = https://github.com/energietransitie/twomes-generic-esp-firmware
@@ -12,7 +12,7 @@ lib_deps = https://github.com/energietransitie/twomes-generic-esp-firmware
 
 ### Configuration
 
-After declaring the library as a dependency, it can by adding these lines in your `platformio.ini` file:
+You should also add these lines to your `platformio.ini` file:
 
 ```ini title="platformio.ini"
 ;Build and Debug settings:
@@ -31,4 +31,4 @@ build_flags =
     -D"$PIOENV"
 ```
 
-> See [the example `platformio.ini`](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/examples/presence_detector/platformio.ini) to see all of the recommended settings.
+> See [the example `platformio.ini`](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/examples/presence_detector/platformio.ini) to see all settings.

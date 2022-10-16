@@ -1,5 +1,5 @@
 # Site information
-site_name: Twomes generic ESP32 firmware documentation
+site_name: twomes-generic-esp-firmware library documentation
 site_description: Documentation for the Twomes generic firmware library.
 site_url: https://energietransitie.github.io/twomes-generic-esp-firmware
 
@@ -8,7 +8,7 @@ repo_url: https://github.com/energietransitie/twomes-generic-esp-firmware
 edit_uri: edit/main/docs/
 
 # Copyright
-copyright: Copyright 2022 Research group Energy Transition, Windesheim University of Applied Sciences
+copyright: License <a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>, <a href="https://www.windesheim.nl/energietransitie">Research group Energy Transition, Windesheim University of Applied Sciences</a> 
 
 # Theme
 theme:
@@ -48,13 +48,12 @@ markdown_extensions:
 # Navigation pages
 nav:
   - Home: index.md
-#  - Getting started: getting-started.md
-  - Library installation:
-    - Create a new project: library-installation/new-project.md
-    - Integrate with an existing project: library-installation/existing-project.md
-  - Library reference:
-    - Measurements and uploading: library-reference/measurements-and-uploading.md
-    - Scheduler: library-reference/scheduler.md
-    - Tasks: library-reference/tasks.md
-  - Procedures:
-    - Device preparation: procedures/device-preparation.md
+  - Developing-getting started:
+    - Use in a new project: developing-library-getstarted/new-project.md
+    - Use in an existing project: developing-library-getstarted/existing-project.md
+  - Developing-reference:
+    - Measurements and uploading: developing-library-reference/measurements-and-uploading.md
+    - Scheduler: developing-library-reference/scheduler.md
+    - Measurement tasks: developing-library-reference/tasks.md
+  - Deploying:
+    - Device preparation: deploying/device-preparation.md
