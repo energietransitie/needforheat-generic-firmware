@@ -1,0 +1,59 @@
+# Site information
+site_name: twomes-generic-esp-firmware library documentation
+site_description: Documentation for the Twomes generic firmware library.
+site_url: https://energietransitie.github.io/twomes-generic-esp-firmware
+
+# Repository
+repo_url: https://github.com/energietransitie/twomes-generic-esp-firmware
+edit_uri: edit/main/docs/
+
+# Copyright
+copyright: License <a href="http://creativecommons.org/licenses/by/4.0">CC BY 4.0</a>, <a href="https://www.windesheim.nl/energietransitie">Research group Energy Transition, Windesheim University of Applied Sciences</a> 
+
+# Theme
+theme:
+  name: material
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    edit: material/file-edit-outline
+  features:
+    - navigation.top
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - content.code.annotate
+    - content.tabs.link
+
+# Extensions
+markdown_extensions:
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+# Navigation pages
+nav:
+  - Home: index.md
+  - Developing-getting started:
+    - Use in a new project: developing-library-getstarted/new-project.md
+    - Use in an existing project: developing-library-getstarted/existing-project.md
+  - Developing-reference:
+    - Measurements and uploading: developing-library-reference/measurements-and-uploading.md
+    - Scheduler: developing-library-reference/scheduler.md
+    - Measurement tasks: developing-library-reference/tasks.md
+  - Deploying:
+    - Device preparation: deploying/device-preparation.md
