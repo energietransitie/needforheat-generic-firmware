@@ -8,7 +8,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 * [Deploying](#deploying)
 * [Developing](#developing) 
 * [Releasing](#releasing)
-* [Supported devices](#suported-devices)
+* [Supported devices](#supported-devices)
 * [Features](#features)
 * [Status](#status)
 * [License](#license)

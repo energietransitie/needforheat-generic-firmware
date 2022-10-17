@@ -6,7 +6,7 @@ This example is a PlatformIO project that uses the [twomes-generic-esp-firmware]
 * [General info](#general-info)
 * [Deploying](#deploying)
 * [Developing](#developing) 
-* [Supported devices](#suported-devices)
+* [Supported devices](#supported-devices)
 * [Features](#features)
 * [Status](#status)
 * [License](#license)
