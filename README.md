@@ -344,16 +344,16 @@ Currently ready:
 * Wi-Fi reset via long button press
 * Example code
 * Over-the-Air (OTA) firmware updates
-* Diaplay provisioning QR-code on e-ink screen (M5Stack CoreInk only)
-* Presence Detection (device preparation-time defintion of tracked Bluetooth addresses)
+* Display provisioning QR-code on e-ink screen ([M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) only)
+* Presence Detection (device preparation-time definition of tracked Bluetooth addresses)
 
 To-do:
 
+* Persistent buffering of measurement data
 * Visual indication via the LEDs, buzzer and/or the e-ink screen that allows the end user to recognize various device states
  	* ready for device activation
  	* device activation
  	* (last time) a heartbeat was sent
-* Persistent buffering of measurement data
 * Presence Detection (runtime definition of tracked Bluetooth addresses)
 * Support for ESP8266
 
