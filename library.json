@@ -1,6 +1,6 @@
 {
     "name": "twomes-generic-esp-firmware",
-    "version": "1.0.0",
+    "version": "3.0.0",
     "description": "Generic firmware library for Twomes devices",
     "keywords": "twomes, m5stack, espidf",
     "repository": {
