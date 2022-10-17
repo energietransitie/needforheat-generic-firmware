@@ -10,7 +10,7 @@ Prerequisites are [the prerequisites for deploying](../deploying/prerequisites.m
 	```shell
 	pio platform update
 	```
-*	If your user directory name contains a whitespace, you may need to change the platformio.ini file. To avoid the error message "Error: Detected a whitespace character in project paths" when building an ESP-IDF project with PlatformIO, add the following lines to the platformio.ini file, as documented in https://docs.platformio.org/en/latest/frameworks/espidf.html#limitations:  
+*	If your user directory name contains a whitespace, you may need to change the platformio.ini file. To avoid the error message "Error: Detected a whitespace character in project paths" when building an ESP-IDF project with PlatformIO, add the following lines to the platformio.ini file, as documented in [https://docs.platformio.org/en/latest/frameworks/espidf.html#limitations](https://docs.platformio.org/en/latest/frameworks/espidf.html#limitations):  
 	```
 	[platformio]
 	core_dir = <path_without_whitespaces>
