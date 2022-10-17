@@ -49,11 +49,20 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Developing-getting started:
-    - Use in a new project: developing-library-getstarted/new-project.md
-    - Use in an existing project: developing-library-getstarted/existing-project.md
+    - Prerequisites: developing-library-getstarted/prerequisites.md
+    - Using a devcontainer: developing-library-getstarted/devcontainer.md
+    - Use as library in a new project: developing-library-getstarted/new-project.md
+    - Use as library in an existing project: developing-library-getstarted/existing-project.md
   - Developing-reference:
     - Measurements and uploading: developing-library-reference/measurements-and-uploading.md
     - Scheduler: developing-library-reference/scheduler.md
     - Measurement tasks: developing-library-reference/tasks.md
+  - Developing-testing:
+    - Testing: developing-testing/testing.md
+  - Developing-releasing:
+    - Releasing: developing-releasing/releasing.md
+    - Secure bootloader: developing-releasing/secure-boot-bootloader.md
+    - Secure firmware: developing-releasing/secure-boot-firmware.md
   - Deploying:
+    - Prerequisites: deploying/prerequisites.md
     - Device preparation: deploying/device-preparation.md

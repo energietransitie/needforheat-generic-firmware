@@ -1,5 +1,6 @@
-# Secure boot
-This section describes how to build the firmware for an ESP32 with a secure bootloader. [Click here](bootloader/README.md) to read more about how to build and flash a secure bootloader.
+# Secure boot firmware for Twomes
+
+This section describes how to build Twomes firmware for an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for Twomes](secure-bootloader.md). For more general information, you may also want to read the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure-boot-v1.html).
 
 ## Prerequisites 
 - [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#manual-installation) installed.
@@ -32,3 +33,5 @@ The [GitHub Actions workflow](https://github.com/energietransitie/twomes-generic
   > This key is needed to sign new firmware for a device with secure boot enabled. If this key is lost, no more new firmware can be installed on the device. 
   > Copying this key as a secret for the GitHub Actions workflow will make it available for the build workflow to sign new firmware releases.
 2. Copy the contents of the key and paste them as a new secret `WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY` in `Settings > Secrets > Actions` of the repository.
+
+
