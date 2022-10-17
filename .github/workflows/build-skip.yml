@@ -1,0 +1,15 @@
+name: Build CI
+# Trigger on any change that is markdown and not in the main branch.
+# Useful when CI is a required check for a PR.
+# This will allow the status check to complete when only markdown files are changed. 
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '*.md'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest   
+    steps:
+      - run: 'echo "No build required."'
