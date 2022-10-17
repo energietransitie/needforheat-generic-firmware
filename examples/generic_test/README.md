@@ -1,4 +1,4 @@
-# Twomes Presence-Detector example
+# Twomes Generic-Test example
 
 This example is a PlatformIO project that uses the [twomes-generic-esp-firmware](https://github.com/energietransitie/twomes-generic-esp-firmware) library. To work with this example, (clone this reposotory and) open the root directory of the Twomes Generic-Test example in Visual Studio Code.
 
@@ -13,10 +13,10 @@ This example is a PlatformIO project that uses the [twomes-generic-esp-firmware]
 * [Credits](#credits)
 
 ## General info
-The Twomes Presence-Detector example, sends [generic data sent by any Twomes measurement device](https://github.com/energietransitie/twomes-generic-esp-firmware#readme) to a Twomes server. In addition, it also sends presence detection data to the Twomes server.
+The Twomes Generic-Test example only sends [generic data sent by any Twomes measurement device](https://github.com/energietransitie/twomes-generic-esp-firmware#readme) a Twomes server.
 
 ## Deploying
-To deploy this software, see the [deploying section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/prerequisites/).
+To deploy this software, see the [deploying section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/prerequisites/)
 
 ## Developing
 To develop software for, or based on this software, see the [developing section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/developing-library-getstarted/prerequisites/)
@@ -29,7 +29,7 @@ This example still needs to be tested n:
 - [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3)
 
 ## Features
-The example features generic firmware tasks, including Bluetooth-based presence detection. For an example that does not include presence detection, we refer to the Twomes GEneric-Test example](../generic-test/README.md).
+The example features generic firmware tasks, excluding Bluetooth-based presence detection. For an example that includes presence detection, we refer to the Twomes Presence-Detector example](../presence_detector/README.md).
 
 Ready:
 * Generic firmware tasks

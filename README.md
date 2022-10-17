@@ -8,6 +8,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 * [Deploying](#deploying)
 * [Developing](#developing) 
 * [Releasing](#releasing)
+* [Supported devices](#suported-devices)
 * [Features](#features)
 * [Status](#status)
 * [License](#license)
@@ -17,7 +18,20 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 
 ![Twomes generic firmware functions overview](twomes-generic-firmware-functions.png)
 
-Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) and [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk). This facilitates development of firmware for Twomes measurement devices. In future releases, support might be extended to measurement devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
+Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
+
+| Sensor | Property or *timestamp*           | Unit | [Printf format](https://en.wikipedia.org/wiki/Printf_format_string) | Default measurement interval \[h:mm:ss\] | Description                            |
+|--------|--------------------|------|--------|-------------------|----------------------------------------|
+| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `heartbeat` |   | %d     | 0:10:00           | Incrementing counter indicating the device is working                       |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `batteryVoltage` | V  | %.2f   | 0:10:00           | Measures the battery voltage                      |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `countPresence`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones responding to Bluetooth name request                        |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`timestamp`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Each measurement is timestamped |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`upload_time`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Uploads of the contents of the secure upload queue to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) are timestamped |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) internet | `booted_fw`         | version   | %s   | 48:00:00           | Version string of firmware on first boot after provisioning or OTA update                        |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) internet | `new_fw`         | version   | %s   | 48:00:00  | If Over-The-Air (OTA) firmware updates are enabled; data is only logged when new valid firmware was downloaded |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) internet  | (none yet)         | [-]   | %u   | 24:00:00           | Device clock is synchronized regularly via the internet over NTP (time skew will be recorded in a future version of the firmware) |
+
+This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC. This facilitates development of firmware for Twomes measurement devices.
 
 ## Deploying
 
@@ -26,6 +40,14 @@ Go to the [deploying section of the twomes-generic-esp-firmware library document
 ## Developing 
 Go to the [developing section of the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/developing-library-getstarted/) to learn how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be deployed, either via the development environment, or via the method described in the section [Deploying](#deploying).
 
+## Supported devices
+
+Ths firmware currently only supports ESP32 devices. In particular, we tested on:
+
+- [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3)
+- [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk)`
+
+In future releases support could be added for devices based on an ESP8266 SoC, such as the [Wemos LOLIN D1 mini](https://www.wemos.cc/en/latest/d1/d1_mini.html).
 ## Features
 Currently ready:
 
@@ -42,6 +64,7 @@ Currently ready:
 To-do:
 
 * Persistent buffering of measurement data
+* Log time skew after NTP sync
 * Visual indication via the LEDs, buzzer and/or the e-ink screen that allows the end user to recognize various device states
  	* ready for device activation
  	* device activation

@@ -66,3 +66,4 @@ nav:
   - Deploying:
     - Prerequisites: deploying/prerequisites.md
     - Device preparation: deploying/device-preparation.md
+    - Configure presence detection: deploying/configure-persence-detection.md

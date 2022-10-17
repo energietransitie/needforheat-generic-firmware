@@ -6,7 +6,8 @@ Currently, each device instance must be registered on a [Twomes server](https://
 
 ## Erase all persistenly stored data
 
-Unless you are 100% sure that it is safe to only upload firmware and keep other persistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The procedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token that may reside in the persistent memory of the device and which is needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server.
+Unless you are 100% sure that it is safe to only upload firmware and keep other persistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The procedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token that may reside in the persistent memory of the device and which is needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server:
+
 *	Open a command prompt and enter:
 	```shell
 	py -m esptool erase_flash
@@ -15,7 +16,8 @@ Unless you are 100% sure that it is safe to only upload firmware and keep other 
 	```shell
 	py -m esptool erase_flash --port "COM?" 
 	```
-Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
+
+> Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
 After this command you should perform the full Twomes device preparation flow below:
 
@@ -106,5 +108,5 @@ To generate a QR-code, you can use any QR-code generator. When generating QR-cod
 If you want to repurpose and existing device (e.g. use it in another home), you should:
 
 * erase all persistently stored data on the device;
-* after the value in the `name` column of the existing device entry in the database, append something like -OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
+* after the value in the `name` column of the existing device entry in the database, append something like `-OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
 *  proceed with regular device preparation.
