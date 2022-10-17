@@ -12,7 +12,7 @@ The curent task time is the task time for the current round of measurements.
 
 ### Next task time
 
-The next task time is the earliest task time for all upcoming measurements according to their respective measurement intervals. Shortly after all mesurements that were started by the scheduler at the current task time are completed, the remaining time until the next task time is calculated. When using an M5Stack CoreInk, it will turn itself off and restart using its internal RTC[^rtc] when remaining time is more than 2 minutes, to save battery power.
+The next task time is the earliest task time for all upcoming measurements according to their respective measurement intervals. Shortly after all mesurements that were started by the scheduler at the current task time are completed, the remaining time until the next task time is calculated. When using an [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), it will turn itself off and restart using its internal RTC[^rtc] when remaining time is more than 2 minutes, to save battery power.
 
 [^rtc]: Real-time clock.
 
@@ -38,7 +38,7 @@ The scheduler supports the following intervals:
 | 48 hours   | HOURS_48   |
 | 1 week     | WEEKS_1    |
 
-> Using shorter intervals consume more energy and will shorten the run time of battery-operated measuement devices. Some easurement devices can be powered off in between measurement tasks, in order to energy. For such devices, we calsulate a `POWER_OFF_THRESHOLD_s` value. After all measurements for the current task time are one, if the remaining time until the next task time is below the  `POWER_OFF_THRESHOLD_s`, such a device will not turn off, since the additional energy required to boot no longer outweighs the saved energy to power off the system. For an M5Stack CoreInk device, this threshold lies betweeen 1 and 2 minutes.
+> Using shorter intervals consume more energy and will shorten the run time of battery-operated measuement devices. Some easurement devices can be powered off in between measurement tasks, in order to energy. For such devices, we calsulate a `POWER_OFF_THRESHOLD_s` value. After all measurements for the current task time are one, if the remaining time until the next task time is below the  `POWER_OFF_THRESHOLD_s`, such a device will not turn off, since the additional energy required to boot no longer outweighs the saved energy to power off the system. For an [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) device, this threshold lies betweeen 1 and 2 minutes.
 
 ## Add a task to the scheduler
 

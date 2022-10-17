@@ -4,7 +4,7 @@ The [twomes-generic-esp-firmware](https://github.com/energietransitie/twomes-gen
 
 ## Measurements
 
-In a single upload, one or more measurements for one or more properties can be uploaded to the Twomes API. The payload of such an upload is a JSON-formatted string with the following structure:
+In a single upload, one or more measurements for one or more properties can be uploaded to the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api). The payload of such an upload is a JSON-formatted string with the following structure:
 
 ```json5 title="Example: JSON payload of a single heartbeat measurement upload"
 {
@@ -24,7 +24,7 @@ In a single upload, one or more measurements for one or more properties can be u
 ```
 
 An upload consists of an `upload_time`, which indicates the Unix timestamp taken from the device clock of the measurement device just before it uploads the content, followed by array `property-measurements`, where each element consists of a `property_name` and an array `measurements`. Each measurement in this array needs to have a `timestamp` and a `value`. 
-The [twomes-generic-esp-firmware](https://github.com/energietransitie/twomes-generic-esp-firmware) library provides various convenience functions for your firmware to securely upload timestamped measurement values to your Twomes server via a Twomes API. 
+The [twomes-generic-esp-firmware](https://github.com/energietransitie/twomes-generic-esp-firmware) library provides various convenience functions for your firmware to securely upload timestamped measurement values to your [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via a [Twomes API](https://github.com/energietransitie/twomes-backoffice-api). 
 
 Your measurement device can measure data for one or more properties. Each property has its own:
 
@@ -32,10 +32,10 @@ Your measurement device can measure data for one or more properties. Each proper
 - format
 - unit
 
-### Registering a property at the Twomes server 
-Before a Twomes server accepts a property from any measurement device, the property first needs to be [registered on that server](https://github.com/energietransitie/twomes-backoffice-api/blob/main/README.md#creating-new-admin-accounts-to-apitstenergietransitiewindesheimnl).
+### Registering a property at the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) 
+Before a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) accepts a property from any measurement device, the property first needs to be [registered on that server](https://github.com/energietransitie/twomes-backoffice-api/blob/main/README.md#creating-new-admin-accounts-to-apitstenergietransitiewindesheimnl).
 
-<i>In a future version of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) and twomes server, we may drop this requirement.</i>
+<i>In a future version of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) and [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration), we may drop this requirement.</i>
 
 ### Property value formatting
 
@@ -46,7 +46,7 @@ To format your measurement values, your firmware only needs to specify a [printf
 Measurements::Measurement::AddFormatter("example", "%d"); // (1)!
 ```
 
-1. `example` is the property name. `%d` is the [printf format string](https://en.wikipedia.org/wiki/Printf_format_string) that this property uses to format its value before it is sent to the Twomes server via the Twomes API in a JSON string.
+1. `example` is the property name. `%d` is the [printf format string](https://en.wikipedia.org/wiki/Printf_format_string) that this property uses to format its value before it is sent to the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) in a JSON string.
 
 ### Create a new measurement instance
 
@@ -65,7 +65,7 @@ int exampleValue = 1;
 Measurements::Measurement exampleMeasurement("example", exampleValue); // (1)!
 ```
 
-1. Create a new measurement with property type `example` and the value `exampleValue`. Since no timestamp is provided by the firmware, the generic firmware will attach the current task time to this measuerment value before it is uploaded to a Twomes server via the Twomes API.
+1. Create a new measurement with property type `example` and the value `exampleValue`. Since no timestamp is provided by the firmware, the generic firmware will attach the current task time to this measuerment value before it is uploaded to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api).
 
 #### Specifying a custom timestamp
 If your firmware code specifies a custom timestamp, then this timestamp will be used when the measurement is uploaded securely. This may be a good choice for measurements that take such a long time to establish that using the [current task time](scheduler.md#current-task-time) no longer seems appropriate. A disadvantage of this option is that it becomes harder during analysis to group measurements of different properties that were started at the same.  
@@ -83,7 +83,7 @@ Measurements::Measurement exampleMeasurement("example", exampleValue, now); // (
 
 ## Secure upload queue
 
-The twomes-generic-esp-firmware library provides a secure upload queue. This is a queue in volatile memory of the device, to which measurements can be added. The secure upload queue will automatically upload queued measurements to a Twomes server via the Twomes API at a later moment. 
+The twomes-generic-esp-firmware library provides a secure upload queue. This is a queue in volatile memory of the device, to which measurements can be added. The secure upload queue will automatically upload queued measurements to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) at a later moment. 
 
 ### Adding a measurement to the upload queue
 
@@ -99,9 +99,9 @@ auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 secureUploadQueue.AddMeasurement(exampleMeasurement);
 ```
 
-### Uploading measurements to a Twomes server via the Twomes API
+### Uploading measurements to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
 
-All queued measurments will be uploaded to a Twomes server when the [upload task](tasks.md#default-tasks) runs.
+All queued measurments will be uploaded to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) when the [upload task](tasks.md#default-tasks) runs.
 
 <i>Currently, on battery-powerd measurement measurement devices that are completely powered down between measurement tasks, to prevent measurement data loss in the measurement queue, the upload task needs to run after each measurement task. This can be achieved by setting the upload task time equal to the greatest common denominator of all measurement tasks.
 

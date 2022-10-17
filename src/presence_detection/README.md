@@ -58,7 +58,7 @@ You also have to add the static Bluetooth addresses in the file `presence_detect
 ## Features
 List of features ready and TODOs for future development. Ready:
 * scanning for well-known static Bluetooth addresses;
-* uploading presence data to Twomes server via Wi-Fi.
+* uploading presence data to [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via Wi-Fi.
 
 To-do:
 * provisioning of the account-specific list of static Bluetooth addresses during device preparation phase in the lab via a file on non-volatile device storage (most likely, SPIFFS), which is read by the firmware at startup;
