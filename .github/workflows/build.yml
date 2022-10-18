@@ -24,8 +24,8 @@ jobs:
           - M5STACK_COREINK
 
         # List of the examples to build.
-        example_dir:
-          - examples/presence_detector
+        test_dir:
+          - test/generic_test
    
     steps:
       # Checkout repository.
@@ -43,12 +43,12 @@ jobs:
       # Change library from github to local directory in platformio.ini.
       - name: Use local library version
         env:
-          EXAMPLE_DIR: ${{ matrix.example_dir }}
-        run: sed -i 's=https://github.com/energietransitie/twomes-generic-esp-firmware=../../=g' $EXAMPLE_DIR/platformio.ini
+          TEST_DIR: ${{ matrix.test_dir }}
+        run: sed -i 's=https://github.com/energietransitie/twomes-generic-esp-firmware=../../=g' $TEST_DIR/platformio.ini
       
       # Build the PlatformIO project.
       - name: Build PlatformIO project
         env:
           PLATFORMIO_ENV: ${{ matrix.platformio_env }}
-          EXAMPLE_DIR: ${{ matrix.example_dir }}
-        run: pio run -e $PLATFORMIO_ENV -d $EXAMPLE_DIR
+          TEST_DIR: ${{ matrix.test_dir }}
+        run: pio run -e $PLATFORMIO_ENV -d $TEST_DIR
