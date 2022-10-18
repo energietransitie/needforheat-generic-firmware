@@ -1,6 +1,6 @@
 # Secure boot firmware for Twomes
 
-This section describes how to build Twomes firmware for an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for Twomes](secure-bootloader.md). For more general information, you may also want to read the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure-boot-v1.html).
+This section describes how to build Twomes firmware for an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for Twomes](secure-boot-bootloader.md). For more general information, you may also want to read the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure-boot-v1.html).
 
 ## Prerequisites 
 - [ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/index.html#manual-installation) installed.

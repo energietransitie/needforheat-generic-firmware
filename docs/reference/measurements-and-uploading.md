@@ -23,7 +23,7 @@ In a single upload, one or more measurements for one or more properties can be u
 }
 ```
 
-An upload consists of an `upload_time`, which indicates the Unix timestamp taken from the device clock of the measurement device just before it uploads the content, followed by array `property-measurements`, where each element consists of a `property_name` and an array `measurements`. Each measurement in this array needs to have a `timestamp` and a `value`. 
+An upload consists of an `upload_time`, which indicates the [Unix timestamp](https://en.wikipedia.org/wiki/Unix_time) taken from the device clock of the measurement device just before it uploads the content, followed by array `property-measurements`, where each element consists of a `property_name` and an array `measurements`. Each measurement in this array needs to have a `timestamp` and a `value`. 
 The [twomes-generic-esp-firmware](https://github.com/energietransitie/twomes-generic-esp-firmware) library provides various convenience functions for your firmware to securely upload timestamped measurement values to your [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via a [Twomes API](https://github.com/energietransitie/twomes-backoffice-api). 
 
 Your measurement device can measure data for one or more properties. Each property has its own:
@@ -79,7 +79,7 @@ time_t now = time(nullptr);
 Measurements::Measurement exampleMeasurement("example", exampleValue, now); // (1)!
 ```
 
-1. Create a new measurement with property type `example` and the value  `exampleCounter` and timestamp `now`, i.e. the Unix time value of the device clock when the code evaluates `time(nullptr)`.
+1. Create a new measurement with property type `example` and the value  `exampleCounter` and timestamp `now`, i.e. the [Unix timestamp](https://en.wikipedia.org/wiki/Unix_time) of the device clock when the code evaluates `time(nullptr)`.
 
 ## Secure upload queue
 

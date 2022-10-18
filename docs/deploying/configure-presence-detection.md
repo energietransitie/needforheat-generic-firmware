@@ -8,7 +8,7 @@ If your measurement device should support presence detection, for each device, a
 
 ## 1) Edit the nvs.csv file
 
-The MAC-addresses used for presence detection should  be defined in the file [`nvs.csv`](nvs.csv);
+The MAC-addresses used for presence detection should be defined in the file `nvs.csv`;
 
 - In a line that starts with `mac_addresses,data,string,`, one or more Bluetooth MAC-addresses can be defined.
 - A MAC-address can be written like `AB:CD:EF:01:23:45` or `AB-CD-EF-01-23-45` and may be upper- or lower-case.

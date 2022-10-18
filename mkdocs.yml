@@ -48,22 +48,27 @@ markdown_extensions:
 # Navigation pages
 nav:
   - Home: index.md
-  - Developing-getting started:
-    - Prerequisites: developing-library-getstarted/prerequisites.md
-    - Using a devcontainer: developing-library-getstarted/devcontainer.md
-    - Use as library in a new project: developing-library-getstarted/new-project.md
-    - Use as library in an existing project: developing-library-getstarted/existing-project.md
-  - Developing-reference:
-    - Measurements and uploading: developing-library-reference/measurements-and-uploading.md
-    - Scheduler: developing-library-reference/scheduler.md
-    - Measurement tasks: developing-library-reference/tasks.md
-  - Developing-testing:
-    - Testing: developing-testing/testing.md
-  - Developing-releasing:
-    - Releasing: developing-releasing/releasing.md
-    - Secure bootloader: developing-releasing/secure-boot-bootloader.md
-    - Secure firmware: developing-releasing/secure-boot-firmware.md
+  - Getting started:
+    - Prerequisites: starting/prerequisites.md
+    - Using a devcontainer: starting/devcontainer.md
+    - Use as library in a new project: starting/new-project.md
+    - Use as library in an existing project: starting/existing-project.md
+  - Reference:
+    - Measurements and uploading: reference/measurements-and-uploading.md
+    - Scheduler: reference/scheduler.md
+    - Measurement tasks: reference/tasks.md
+  - Documenting:
+    - Device installation manual: documenting/installation-manual.md
+    - Device info page: documenting/device-info.md
+  - Releasing:
+    - Building: releasing/building.md
+    - Releasing: releasing/releasing.md
+    - Secure bootloader: releasing/secure-boot-bootloader.md
+    - Secure firmware: releasing/secure-boot-firmware.md
   - Deploying:
     - Prerequisites: deploying/prerequisites.md
     - Device preparation: deploying/device-preparation.md
-    - Configure presence detection: deploying/configure-persence-detection.md
+    - Configure presence detection: deploying/configure-presence-detection.md
+  - Provisioning:
+    - Testing: provisioning/testing.md
+

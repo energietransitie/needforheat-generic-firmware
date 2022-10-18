@@ -19,7 +19,7 @@ The Twomes Generic-Test example only sends [generic data sent by any Twomes meas
 To deploy this software, see the [deploying section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/prerequisites/)
 
 ## Developing
-To develop software for, or based on this software, see the [developing section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/developing-library-getstarted/prerequisites/)
+To develop software for, or based on this software, see the [developing section in the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/getstarted/prerequisites/)
 
 ## Supported devices
 This example was tested on:

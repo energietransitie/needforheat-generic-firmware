@@ -1,6 +1,6 @@
 # Testing
 
-For tests, you should : 
+For tests, you should: 
 
 - use a test instance of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) connected with a test instance of a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration); 
 - compile firmware using swiches that target a test version of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) connected with a test instance of a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration);
@@ -20,4 +20,4 @@ Alternatively, you may use test apps that only support Wi-Fi provisioning using 
 * [Apple Unified Provisioning app for BLE](https://apps.apple.com/us/app/esp-ble-provisioning/id1473590141)
 * [Apple Unified Provisioning app for SoftAP](https://apps.apple.com/us/app/esp-softap-provisioning/id1474040630)
 
-> Using the Espressif Unified Provisioning apps, you cannot test Twomes device provisioning fully: you can only test the Wi-Fi provisioning part.
+> Using one of the above Espressif Unified Provisioning apps, you cannot test Twomes device provisioning fully: you can only test the Wi-Fi provisioning part.

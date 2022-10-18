@@ -2,7 +2,7 @@
 GitHub actions can be used to automatically build and create a draft for a new release. This draft has to be verified by a member of the [research group Energy Transition](https://github.com/energietransitie) and released (not as a draft). At the time of verifying, a title and description can be added to the release.
 
 ## Semantic versioning
-Always use a semantic version number when following the steps below! Read more about semantic versioning [here](https://semver.org). If you create a tag which is not a semantic version number prepended with "v" (e.g. "v1.0.0", "v1.3.12" or "v12.34.2"), Over-The-Air firmare updates will not work properly.
+Always use a [semantic version number](https://semver.org) when following the steps below! If you create a tag which is not a semantic version number prepended with "v" (e.g. "v1.0.0", "v1.3.12" or "v12.34.2"), Over-The-Air firmare updates will not work properly.
 
 ## Initiating a build and draft release
 Follow the steps below to start the GitHub actions workflow which build the binaries and creates a draf release.
@@ -11,7 +11,7 @@ Follow the steps below to start the GitHub actions workflow which build the bina
 
 - [Git](https://git-scm.com/downloads)
 - [Git GPG signing](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) (recommended)
-- [Singing key secret set up in GitHub Actions](SECURE_BOOT.md#github-actions-workflow)
+- [Singing key secret set up in GitHub Actions](secure-boot-firmware.md#github-actions-workflow)
 
 ### Steps
 1. If you have not already cloned the repository, do this now:

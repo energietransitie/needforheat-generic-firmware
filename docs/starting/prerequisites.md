@@ -35,4 +35,4 @@ Open the project in PlatformIO:
   9. Click `Upload and Monitor`. 
 > The first time might take a while because PlatformIO needs to install and build the ESP-IDF before it can upload the firmwware.
   10. When it is done uploading, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
-  11. To provision the device, use [the Twomes app or another app that supports Espressif Unified Provisioning](../developing-testing/testing.md). 
+  11. To provision the device, use [the Twomes app or another app that supports Espressif Unified Provisioning](../provisioning/testing.md). 
