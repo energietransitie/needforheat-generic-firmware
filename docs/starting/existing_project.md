@@ -1,6 +1,6 @@
 # Integrate with an existing project
 
-For most cases, we recommend to [start with a new project](new-project.md). Should you rather integrate the twomes-generic-esp-firmware library into code for an existing project, read the steps below.
+For most cases, we recommend to [start with a new project](new_project.md). Should you rather integrate the twomes-generic-esp-firmware library into code for an existing project, read the steps below.
 
 ## PlatformIO project
 

@@ -16,7 +16,7 @@ See [Twomes presence detection library](https://github.com/energietransitie/twom
 
 ## General info
 
-![Twomes generic firmware functions overview](twomes-generic-firmware-functions.png)
+![Twomes generic firmware functions overview](./docs/twomes-generic-firmware-functions.png)
 
 Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
 

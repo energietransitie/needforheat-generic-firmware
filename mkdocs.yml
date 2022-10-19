@@ -48,27 +48,29 @@ markdown_extensions:
 # Navigation pages
 nav:
   - Home: index.md
-  - Getting started:
+  - Starting:
     - Prerequisites: starting/prerequisites.md
     - Using a devcontainer: starting/devcontainer.md
-    - Use as library in a new project: starting/new-project.md
-    - Use as library in an existing project: starting/existing-project.md
-  - Reference:
-    - Measurements and uploading: reference/measurements-and-uploading.md
-    - Scheduler: reference/scheduler.md
-    - Measurement tasks: reference/tasks.md
+    - Using the library in a new project: starting/new_project.md
+    - Using the library in an existing project: starting/existing_project.md
+  - Measuring:
+    - Adding measurements : measuring/measuring.md
+    - Scheduling: measuring/scheduling.md
+    - Running measurement tasks: measuring/running_tasks.md
+    - Uploading: measuring/uploading.md    
   - Documenting:
-    - Device installation manual: documenting/installation-manual.md
-    - Device info page: documenting/device-info.md
+    - Device installation manual: documenting/installation_manual.md
+    - Device info page: documenting/device_info.md
   - Releasing:
     - Building: releasing/building.md
     - Releasing: releasing/releasing.md
-    - Secure bootloader: releasing/secure-boot-bootloader.md
-    - Secure firmware: releasing/secure-boot-firmware.md
+    - Securing the bootloader: releasing/secure_boot_bootloader.md
+    - Securing firmware: releasing/secure_boot_firmware.md
   - Deploying:
     - Prerequisites: deploying/prerequisites.md
-    - Device preparation: deploying/device-preparation.md
-    - Configure presence detection: deploying/configure-presence-detection.md
+    - Preparing devices: deploying/device_preparation.md
+    - Configuring presence detection: deploying/configuring_presence_detection.md
   - Provisioning:
+    - Overview: provisioning/overview.md
     - Testing: provisioning/testing.md
 

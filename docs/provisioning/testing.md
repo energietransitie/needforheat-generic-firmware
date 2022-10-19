@@ -1,10 +1,10 @@
-# Testing
+# Testing Twomes provisoning
 
-For tests, you should: 
+To test Twomes provisioning fully, you should: 
 
 - use a test instance of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) connected with a test instance of a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration); 
 - compile firmware using swiches that target a test version of the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) connected with a test instance of a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration);
-- [prepare a test device](../deploying/device-preparation.md);
+- [prepare a test device](../deploying/device_preparation.md);
 - perform device provisioning with a test version of the Twomes WarmteWachter app (see below).
 
 > For a future version of the Twomes [firmware](https://github.com/energietransitie/twomes-generic-esp-firmware), [API](https://github.com/energietransitie/twomes-backoffice-api), [server](https://github.com/energietransitie/twomes-backoffice-configuration) and [app](https://github.com/energietransitie/twomes-app-warmtewachter), we consider allowing the provisioning app to determine whether the (preconfigured) test server URI or production server URI is targeted. 

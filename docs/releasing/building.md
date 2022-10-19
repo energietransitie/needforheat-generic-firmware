@@ -1,4 +1,4 @@
-# Building firmware for a Twomes measurement device
+# Building firmware
 
 To build firmware for a Twomes measurement device, first open the root folder of the firmware directory in Visual Studio Code.
 
