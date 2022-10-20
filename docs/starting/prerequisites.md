@@ -20,8 +20,8 @@ Prerequisites are [the prerequisites for deploying](../deploying/prerequisites.m
 > Refer to [developing using a devcontainer ](devcontainer.md) should you prefer that way of developing.
 
 
-## Coding and uploading  
-Open the project in PlatformIO:
+## Coding and uploading
+We recommend using a device without [secure boot](../releasing/secure-boot-firmware.md) for developing. Follow the steps below to build the firmware and flash it to a device:
 
   1. In the top-left corner, select File -> Open Folder.
   2. Select the folder where you cloned or extracted the repository.
