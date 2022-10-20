@@ -13,9 +13,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    concurrency: 
-      group: ${{ github.ref }}
-      cancel-in-progress: true
     strategy:
       matrix:
         # List all of the PlatformIO platforms to build
