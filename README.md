@@ -1,7 +1,7 @@
 # Generic firmware for Twomes measurement devices
 This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an ESP32 SoC.
 
-See [Twomes presence detection library](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/lib/presence_detection/README.md) for more specific information about the optional presence detection capabilities of this Twomes generic firmware. 
+See [Twomes presence detection documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/configuring-presence-detection) for more specific information about the optional presence detection capabilities of this Twomes generic firmware.
 
 ## Table of contents
 * [General info](#general-info)
