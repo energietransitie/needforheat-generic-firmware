@@ -2,7 +2,7 @@
 
 This section describes how to sign Twomes firmware to work on an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for Twomes](secure_boot_bootloader.md). 
 
-For more information, see the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure_boot_v1.html).
+For more information, see the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure-boot-v1.html).
 
 ## Prerequisites 
 Before signing the firmware, you should first [build the firmware](./building.md).

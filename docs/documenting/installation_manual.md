@@ -2,7 +2,7 @@
 
 The purpose of a device installation manual is to help the subjects of your measurement campaign to install, power and connect your your specific measurement device. 
 
-The contents of the folder [`/docs/installation_manual/`](https://github.com/energietransitie/twomes-presence-detector/blob/main/docs/installation_manual) of a Twomes measurement device repository can be used as a template for this. 
+The contents of the folder [`/docs/installation/`](https://github.com/energietransitie/twomes-presence-detector/blob/main/docs/installation) of a Twomes measurement device repository can be used as a template for this. 
 
 ## Prerequisites
 
