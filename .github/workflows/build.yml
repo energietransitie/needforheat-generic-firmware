@@ -29,17 +29,6 @@ jobs:
         # CodeQL languages
         language: [ 'cpp' ]
         
-    env:
-      # Directory where the build artifacts will be.
-      BUILD_DIR: .pio/build/${{ matrix.platformio_env }}
-      
-      # Files that need to be uploaded as artifacts.
-      ARCHIVE_FILES: |
-        bootloader.bin 
-        firmware.bin 
-        ota_data_initial.bin 
-        partitions.bin
-   
     steps:
       # Checkout repository.
       - name: Checkout repository
@@ -83,10 +72,3 @@ jobs:
         uses: github/codeql-action/analyze@v2
         with:
           category: "/language:${{matrix.language}}"
-
-      # Upload artifacts for optional download.
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-files
-          path: ${{ env.ARCHIVE_FILES }}
