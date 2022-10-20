@@ -1,6 +1,6 @@
 # Integrate with an existing project
 
-For most cases, we recommend to [start with a new project](new-project.md). Should you rather integrate the twomes-generic-esp-firmware library into an existing project, read the steps below.
+For most cases, we recommend to [start with a new project](new-project.md). Should you rather integrate the twomes-generic-esp-firmware library into code for an existing project, read the steps below.
 
 ## PlatformIO project
 
@@ -31,4 +31,4 @@ build_flags =
     -D"$PIOENV"
 ```
 
-> See [the example `platformio.ini`](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/examples/presence_detector/platformio.ini) to see all settings.
+> See [`platformio.ini`](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/platformio.ini) for all settings.

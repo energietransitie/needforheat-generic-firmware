@@ -4,30 +4,10 @@ This section describes how a device running firmware based on the twomes-generic
 
 Currently, each device instance must be registered on a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) before the server accepts data send data to it from that device.
 
-### Prerequisites
+## Erase all persistenly stored data
 
-Hardware:
+Unless you are 100% sure that it is safe to only upload firmware and keep other persistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The procedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token that may reside in the persistent memory of the device and which is needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server:
 
-* a device based on an ESP32 SoC, e.g.
-	* [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3) (programmable via micro-USB)
-	* [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) (programmable via USB-C)
-* a matching USB cable 
-* a PC with a USB port
-
-Software:
-
-* [Python v3.8 or above](https://www.python.org/downloads/) installed; make sure to select `Add Python <version number> to PATH` so you can use the Python commands we document below from a command prompt
-* [Esptool](https://github.com/espressif/esptool) installed, the Espressif SoC serial bootloader utility
-* [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), a serial monitor utility (if your you are also developing, you may use the serial monitor utility in your IDE, instead)
-* Some devices, such as the [LilyGO TTGO T7 Mini32 V1.3 ESP32](https://github.com/LilyGO/ESP32-MINI-32-V1.3), are based on the  CH340 USB to serial converter, which may not be recognized by your OS. You may need to install a specific driver:
-	* [Windows driver](http://www.wch.cn/download/CH341SER_EXE.html)
-	* [Mac OSX driver](http://www.wch.cn/download/CH341SER_MAC_ZIP.html) (see also [this additional info](https://kig.re/2014/12/31/how-to-use-arduino-nano-mini-pro-with-CH340G-on-mac-osx-yosemite.html))
-	* [Linux driver](http://www.wch.cn/download/CH341SER_LINUX_ZIP.html)
-	* [Android driver](http://www.wch.cn/download/CH341SER_ANDROID_ZIP.html)
-
-### Erase all persistenly stored data
-
-Unless you are 100% sure that it is safe to only upload firmware and keep other persistent memory intact, you should always first completely erase the persistent (non-volatile) memory of the device. The procedure below not only erases the firmware, but also any device activation_token, Wi-Fi provisioning data and device session_token that may reside in the persistent memory of the device and which is needed as bearer token that identifies, authenticates and authorizes the device when uploading measurement data to the server.
 *	Open a command prompt and enter:
 	```shell
 	py -m esptool erase_flash
@@ -36,7 +16,8 @@ Unless you are 100% sure that it is safe to only upload firmware and keep other 
 	```shell
 	py -m esptool erase_flash --port "COM?" 
 	```
-Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
+
+> Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
 After this command you should perform the full Twomes device preparation flow below:
 
@@ -44,10 +25,10 @@ After this command you should perform the full Twomes device preparation flow be
 2. Find the device name and activation_token
 3. Register the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
 4. Generating a QR-code and print the QR_code<br>
-<i>N.B. For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this last step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.</i>
+> For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this last step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.
  
 
-### Step 1: Upload firmware to the ESP32 device
+## Step 1: Upload firmware to the ESP32 device
 
 1. Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
 2. Connect the device with a USB cable to the PC.
@@ -73,7 +54,7 @@ After this command you should perform the full Twomes device preparation flow be
 > - `python3 -m esptool` or
 > - `esptool.py`.
 
-### Step 2: Find the device name and activation_token
+## Step 2: Find the device name and activation_token
 
 1. Open your serial monitor utility.
 	*  For [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), use the following destination settings (be sure to `Save` them to `Load` them conveniently later):
@@ -91,7 +72,7 @@ After this command you should perform the full Twomes device preparation flow be
 	}
 	```
 
-### Step 3: Register the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
+## Step 3: Register the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
 
 In order to create a device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api), you need the JSON payload which you found in [step 2](#step-2-find-a-devices-name-and-activationtoken).
 
@@ -99,8 +80,8 @@ Read the [Twomes API documentation](https://api.energietransitiewindesheim.nl/do
 
 You will need an admin bearer session token in order to use this endpoint. Refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deploying-new-admin-accounts-to-apitstenergietransitiewindesheimnl) on how to obtain one.
 
-### Step 4: Generating a QR-code
-<i>N.B. For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.</i>
+## Step 4: Generating a QR-code
+> For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.<
 
 The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that visible to the subject that receives the Twomes measurement device. When printed on a sticker, we recomend attaching it the back of the measurement device.
 
@@ -119,12 +100,13 @@ Payload information :
 | security  	| Security during Wi-Fi provisioning  	| Either `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
 | password  	| device.activation_token         	| Password to connect with SoftAP device. 	| Optional                                                            	|
 
-To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you SHOULD use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement data. Simply encode the example payload you find below. Note: the payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
+To generate a QR-code, you can use any QR-code generator. When generating QR-codes for production use, you SHOULD use an offline QR-code gerator, such as [this chrome extension offline QR-code generator](https://chrome.google.com/webstore/detail/offline-qr-code-generator/fehmldbcmhbdkofkiaedfejkalnidchm), which also works in the Microsoft Edge browser. A device activation_token might constitute personal information since it is used in a process that might link personally identifiable information of subjects to measurement 
+> The Espressif QR-code payload is NOT a URL, so it should NOT start with `http://` nor with `https://`; the QR-code just includes a list of JSON key-value pairs).
 
 ## Prepare an existing device
 
 If you want to repurpose and existing device (e.g. use it in another home), you should:
 
 * erase all persistently stored data on the device;
-* after the value in the `name` column of the existing device entry in the database, append something like -OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
+* after the value in the `name` column of the existing device entry in the database, append something like `-OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
 *  proceed with regular device preparation.

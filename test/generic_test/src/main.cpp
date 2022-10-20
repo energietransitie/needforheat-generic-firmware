@@ -2,7 +2,7 @@
 #include <generic_tasks.hpp>
 #include <scheduler.hpp>
 
-constexpr const char *DEVICE_TYPE_NAME = "Presence-Detector";
+constexpr const char *DEVICE_TYPE_NAME = "Generic-Test";
 
 extern "C" void app_main(void)
 {

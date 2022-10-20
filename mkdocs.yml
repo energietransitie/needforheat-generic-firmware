@@ -48,12 +48,29 @@ markdown_extensions:
 # Navigation pages
 nav:
   - Home: index.md
-  - Developing-getting started:
-    - Use in a new project: developing-library-getstarted/new-project.md
-    - Use in an existing project: developing-library-getstarted/existing-project.md
-  - Developing-reference:
-    - Measurements and uploading: developing-library-reference/measurements-and-uploading.md
-    - Scheduler: developing-library-reference/scheduler.md
-    - Measurement tasks: developing-library-reference/tasks.md
+  - Starting:
+    - Prerequisites: starting/prerequisites.md
+    - Using a devcontainer: starting/devcontainer.md
+    - Using the library in a new project: starting/new-project.md
+    - Using the library in an existing project: starting/existing-project.md
+  - Measuring:
+    - Adding measurements : measuring/measuring.md
+    - Scheduling: measuring/scheduling.md
+    - Running measurement tasks: measuring/running-tasks.md
+    - Uploading: measuring/uploading.md    
+  - Documenting:
+    - Device installation manual: documenting/installation-manual.md
+    - Device info page: documenting/device-info.md
+  - Releasing:
+    - Building: releasing/building.md
+    - Releasing: releasing/releasing.md
+    - Securing the bootloader: releasing/secure-boot-bootloader.md
+    - Securing firmware: releasing/secure-boot-firmware.md
   - Deploying:
-    - Device preparation: deploying/device-preparation.md
+    - Prerequisites: deploying/prerequisites.md
+    - Preparing devices: deploying/device-preparation.md
+    - Configuring presence detection: deploying/configuring-presence-detection.md
+  - Provisioning:
+    - Overview: provisioning/overview.md
+    - Testing: provisioning/testing.md
+

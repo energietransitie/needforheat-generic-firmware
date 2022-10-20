@@ -5,6 +5,6 @@ build/
 .vscode/launch.json
 .vscode/ipch
 secure_boot_signing_key.pem
-CMakeLists.txt
+/CMakeLists.txt
 settings.json
 extensions.json
