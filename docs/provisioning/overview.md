@@ -4,9 +4,9 @@ Twomes provisioning is the process that involves:
 - In a more broad sense:
     - subject account creation
     - app installation & account activation
-    - [device preparation](../deploying/device_preparation.md) 
+    - [device preparation](../deploying/device-preparation.md) 
 - In a more narrow sense:
-    - [device installation](../documenting/installation_manual.md)
+    - [device installation](../documenting/installation-manual.md)
     - Wi-Fi provisioning
     - device-app activation
     - device-backend activation  

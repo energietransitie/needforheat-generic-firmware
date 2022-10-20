@@ -4,7 +4,7 @@ Your measurement device can measure data for one or more properties. For each pr
 
 - [add a value formatter](#property-value-formatting)
 - [schedule measurement tasks](./scheduling.md)
-- [runing measurement tasks for multiple properties](./running_tasks.md)
+- [runing measurement tasks for multiple properties](./running-tasks.md)
 - [creating and timestamping a measurement](#creating-and-timestamping-a-measurement)
 - [adding a timestamped measurement to the secure upload queue](#adding-a-measurement-to-the-upload-queue)
 - [securely upload your queued measurements](./uploading.md)

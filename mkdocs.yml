@@ -51,25 +51,25 @@ nav:
   - Starting:
     - Prerequisites: starting/prerequisites.md
     - Using a devcontainer: starting/devcontainer.md
-    - Using the library in a new project: starting/new_project.md
-    - Using the library in an existing project: starting/existing_project.md
+    - Using the library in a new project: starting/new-project.md
+    - Using the library in an existing project: starting/existing-project.md
   - Measuring:
     - Adding measurements : measuring/measuring.md
     - Scheduling: measuring/scheduling.md
-    - Running measurement tasks: measuring/running_tasks.md
+    - Running measurement tasks: measuring/running-tasks.md
     - Uploading: measuring/uploading.md    
   - Documenting:
-    - Device installation manual: documenting/installation_manual.md
-    - Device info page: documenting/device_info.md
+    - Device installation manual: documenting/installation-manual.md
+    - Device info page: documenting/device-info.md
   - Releasing:
     - Building: releasing/building.md
     - Releasing: releasing/releasing.md
-    - Securing the bootloader: releasing/secure_boot_bootloader.md
-    - Securing firmware: releasing/secure_boot_firmware.md
+    - Securing the bootloader: releasing/secure-boot-bootloader.md
+    - Securing firmware: releasing/secure-boot-firmware.md
   - Deploying:
     - Prerequisites: deploying/prerequisites.md
-    - Preparing devices: deploying/device_preparation.md
-    - Configuring presence detection: deploying/configuring_presence_detection.md
+    - Preparing devices: deploying/device-preparation.md
+    - Configuring presence detection: deploying/configuring-presence-detection.md
   - Provisioning:
     - Overview: provisioning/overview.md
     - Testing: provisioning/testing.md

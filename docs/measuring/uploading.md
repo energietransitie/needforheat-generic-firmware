@@ -1,6 +1,6 @@
 # Uploading
 
-All queued measurments will be uploaded to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) when the [upload task](running_tasks.md#default-tasks) runs.
+All queued measurments will be uploaded to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) when the [upload task](running-tasks.md#default-tasks) runs.
 
 In a single upload, one or more measurements for one or more properties can be uploaded. The payload of such an upload is a JSON-formatted string with the following structure:
 
