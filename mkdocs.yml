@@ -59,6 +59,7 @@ nav:
     - Running measurement tasks: measuring/running-tasks.md
     - Uploading: measuring/uploading.md    
   - Documenting:
+    - Generic library: documenting/generic-library.md
     - Device installation manual: documenting/installation-manual.md
     - Device info page: documenting/device-info.md
   - Releasing:
