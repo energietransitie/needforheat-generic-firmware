@@ -25,7 +25,7 @@ Open the project in PlatformIO:
 
   1. In the top-left corner, select File -> Open Folder.
   2. Select the folder where you cloned or extracted the repository.
-  3. In the `src` folder you will find `main.c`; this is an example application.
+  3. In the `src` folder you will find `main.cpp`; this is an example application.
   4. In the `lib` folder you will find the library that this repository contains.
   5. To change between provisioning via BLE or SoftAP, in the `platformio.ini`file, comment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_BLE` and uncomment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP` or vice versa.
   6. Change the code in `src/main.c` as you see fit.
