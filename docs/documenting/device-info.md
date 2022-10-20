@@ -4,7 +4,7 @@ The purpose of a device info page is to inform people that encounter your measur
 
 On a [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) device, after the device was provisioned, the e-ink screen can show a QR-code and a text like "scan for mor info". Your device info page is shown to people that scan the QR-code, typically from their smartphone. 
 
-The contents of the folder [`/docs/deviceinfo/`](https://github.com/energietransitie/twomes-presence-detector/blob/main/docs/deviceinfo) of a Twomes measurement device repository can be used as the template for your device info page. 
+The contents of the folder [`/docs/device-info/`](https://github.com/energietransitie/twomes-presence-detector/blob/main/docs/devic-einfo) of a Twomes measurement device repository can be used as the template for your device info page. 
 
 ## Prerequisites
 
