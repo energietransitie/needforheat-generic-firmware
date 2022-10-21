@@ -9,13 +9,12 @@ on:
     branches: [ main ]
     paths-ignore:
       - '*.md'
+  schedule:
+    - cron: '0 8 * * 1'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    concurrency: 
-      group: ${{ github.ref }}
-      cancel-in-progress: true
     strategy:
       matrix:
         # List all of the PlatformIO platforms to build
@@ -26,11 +25,26 @@ jobs:
         # List of the examples to build.
         test_dir:
           - test/generic_test
-   
+
+        # CodeQL languages
+        language: [ 'cpp' ]
+        
     steps:
       # Checkout repository.
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Initializes the CodeQL tools for scanning.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: ${{ matrix.language }}
+          # If you wish to specify custom queries, you can do so here or in a config file.
+          # By default, queries listed here will override any specified in a config file.
+          # Prefix the list here with "+" to use these queries and those in the config file.
+          
+          # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          # queries: security-extended,security-and-quality
       
       # Setup Python (needed by PlatformIO)
       - name: Setup Python
@@ -52,3 +66,9 @@ jobs:
           PLATFORMIO_ENV: ${{ matrix.platformio_env }}
           TEST_DIR: ${{ matrix.test_dir }}
         run: pio run -e $PLATFORMIO_ENV -d $TEST_DIR
+
+      # Perform the code analysis.
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: "/language:${{matrix.language}}"
