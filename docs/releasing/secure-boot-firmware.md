@@ -20,7 +20,7 @@ esptool.py --chip esp32 --baud 460800 --before default_reset --after hard_reset 
 ```
 
 ## GitHub Actions workflow
-The [GitHub Actions workflow](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/.github/workflows/release.yml) needs a secret with the name `WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY` in order to sign the firmware. This key needs to be set in `Settings > Secrets > Actions`.
+The [GitHub Actions workflow](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/.github/workflows/release.yml) needs a secret with the name `SECURE_BOOTLOADER_SIGNING_KEY` in order to sign the firmware. This key needs to be set in `Settings > Secrets > Actions`.
 
 1. Generate a secure boot signing key:
   ```shell
@@ -29,6 +29,6 @@ The [GitHub Actions workflow](https://github.com/energietransitie/twomes-generic
   > KEEP THIS KEY SAFE! 
   > This key is needed to sign new firmware for a device with secure boot enabled. If this key is lost, no more new firmware can be installed on the device. 
   > Copying this key as a secret for the GitHub Actions workflow will make it available for the build workflow to sign new firmware releases.
-2. Copy the contents of the key and paste them as a new secret `WINDESHEIM_ENERGIETRANSITIE_SIGNING_KEY` in `Settings > Secrets > Actions` of the repository.
+2. Copy the contents of the key and paste them as a new secret `SECURE_BOOTLOADER_SIGNING_KEY` in `Settings > Secrets > Actions` of the repository.
 
 
