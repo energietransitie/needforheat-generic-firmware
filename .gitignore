@@ -8,3 +8,4 @@ secure_boot_signing_key.pem
 /CMakeLists.txt
 settings.json
 extensions.json
+.vscode/extensions.json
