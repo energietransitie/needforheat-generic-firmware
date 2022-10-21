@@ -24,7 +24,7 @@ jobs:
 
         # List of the examples to build.
         test_dir:
-          - test/generic_test
+          - test/generic-test
 
         # CodeQL languages
         language: [ 'cpp' ]
