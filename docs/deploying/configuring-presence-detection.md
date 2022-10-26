@@ -22,17 +22,20 @@ The MAC-addresses used for presence detection should be defined in the file `nvs
 1. Open a comand prompt in the directory of the nvs.csv file you just edited.
 2. Use the command below to generate the partition:
     ```shell
-    py -m $IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen generate nvs.csv nvs.bin 16384
+    python3 $IDF_PATH/components/nvs_flash/nvs_partition_generator/nvs_partition_gen.py generate nvs.csv nvs.bin 16384
     ```
+    > Should you encounter issues you may try to replace `py <command>` in the above commands with:
+    >
+    > - `py <command>` 
+    > - `python <command>`
 ## 3. Deploy the nvs.bin partition to a specific measurement device
 
 1. Open a comand prompt in the directory of the nvs.bin file you just generated.
 2. Use the command below to generate the partition:
     ```shell
-    py -m esptool --chip esp32 --baud 460800 write_flash 0x19000 nvs.bin
+    python3 -m esptool --chip esp32 --baud 460800 write_flash 0x19000 nvs.bin
     ```
-> Should you encounter issues you may try to replace `py -m <command>` in the above commands with:
->
-> - `python -m <command>` 
-> - `python3 -m <command>`
-> - `<command>.py`
+    > Should you encounter issues you may try to replace `py -m <command>` in the above commands with:
+    >
+    > - `py -m <command>` 
+    > - `python -m <command>`
