@@ -34,6 +34,8 @@ namespace Scheduler
 		static EventGroupHandle_t s_tasksEventGroup = xEventGroupCreate();
 		static EventBits_t s_startedTaskBits = 0;
 
+		static time_t s_schedulerStartTime = time(nullptr);
+
 		/**
 		 * Struct that holds information needed by the TaskWrapper.
 		 */
@@ -145,6 +147,8 @@ namespace Scheduler
 				// Reset started task bits and count.
 				s_startedTaskBits = 0;
 				int startedTasks = 0;
+
+				s_schedulerStartTime = time(nullptr);
 
 				// Loop over every task.
 				for (const auto &task : s_tasks)
@@ -260,6 +264,8 @@ namespace Scheduler
 
 	void RunAll()
 	{
+		s_schedulerStartTime = time(nullptr);
+
 		// Reset started task bits and count.
 		s_startedTaskBits = 0;
 		int startedTasks = 0;
@@ -306,8 +312,7 @@ namespace Scheduler
 	{
 		// Round down the time to full minutes,
 		// since the intervals will never be smaller than 1 minute.
-		auto now = time(nullptr);
-		auto currentTime = localtime(&now);
+		auto currentTime = localtime(&s_schedulerStartTime);
 
 		currentTime->tm_sec = 0;
 
