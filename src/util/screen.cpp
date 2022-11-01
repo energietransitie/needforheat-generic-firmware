@@ -17,7 +17,9 @@ Screen::Screen()
 
 void Screen::Clear()
 {
+	m_display.setEpdMode(epd_mode_t::epd_quality);
 	m_display.clear();
+	m_display.setEpdMode(epd_mode_t::epd_text);
 }
 
 void Screen::DisplayQR(const std::string &payload, int padding, const std::string &text)
