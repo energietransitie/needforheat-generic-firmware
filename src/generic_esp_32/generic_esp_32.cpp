@@ -29,10 +29,7 @@
 #include <generic_tasks.hpp>
 #include <measurements.hpp>
 #include <secure_upload.hpp>
-
-#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 #include <ota_firmware_updater.hpp>
-#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
@@ -447,11 +444,10 @@ namespace GenericESP32Firmware
         {
             // Immediately sync time.
             InitializeTimeSync();
-#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+
             // Log the booted firmware version to the backend.
             auto appDescription = esp_ota_get_app_description();
             OTAFirmwareUpdater::LogFirmwareToBackend("booted_fw", appDescription->version);
-#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
 
             ESP_LOGD(TAG, "Sending a heartbeat once.");
             // Add a measurement formatter for the heartbeat property.
