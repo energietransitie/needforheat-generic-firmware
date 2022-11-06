@@ -40,6 +40,7 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
+#include <specific_m5coreink/power_off_timeout.hpp>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -72,6 +73,8 @@ constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan voor info";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
 
+constexpr int PRE_PROVISIONING_POWER_OFF_TIMEOUT_S = 15 * 60; // 15 minutes.
+
 // Screen and QR definitions
 constexpr int SCREEN_WIDTH = 200;
 constexpr int SCREEN_HEIGHT = 200;
@@ -91,6 +94,8 @@ namespace GenericESP32Firmware
 
 #ifdef M5STACK_COREINK
         static Screen s_screen;
+
+        static M5CoreInkSpecific::PowerOffTimeout s_powerOffTimeout(PRE_PROVISIONING_POWER_OFF_TIMEOUT_S);
 #endif // M5STACK_COREINK
 
         /**
@@ -113,13 +118,17 @@ namespace GenericESP32Firmware
             }
         }
 
+#ifdef M5STACK_COREINK
         void PowerOff()
         {
             // Buzz the buzzer 500ms to signal power off.
             Buzzer::Buzz(500);
 
+            s_screen.Clear();
+
             powerpin_reset();
         }
+#endif // M5STACK_COREINK
 
         /**
          * Reset wireless settings and delete the bearer to force re-activation.
@@ -534,10 +543,10 @@ namespace GenericESP32Firmware
             }
 
 #if M5STACK_COREINK
-            // Show QR code on screen.
             auto qrCodePayload = Format::String(QR_CODE_PAYLOAD_TEMPLATE, GetDeviceServiceName().c_str(), GetDat());
-
             s_screen.DisplayQR(qrCodePayload, QR_PADDING);
+
+            s_powerOffTimeout.Start();
 #endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
@@ -680,6 +689,9 @@ namespace GenericESP32Firmware
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.
         s_screen.DisplayQR(POST_PROVISIONING_INFO_LINK, QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+
+        // Cancel power off timeout since provisioning is done.
+        s_powerOffTimeout.Cancel();
 #endif // M5STACK_COREINK
 
         err = StartWireless();
