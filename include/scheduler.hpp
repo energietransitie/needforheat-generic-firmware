@@ -39,47 +39,6 @@ namespace Scheduler
 		uint32_t priority;
 		Interval interval_s;
 		uint32_t id;
-
-		// // Constructor that allows to move name instead
-		// Task(TaskFunction_t function,
-		// 	 std::string &&name,
-		// 	 uint32_t stackDepth,
-		// 	 void *params,
-		// 	 uint32_t priority,
-		// 	 Interval interval_s,
-		// 	 uint32_t id)
-		// 	: function(function),
-		// 	  name(name),
-		// 	  stackDepth(stackDepth),
-		// 	  params(params),
-		// 	  priority(priority),
-		// 	  interval_s(interval_s),
-		// 	  id(id) {}
-	};
-
-	/**
-	 * Helper class with method Needed() to see if init is needed.
-	 */
-	class Init
-	{
-	public:
-		/**
-		 * Check if initialization needs to be done or not.
-		 *
-		 * @returns True if initialization is needed. False if already initialized.
-		 */
-		bool Needed()
-		{
-			if (needInit)
-			{
-				needInit = false;
-				return true;
-			}
-			return false;
-		}
-
-	private:
-		bool needInit = true;
 	};
 
 	/**
