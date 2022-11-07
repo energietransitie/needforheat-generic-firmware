@@ -15,8 +15,16 @@ jobs:
     environment: production
     strategy:
       matrix:
-        # List all of the PlatformIO platforms to build
-        platformio_env: [ESP32DEV, M5STACK_COREINK]
+        # List all of the PlatformIO platforms to build.
+        platformio_env: 
+          - ESP32DEV
+          - M5STACK_COREINK
+
+        # Twomes server environments to build for.
+        twomes_server_env:
+          - TEST_SERVER
+          - PRODUCTION_SERVER
+
     env:
       # Directory where the to-be-archived files are.
       BUILD_DIR: .pio/build/${{ matrix.platformio_env }}
@@ -50,6 +58,7 @@ jobs:
       - name: Build PlatformIO project
         env:
           PLATFORMIO_ENV: ${{ matrix.platformio_env }}
+          PLATFORMIO_BUILD_FLAGS: -DCONFIG_TWOMES_${{ matrix.twomes_server_env }}
         run: pio run -e $PLATFORMIO_ENV
 
       # Create secure_boot_signing_key.pem from GH secret SECURE_BOOTLOADER_SIGNING_KEY.
@@ -62,11 +71,11 @@ jobs:
       - name: Sign firmware
         uses: espressif/esp-idf-ci-action@main
         with:
-          command: espsecure.py sign_data -v1 --keyfile secure_boot_signing_key.pem --output $BUILD_DIR/firmware-signed_${{ matrix.platformio_env }}.bin $BUILD_DIR/firmware.bin
+          command: espsecure.py sign_data -v1 --keyfile secure_boot_signing_key.pem --output $BUILD_DIR/firmware-signed_${{ matrix.platformio_env }}_${{ matrix.twomes_server_env }}.bin $BUILD_DIR/firmware.bin
       
       # Set ARCHIVE_NAME variable from ARCHIVE_PREFIX and tag name.
       - name: Set ARCHIVE_NAME
-        run: echo "ARCHIVE_NAME=${ARCHIVE_PREFIX}_${{ matrix.platformio_env }}_${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+        run: echo "ARCHIVE_NAME=${ARCHIVE_PREFIX}_${{ matrix.platformio_env }}_${{ matrix.twomes_server_env }}_${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
       
       # Archive binary files.
       - name: Archive binary files
@@ -81,4 +90,4 @@ jobs:
           draft: true
           files: |
             ${{ env.BUILD_DIR }}/${{ env.ARCHIVE_NAME }}.zip
-            ${{ env.BUILD_DIR }}/firmware-signed_${{ matrix.platformio_env }}.bin
+            ${{ env.BUILD_DIR }}/firmware-signed_${{ matrix.platformio_env }}_${{ matrix.twomes_server_env }}.bin
