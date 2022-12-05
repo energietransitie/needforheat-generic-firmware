@@ -1,5 +1,6 @@
 #include <util/http_util.hpp>
 
+#include <power_manager.hpp>
 #include <util/delay.hpp>
 #include <util/nvs.hpp>
 
@@ -98,7 +99,7 @@ namespace HTTPUtil
         {
             // We were not able to connect after HTTPS_CONNECTION_RETRIES.
             // Reboot to avoid worse.
-            esp_restart();
+            PowerManager::GetInstance().Restart();
         }
 
         if (dataSend.size() > 0)

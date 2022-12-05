@@ -1,8 +1,8 @@
-#include <specific_m5coreink/power_off_timeout.hpp>
+#include <power_off_timeout.hpp>
 
 #include <esp_log.h>
 
-#include <specific_m5coreink/powerpin.h>
+#include <power_manager.hpp>
 #include <util/delay.hpp>
 #include <util/screen.hpp>
 
@@ -26,7 +26,7 @@ namespace M5CoreInkSpecific
             // vTaskDelay(Delay::MilliSeconds(300));
 
             // Power off the M5CoreINK.
-            powerpin_reset();
+            PowerManager::GetInstance().PowerOff();
 
             vTaskDelete(nullptr);
         }
@@ -37,6 +37,10 @@ namespace M5CoreInkSpecific
 
     void PowerOffTimeout::Start()
     {
+#ifndef M5STACK_COREINK
+        return;
+#endif // ifndef M5STACK_COREINK
+
         auto err = xTaskCreatePinnedToCore(TimoutFunction,
                                            "PowerOffTimeout",
                                            4096,
@@ -55,6 +59,10 @@ namespace M5CoreInkSpecific
 
     void PowerOffTimeout::Cancel()
     {
+#ifndef M5STACK_COREINK
+        return;
+#endif // ifndef M5STACK_COREINK
+
         if (m_taskHandle == nullptr)
         {
             return;

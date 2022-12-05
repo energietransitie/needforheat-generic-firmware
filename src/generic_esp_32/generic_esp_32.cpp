@@ -30,6 +30,7 @@
 #include <measurements.hpp>
 #include <secure_upload.hpp>
 #include <ota_firmware_updater.hpp>
+#include <power_manager.hpp>
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
@@ -44,7 +45,7 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
-#include <specific_m5coreink/power_off_timeout.hpp>
+#include <power_off_timeout.hpp>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -120,9 +121,23 @@ namespace GenericESP32Firmware
             // If the device was not provisioned and activated,
             // the provisioning QR will still be on screen.
 
-            powerpin_reset();
+            PowerManager::GetInstance().PowerOff();
         }
 #endif // M5STACK_COREINK
+
+        /**
+         * Reset wireless settings and delete the bearer to force re-activation.
+         */
+        void ResetWireless()
+        {
+            BlinkLED(LED_WIFI_RESET, 5);
+
+            auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
+            Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
+
+            esp_wifi_restore();
+            PowerManager::GetInstance().Restart();
+        }
 
         /**
          * Event handler for WiFi and provisioning events.
@@ -540,8 +555,7 @@ namespace GenericESP32Firmware
 
                     ESP_LOGE(TAG, "Could still not get connection; restarting now.");
 
-                    fflush(stdout);
-                    esp_restart();
+                    PowerManager::GetInstance().Restart();
                 }
             }
 
