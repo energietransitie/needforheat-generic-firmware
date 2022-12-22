@@ -113,7 +113,7 @@ namespace GenericTasks
 						   Scheduler::Interval::MINUTES_10);
 		Scheduler::AddTask(UploadTask,
 						   "Upload task",
-						   4096,
+						   8192,
 						   nullptr,
 						   1,
 						   Scheduler::Interval::MINUTES_10);

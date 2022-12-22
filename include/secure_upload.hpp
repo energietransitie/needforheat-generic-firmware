@@ -4,6 +4,7 @@
 #include <freertos/queue.h>
 
 #include <measurements.hpp>
+#include <persistent_buffer.hpp>
 
 namespace SecureUpload
 {
@@ -40,11 +41,11 @@ namespace SecureUpload
         /**
          * Create a new queue.
          */
-        Queue();
+        Queue() = default;
 
         /**
-         * Queue of measurements to upload.
+         * Storage for measurements (memory and SPIFFS if necessary).
          */
-        QueueHandle_t m_measurementQueue;
+        PersistentBuffer m_measurements;
     };
 } // namespace Upload

@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <esp_log.h>
 
@@ -23,6 +24,7 @@ namespace Measurements
 		 */
 		static void AddFormatter(const std::string &propertyName, const std::string &formatString);
 
+	public:
 		/**
 		 * Construct a new measurement.
 		 *
@@ -80,21 +82,23 @@ namespace Measurements
 			: Measurement(propertyName, value, 0) {}
 
 		/**
+		 * Default copy constructor for create a copy of a measurement.
+		 */
+		Measurement(const Measurement &other) = default;
+
+		/**
+		 * Construct a new measurement by taking another measurement's resources.
+		 */
+		Measurement(Measurement &&other);
+
+		/**
 		 * Create a JSON object that can be used to send to the backend API.
 		 *
 		 * @returns JSON object of the property.
 		 */
-		cJSON *GetJSON();
+		cJSON *GetJSON() const;
 
 	private:
-		/**
-		 * This map holds all the format strings for specific property types.
-		 *
-		 * When creating a new measurement, the propertyName is found in this map
-		 * and the format string is used to format the value.
-		 */
-		static std::unordered_map<std::string, std::string> m_formatStrings;
-
 		/**
 		 * The property name of this measurement.
 		 */
@@ -109,5 +113,39 @@ namespace Measurements
 		 * Value of the measurement, already formatted.
 		 */
 		std::string m_value;
+
+	private:
+		/**
+		 * This map holds all the format strings for specific property types.
+		 *
+		 * When creating a new measurement, the propertyName is found in this map
+		 * and the format string is used to format the value.
+		 */
+		static std::unordered_map<std::string, std::string> m_formatStrings;
+
+		// SerializeMeasurement and DeserializeMeasurement can access private class members for serialization.
+		friend esp_err_t SerializeMeasurement(const Measurement &measurement, FILE *file);
+		friend std::pair<Measurement, esp_err_t> DeserializeMeasurement(FILE *file);
 	};
+
+	/**
+	 * Serialize a measurement to a file.
+	 *
+	 * @param measurement Measurement to serialize.
+	 * @param file File to serialize to.
+	 * 
+	 * @returns An ESP error.
+	 */
+	esp_err_t SerializeMeasurement(const Measurement &measurement, FILE *file);
+
+	/**
+	 * Deserialize a measurement from a file.
+	 *
+	 * @param measurement 
+	 * @param file File to deserialize from.
+	 * 
+	 * @returns A measurement and an ESP error.
+	 */
+	std::pair<Measurement, esp_err_t> DeserializeMeasurement(FILE *file);
+
 } // namespace Measurements

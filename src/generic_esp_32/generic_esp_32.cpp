@@ -8,6 +8,7 @@
 #include <esp_wifi.h>
 #include <wifi_provisioning/manager.h>
 #include <esp_sntp.h>
+#include <esp_spiffs.h>
 #include <esp32/rom/crc.h>
 
 #include <freertos/FreeRTOS.h>
@@ -445,6 +446,27 @@ namespace GenericESP32Firmware
         }
 
         /**
+         * Initialize SPIFFS virtual filesystem.
+         */
+        esp_err_t InitializeSPIFFS()
+        {
+            esp_vfs_spiffs_conf_t spiffsConf{};
+            spiffsConf.base_path = "/spiffs";
+            spiffsConf.partition_label = nullptr;
+            spiffsConf.max_files = 2;
+            spiffsConf.format_if_mount_failed = true;
+
+            auto err = esp_vfs_spiffs_register(&spiffsConf);
+            if (err != ESP_OK) {
+                return err;
+            }
+
+            ESP_LOGI(TAG, "VFS for SPIFFS initialized");
+
+            return ESP_OK;
+        }
+
+        /**
          * Initialize and set the timezone.
          */
         void InitializeTimezone(const char *timezone)
@@ -737,7 +759,10 @@ namespace GenericESP32Firmware
         rtc_syncronize_sys_time();
 #endif // M5STACK_COREINK
 
-        auto err = InitializeWireless();
+        auto err = InitializeSPIFFS();
+        Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeSPIFFS()");
+
+        err = InitializeWireless();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeWireless()");
 
 #ifndef CONFIG_TWOMES_CUSTOM_GPIO
