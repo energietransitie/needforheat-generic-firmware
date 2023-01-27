@@ -76,8 +76,6 @@ namespace SecureUpload
             AppendToSPIFFS(itemsFromMemory);
             totalSaved += itemsFromMemory.size();
         }
-
-        ESP_LOGD(TAG, "Persisted %d items to from memory to persistent storage", totalSaved);
     }
 
     void PersistentBuffer::EraseItems()
@@ -123,33 +121,27 @@ namespace SecureUpload
             return {};
         }
 
-        size_t size = 0;
-        auto read = std::fread(&size, sizeof(size_t), 1, file);
-        if (read != 1 || size == 0)
-        {
-            std::fclose(file);
-            return {};
-        }
+        // Move to end, get position and return to beginning.
+        std::fseek(file, 0, SEEK_END);
+        auto endPos = std::ftell(file);
+        std::fseek(file, 0, SEEK_SET);
 
-        if (size == 0)
-        {
-            std::fclose(file);
-            return {};
-        }
+        size_t itemsRead = 0;
 
-        for (size_t i = 0; i < size; i++)
+        while (std::ftell(file) != endPos)
         {
             auto result = Measurements::DeserializeMeasurement(file);
             if (result.second != ESP_OK)
             {
-                ESP_LOGW(TAG, "An error occured while deserializing persistent buffer");
-                std::fclose(file);
-                return {};
+                ESP_LOGW(TAG, "An error occured while deserializing an item to persistent buffer");
+                continue;
             }
 
             auto measurementPtr = new Measurements::Measurement(std::move(result.first));
 
             items.push_back(measurementPtr);
+
+            itemsRead++;
         }
 
         auto err = std::fclose(file);
@@ -159,7 +151,7 @@ namespace SecureUpload
             return {};
         }
 
-        ESP_LOGI(TAG, "Loaded %d items from SPIFFS", size);
+        ESP_LOGI(TAG, "Loaded %d items from SPIFFS", itemsRead);
 
         return items;
     }
@@ -184,34 +176,36 @@ namespace SecureUpload
             return;
         }
 
-        ESP_LOGD(TAG, "Saved %d items to SPIFFS", size);
+        ESP_LOGD(TAG, "Wrote %d items to SPIFFS", size);
     }
 
     void PersistentBuffer::AppendToSPIFFS(const ItemsContainer &items)
     {
         ESP_LOGD(TAG, "Appending items to SPIFFS");
 
-        // Create new container with old items and add new items to it.
-        auto allItems = GetItemsFromSPIFFS();
-        
-        allItems.insert(allItems.end(), items.begin(), items.end());
+        auto file = std::fopen("/spiffs/buffer", "a");
+        if (!file)
+        {
+            ESP_LOGE(TAG, "An error occured when opening file \"/spiffs/buffer\"");
+            return;
+        }
 
-        WriteToSPIFFS(allItems);
+        auto size = SerializeToFile(items, file);
 
-        ESP_LOGI(TAG, "Appended %d measurements to SPIFFS", items.size());
+        auto err = std::fclose(file);
+        if (err != 0)
+        {
+            ESP_LOGE(TAG, "An error occured when closing file \"/spiffs/buffer\"");
+            return;
+        }
+
+        ESP_LOGD(TAG, "Appended %d items to SPIFFS", size);
     }
 
     size_t PersistentBuffer::SerializeToFile(const ItemsContainer &items, FILE *&file)
     {
-        size_t size = items.size();
-        if (size == 0)
-        {
-            return size;
-        }
-
-        auto written = std::fwrite(&size, sizeof(size_t), 1, file);
-        if (written != 1)
-            return written;
+        if (items.size() <= 0)
+            return 0;
 
         int itemCount = 0;
         for (auto &item : items)
@@ -219,9 +213,10 @@ namespace SecureUpload
             auto err = Measurements::SerializeMeasurement(*item, file);
             if (err != ESP_OK)
             {
-                ESP_LOGE(TAG, "An error occured while serializing persistent buffer");
-                return itemCount;
+                ESP_LOGW(TAG, "An error occured when serializing measurement");
+                continue;
             }
+
             itemCount++;
         }
 
