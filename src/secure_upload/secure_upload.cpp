@@ -40,13 +40,13 @@ namespace SecureUpload
 	{
 		auto uploadObject = cJSON_CreateObject();
 
-		// Add upload time.
+		// Add device upload time.
 		auto uploadTime = cJSON_CreateNumber(time(nullptr));
-		cJSON_AddItemToObject(uploadObject, "upload_time", uploadTime);
+		cJSON_AddItemToObject(uploadObject, "device_time", uploadTime);
 
-		// add property_measurements array
-		auto propertyMeasurements = cJSON_CreateArray();
-		cJSON_AddItemToObject(uploadObject, "property_measurements", propertyMeasurements);
+		// Ddd measurements array
+		auto measurements = cJSON_CreateArray();
+		cJSON_AddItemToObject(uploadObject, "measurements", measurements);
 
 		int measurementItems = 0;
 
@@ -56,7 +56,7 @@ namespace SecureUpload
 			if (xQueueReceive(m_measurementQueue, &item, 0) != pdTRUE)
 				break;
 
-			cJSON_AddItemToArray(propertyMeasurements, item->GetJSON());
+			cJSON_AddItemToArray(measurements, item->GetJSON());
 			delete item;
 
 			measurementItems++;
@@ -70,9 +70,11 @@ namespace SecureUpload
 		}
 
 		HTTPUtil::buffer_t dataSend = cJSON_Print(uploadObject);
+		HTTPUtil::headers_t headersSend;
 		HTTPUtil::buffer_t dataReceive;
+		HTTPUtil::headers_t headersReceive;
 
-		auto statusCode = GenericESP32Firmware::PostHTTPSToBackend(ENDPOINT_VARIABLE_UPLOAD, dataSend, dataReceive);
+		auto statusCode = GenericESP32Firmware::PostHTTPSToBackend(ENDPOINT_VARIABLE_UPLOAD, dataSend, headersSend, dataReceive, headersReceive, true);
 		if (statusCode != 200)
 		{
 			ESP_LOGE(TAG, "Posting to backend returned statuscode %d.", statusCode);

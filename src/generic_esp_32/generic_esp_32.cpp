@@ -67,7 +67,7 @@ constexpr const char *NVS_NAMESPACE = "twomes_storage";
 constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
-constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"activation_token\":\"%u\"}";
+constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"name\":\"%s\"}";
 constexpr const char *POST_PROVISIONING_INFO_LINK = "https://edu.nl/4pujw";
 constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan voor info";
 
@@ -409,16 +409,6 @@ namespace GenericESP32Firmware
                      "\n\n%s\n\n",
                      qrCodePayload.c_str());
 
-            // Log the post /device payload.
-            auto postDevicePayload = Format::String(POST_DEVICE_PAYLOAD_TEMPLATE,
-                                                    deviceServiceName.c_str(),
-                                                    s_deviceTypeName.c_str(),
-                                                    dat);
-            ESP_LOGI(TAG,
-                     "POST /device payload: \n"
-                     "\n\n%s\n\n",
-                     postDevicePayload.c_str());
-
             return ESP_OK;
         }
 
@@ -604,13 +594,17 @@ namespace GenericESP32Firmware
                 return;
             }
 
-            auto dat = GetDat();
-            HTTPUtil::buffer_t deviceActivationRequestData = Format::String(ACTIVATION_POST_REQUEST_TEMPLATE, dat);
+            HTTPUtil::buffer_t deviceActivationRequestData = Format::String(ACTIVATION_POST_REQUEST_TEMPLATE, GetDeviceServiceName().c_str());
+            HTTPUtil::headers_t headersSend;
+            headersSend["Authorization"] = Format::String("Bearer %s", std::to_string(GetDat()).c_str());
 
             HTTPUtil::buffer_t dataReceive;
+            HTTPUtil::headers_t headersReceive;
             auto statusCode = PostHTTPSToBackend(ENDPOINT_DEVICE_ACTIVATION,
                                                  deviceActivationRequestData,
+                                                 headersSend,
                                                  dataReceive,
+                                                 headersReceive,
                                                  false);
             if (statusCode != 200)
             {
@@ -634,15 +628,15 @@ namespace GenericESP32Firmware
                 ESP_LOGE(TAG, "An error occured when parsing JSON.");
             }
 
-            auto jsonSessionToken = cJSON_GetObjectItem(json, "session_token");
+            auto jsonAuthorizationToken = cJSON_GetObjectItem(json, "authorization_token");
             if (json == nullptr)
             {
                 ESP_LOGE(TAG, "An error occured when parsing JSON.");
             }
 
-            auto sessionToken = cJSON_GetStringValue(jsonSessionToken);
-            std::string sessionTokenStr(sessionToken);
-            SetBearer(sessionTokenStr.c_str());
+            auto authorizationToken = cJSON_GetStringValue(jsonAuthorizationToken);
+            std::string authorizationTokenStr(authorizationToken);
+            SetBearer(authorizationTokenStr.c_str());
             cJSON_Delete(json);
         }
     } // namespace
@@ -712,6 +706,8 @@ namespace GenericESP32Firmware
 
     std::string GetDeviceServiceName()
     {
+        // TODO: hash device type + add mac.
+
         uint8_t eth_mac[6];
         auto err = esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
         Error::CheckAppendName(err, TAG, "An error occured when getting ETH MAC");
@@ -754,8 +750,10 @@ namespace GenericESP32Firmware
 
     int PostHTTPSToBackend(const std::string &endpoint,
                            HTTPUtil::buffer_t &dataSend,
+                           HTTPUtil::headers_t &headersSend,
                            HTTPUtil::buffer_t &dataReceive,
-                           bool useBearer)
+                           HTTPUtil::headers_t &headersReceive,
+                           bool useBearer = false)
     {
         std::string url = TWOMES_SERVER + endpoint;
 
@@ -766,15 +764,12 @@ namespace GenericESP32Firmware
         config.transport_type = HTTP_TRANSPORT_OVER_SSL;
         config.is_async = false;
 
-        HTTPUtil::headers_t headersSend;
         headersSend["accept"] = "*/*";
         headersSend["Content-Type"] = "application/json";
         if (useBearer)
             headersSend["Authorization"] = "Bearer " + GetBearer();
 
         ESP_LOGD(TAG, "Sending data to backend with length: %d, data:\n%s", dataSend.size(), dataSend.c_str());
-
-        HTTPUtil::headers_t headersReceive;
 
         ESP_LOGD(TAG, "Remaining heap space: %d", esp_get_free_heap_size());
 
