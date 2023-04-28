@@ -68,8 +68,7 @@ constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"name\":\"%s\"}";
-constexpr const char *POST_PROVISIONING_INFO_LINK = "https://edu.nl/4pujw";
-constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan voor info";
+constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan for info";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
 
@@ -78,7 +77,7 @@ constexpr int PRE_PROVISIONING_POWER_OFF_TIMEOUT_S = 15 * 60; // 15 minutes.
 // Screen and QR definitions
 constexpr int SCREEN_WIDTH = 200;
 constexpr int SCREEN_HEIGHT = 200;
-constexpr int QR_PADDING = 16;
+constexpr int QR_PADDING = 10;
 
 namespace GenericESP32Firmware
 {
@@ -284,12 +283,49 @@ namespace GenericESP32Firmware
         /**
          * Set bearer in NVS.
          *
-         * @returns bearer.
+         * @param bearer Bearer to store in NVS.
          */
         void SetBearer(const std::string &bearer)
         {
             auto err = NVS::Set(NVS_NAMESPACE, "bearer", bearer);
             Error::CheckAppendName(err, TAG, "An error occured when setting bearer");
+        }
+
+        /**
+         * Get Info URL from NVS.
+         *
+         * @returns Info URL.
+         */
+        std::string GetInfoURL()
+        {
+            std::string infoURL;
+            auto err = NVS::Get(NVS_NAMESPACE, "info_url", infoURL);
+            if (err == ESP_ERR_NVS_NOT_FOUND)
+            {
+                // The key does not exist.
+                ESP_LOGD(TAG, "The info URL has not been initialized in NVS yet.");
+                return infoURL;
+            }
+
+            if (err != ESP_OK)
+            {
+                // Something went wrong besides the key not existing.
+                Error::Check(err, TAG);
+                return infoURL;
+            }
+
+            return infoURL;
+        }
+
+        /**
+         * Set info URL in NVS.
+         *
+         * @param infoURL Info URL to store in NVS.
+         */
+        void SetInfoURL(const std::string &infoURL)
+        {
+            auto err = NVS::Set(NVS_NAMESPACE, "info_url", infoURL);
+            Error::CheckAppendName(err, TAG, "An error occured when setting info URL");
         }
 
         /**
@@ -635,8 +671,23 @@ namespace GenericESP32Firmware
             }
 
             auto authorizationToken = cJSON_GetStringValue(jsonAuthorizationToken);
-            std::string authorizationTokenStr(authorizationToken);
-            SetBearer(authorizationTokenStr.c_str());
+            SetBearer(authorizationToken);
+
+            auto jsonDeviceType = cJSON_GetObjectItem(json, "device_type");
+            if (json == nullptr)
+            {
+                ESP_LOGE(TAG, "An error occured when parsing JSON.");
+            }
+
+            auto jsonInfoURL = cJSON_GetObjectItem(jsonDeviceType, "info_url");
+            if (json == nullptr)
+            {
+                ESP_LOGE(TAG, "An error occured when parsing JSON.");
+            }
+
+            auto infoURL = cJSON_GetStringValue(jsonInfoURL);
+            SetInfoURL(infoURL);
+
             cJSON_Delete(json);
         }
     } // namespace
@@ -681,9 +732,6 @@ namespace GenericESP32Firmware
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::StartProvisioning()");
 
 #ifdef M5STACK_COREINK
-        // Show information about what this device does on the screen.
-        s_screen.DisplayQR(POST_PROVISIONING_INFO_LINK, QR_PADDING, POST_PROVISIONING_INFO_TEXT);
-
         // Cancel power off timeout since provisioning is done.
         s_powerOffTimeout.Cancel();
 #endif // M5STACK_COREINK
@@ -697,6 +745,11 @@ namespace GenericESP32Firmware
 #endif
 
         ActivateDevice();
+
+#ifdef M5STACK_COREINK
+        // Show information about what this device does on the screen.
+        s_screen.DisplayQR(GetInfoURL(), QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+#endif // M5STACK_COREINK
 
         if (s_postProvisioningNeeded)
             PostProvisioning();
