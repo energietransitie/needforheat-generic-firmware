@@ -274,7 +274,7 @@ namespace OTAFirmwareUpdater
         // Initialize Measurement formatter.
         Measurements::Measurement::AddFormatter(propertyName, "%s");
 
-        Measurements::Measurement measurement(propertyName, version.c_str());
+        Measurements::Measurement measurement(propertyName, version.c_str(), time(nullptr));
         secureUploadQueue.AddMeasurement(measurement);
     }
 } // namespace OTAFirmwareUpdater
