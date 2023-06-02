@@ -9,6 +9,7 @@
 #include <wifi_provisioning/manager.h>
 #include <driver/gpio.h>
 #include <esp_sntp.h>
+#include <esp32/rom/crc.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
@@ -759,13 +760,13 @@ namespace GenericESP32Firmware
 
     std::string GetDeviceServiceName()
     {
-        // TODO: hash device type + add mac.
+        uint16_t deviceTypeHash = ~crc16_be((uint16_t)~0x0000, (const uint8_t *)s_deviceTypeName.c_str(), s_deviceTypeName.length());
 
         uint8_t eth_mac[6];
         auto err = esp_wifi_get_mac(WIFI_IF_STA, eth_mac);
         Error::CheckAppendName(err, TAG, "An error occured when getting ETH MAC");
 
-        return Format::String("%s%02X%02X%02X", DEVICE_SERVICE_NAME_PREFIX, eth_mac[3], eth_mac[4], eth_mac[5]);
+        return Format::String("%04X-%02X%02X%02X", deviceTypeHash, eth_mac[3], eth_mac[4], eth_mac[5]);
     }
 
     void InitializeTimeSync()
