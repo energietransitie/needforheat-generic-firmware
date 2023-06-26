@@ -6,7 +6,7 @@
 #include <secure_upload.hpp>
 #include <measurements.hpp>
 
-constexpr const char *MEASUREMENT_PROPERTY_NAME = "batteryVoltage";
+constexpr const char *MEASUREMENT_PROPERTY_NAME = "battery_voltage__V";
 
 namespace M5CoreInkSpecific
 {

@@ -33,7 +33,7 @@ constexpr int RESPONSE_MAX_WAIT_MS = 20 * 1000; // 20 seconds.
 constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
-constexpr const char *MEASUREMENT_PROPERTY_NAME = "countPresence";
+constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
 
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
