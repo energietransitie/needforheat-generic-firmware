@@ -13,29 +13,25 @@ namespace Measurements
 
 	cJSON *Measurement::GetJSON()
 	{
-		// Create the object that eventually gets added to "property_measurements".
-		auto propertyMeasurementObject = cJSON_CreateObject();
+		// Create the object that eventually gets added to "measurements".
+		auto measurementObject = cJSON_CreateObject();
 
-		// Add the property name to the object.
+		// Add the property object.
+		auto propertyObject = cJSON_CreateObject();
+		cJSON_AddItemToObject(measurementObject, "property", propertyObject);
+
+		// Add the property name to the property object.
 		auto propertyName = cJSON_CreateString(m_propertyName.c_str());
-		cJSON_AddItemToObject(propertyMeasurementObject, "property_name", propertyName);
-
-		// Add a measurements array to the object.
-		auto measurements = cJSON_CreateArray();
-		cJSON_AddItemToObject(propertyMeasurementObject, "measurements", measurements);
-
-		// Add a new measurement object to the measurements array.
-		auto measurement = cJSON_CreateObject();
-		cJSON_AddItemToArray(measurements, measurement);
+		cJSON_AddItemToObject(propertyObject, "name", propertyName);
 
 		// Add the measurement timestamp to the measurement object.
 		auto timestamp = cJSON_CreateNumber(m_timestamp);
-		cJSON_AddItemToObject(measurement, "timestamp", timestamp);
+		cJSON_AddItemToObject(measurementObject, "time", timestamp);
 
 		// Add the measurement value to the measurement object.
 		auto value = cJSON_CreateString(m_value.c_str());
-		cJSON_AddItemToObject(measurement, "value", value);
+		cJSON_AddItemToObject(measurementObject, "value", value);
 
-		return propertyMeasurementObject;
+		return measurementObject;
 	}
 } // namespace Measurements

@@ -22,8 +22,8 @@ Different Twomes measurement devices may have various features in common, includ
 | Sensor | Property or *timestamp*           | Unit | [Printf format](https://en.wikipedia.org/wiki/Printf_format_string) | Default measurement interval \[h:mm:ss\] | Description                            |
 |--------|--------------------|------|--------|-------------------|----------------------------------------|
 | [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `heartbeat` |   | %d     | 0:10:00           | Incrementing counter indicating the device is working                       |
-| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `batteryVoltage` | V  | %.2f   | 0:10:00           | Measures the battery voltage                      |
-| [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `countPresence`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones responding to Bluetooth name request                        |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `battery_voltage__V` | V  | %.2f   | 0:10:00           | Measures the battery voltage                      |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `occupancy__p`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones responding to Bluetooth name request                        |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`timestamp`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Each measurement is timestamped |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`upload_time`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Uploads of the contents of the secure upload queue to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) are timestamped |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) internet | `booted_fw`         | version   | %s   | 48:00:00           | Version string of firmware on first boot after provisioning or OTA update                        |

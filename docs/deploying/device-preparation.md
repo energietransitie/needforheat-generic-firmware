@@ -54,33 +54,7 @@ After this command you should perform the full Twomes device preparation flow be
 > - `python3 -m esptool` or
 > - `esptool.py`.
 
-## Step 2: Find the device name and activation_token
-
-1. Open your serial monitor utility.
-	*  For [PuTTY](https://www.chiark.greenend.org.uk/~sgtatham/putty/), use the following destination settings (be sure to `Save` them to `Load` them conveniently later):
-		* Connection type: `Serial`
-		* Speed: `115200`
-		* Serial line: `COM?` (replace `?` with the number of the COM-port your device is connected to, e.g., `COM5`). 
-2. Once your device is powered up (and running), briefly press the reset button.
-3. You will be able to see all the boot logs of the device in the serial monitor. Somewhere in the logs, you will find the JSON payload needed to active the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api).
-
-	```json5 title="Example JSON payload inside device logs"
-	{
-		"name":"TWOMES-D3AD48",
-		"device_type":"DSMR-P1-gateway-TinTsTrCO2",
-		"activation_token":"3375550652"
-	}
-	```
-
-## Step 3: Register the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
-
-In order to create a device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api), you need the JSON payload which you found in [step 2](#step-2-find-a-devices-name-and-activationtoken).
-
-Read the [Twomes API documentation](https://api.energietransitiewindesheim.nl/docs#/default/device_create_device_post) to see how you can use the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) to create the device. 
-
-You will need an admin bearer session token in order to use this endpoint. Refer to [this section on the Twomes API](https://github.com/energietransitie/twomes-backoffice-api#deploying-new-admin-accounts-to-apitstenergietransitiewindesheimnl) on how to obtain one.
-
-## Step 4: Generating a QR-code
+## Step 2: Generating a QR-code
 > For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.<
 
 The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that visible to the subject that receives the Twomes measurement device. When printed on a sticker, we recomend attaching it the back of the measurement device.

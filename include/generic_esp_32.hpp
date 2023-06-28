@@ -4,9 +4,9 @@
 
 #include <util/http_util.hpp>
 
-constexpr const char *ENDPOINT_VARIABLE_UPLOAD = "/device/measurements/variable-interval";
-constexpr const char *ENDPOINT_FIXED_INTERVAL_UPLOAD = "/device/measurements/fixed-interval";
-constexpr const char *ENDPOINT_DEVICE_ACTIVATION = "/device/activate";
+constexpr const char *ENDPOINT_VARIABLE_UPLOAD = "/v2/upload";
+constexpr const char *ENDPOINT_FIXED_INTERVAL_UPLOAD = "/v2/device/measurements/fixed-interval"; // Deprecated.
+constexpr const char *ENDPOINT_DEVICE_ACTIVATION = "/v2/device/activate";
 
 namespace GenericESP32Firmware
 {
@@ -39,13 +39,17 @@ namespace GenericESP32Firmware
      *
      * @param endpoint API endpoint.
      * @param dataSend Data to send in the POST request.
+     * @param headersSend Headers to send in the POST request.
      * @param dataReceive Response data from the POST request.
+     * @param headersReceive Response headers from the POST request.
      * @param useBearer Optional parameter (default true) to use bearer or not.
      *
      * @returns HTTP status code.
      */
     int PostHTTPSToBackend(const std::string &endpoint,
                            HTTPUtil::buffer_t &dataSend,
+                           HTTPUtil::headers_t &headersSend,
                            HTTPUtil::buffer_t &dataReceive,
-                           bool useBearer = true);
+                           HTTPUtil::headers_t &headersReceive,
+                           bool useBearer);
 } // namespace GenericESP32Firmware
