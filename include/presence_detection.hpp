@@ -3,6 +3,7 @@
 #include <string>
 
 #include <esp_bt_defs.h>
+#include <mac_address.hpp>
 
 namespace PresenceDetection
 {

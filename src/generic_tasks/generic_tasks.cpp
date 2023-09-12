@@ -4,6 +4,7 @@
 #include <measurements.hpp>
 #include <secure_upload.hpp>
 #include <generic_esp_32.hpp>
+#include <demo.hpp>
 
 #ifdef M5STACK_COREINK
 #include <specific_m5coreink/battery_voltage.hpp>
@@ -78,7 +79,7 @@ namespace GenericTasks
 						   4096,
 						   nullptr,
 						   1,
-						   Scheduler::Interval::MINUTES_10);
+						   Scheduler::Interval::MINUTES_1);
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
 
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
@@ -90,7 +91,12 @@ namespace GenericTasks
 						   1,
 						   Scheduler::Interval::HOURS_48);
 #endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
-
+		Scheduler::AddTask(task_main,
+						   "ble task",
+						   4096,
+						   nullptr,
+						   1,
+						   Scheduler::Interval::MINUTES_1);
 		// Add tasks to the scheduler. Add the UploadTask as the last task.
 		Scheduler::AddTask(HeartbeatTask,
 						   "Heartbeat task",

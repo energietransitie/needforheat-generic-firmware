@@ -1,4 +1,5 @@
 #include "presence_detection.hpp"
+#include "control_panel.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -11,6 +12,8 @@
 #include <esp_bt_main.h>
 #include <esp_gatt_common_api.h>
 #include <esp_gap_bt_api.h>
+
+#include <esp_bt_device.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
@@ -159,6 +162,12 @@ namespace PresenceDetection
 					ESP_LOGD(TAG, "All name requests have returned.");
 				}
 			}
+			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
+			{
+				MACAddres::new_paired_device(param);
+			}
+
+			ESP_LOGI("GAP", "event: %d", event);			
 		}
 
 		/**
@@ -191,6 +200,15 @@ namespace PresenceDetection
 			err = esp_bt_gap_register_callback(GapCallback);
 			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
 				return err;
+
+			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+				return err;
+			
+			char *dev_name = "NeedForHeat_tel_ook_mij_mee";
+    		esp_bt_dev_set_device_name(dev_name);
+
+			ControlPanel::initialzeButtons();
 
 			return ESP_OK;
 		}
