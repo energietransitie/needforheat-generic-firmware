@@ -37,6 +37,7 @@ constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
 constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
+constexpr const char *dev_name = "NeedForHeat_tel_ook_mij_mee";
 
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
@@ -204,8 +205,7 @@ namespace PresenceDetection
 			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
 			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
 				return err;
-			
-			char *dev_name = "NeedForHeat_tel_ook_mij_mee";
+
     		esp_bt_dev_set_device_name(dev_name);
 
 			ControlPanel::initialzeButtons();
@@ -314,5 +314,10 @@ namespace PresenceDetection
 		secureUploadQueue.AddMeasurement(measurement);
 
 		ESP_LOGD(TAG, "task finished.");
+	}
+
+	std::string getDevName()
+	{
+		return dev_name;
 	}
 } // namespace PresenceDetection

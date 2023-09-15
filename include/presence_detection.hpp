@@ -31,4 +31,9 @@ namespace PresenceDetection
      * and report which ones responded.
      */
     void PresenceDetectionTask(void *taskInfo);
+
+    /**
+     * Return the device name.
+     */
+    std::string getDevName();
 } // namespace PresenceDetection

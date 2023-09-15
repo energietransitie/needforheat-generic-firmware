@@ -1,6 +1,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <util/strings.hpp>
 
 #define LGFX_USE_V1
 #include <LovyanGFX.h>
@@ -28,6 +30,27 @@ public:
 	 * @param text Optional text to show under the QR code.
 	 */
 	void DisplayQR(const std::string &payload, int padding, const std::string &text = "");
+
+	/**
+	 * Display smartphones.
+	 * 
+	 * @param smartphones String cointaing all smartphones
+	 * @param position Current selected smartphone 
+	 */
+	void DisplaySmartphones(std::string smartphones, uint8_t position);
+
+	/**
+	 * Info prompt on how to participate with presence detection.
+	 */
+	void InfoScreen();
+
+	/**
+	 * Prompt to remove phone.
+	 * 
+	 * @param smartphones String cointaing all smartphones
+	 * @param position Current selected smartphone 
+	 */
+	void RemoveSmartphone(std::string smartphones, uint8_t position);
 
 private:
 	/**

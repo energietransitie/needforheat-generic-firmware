@@ -104,7 +104,7 @@ namespace Buttons
 
                 err = xTaskCreatePinnedToCore(ButtonPressHandlerTask,
                                               "ButtonPressHandlerTask",
-                                              2048,
+                                              4096,
                                               nullptr,
                                               10,
                                               nullptr,

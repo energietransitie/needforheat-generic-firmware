@@ -91,12 +91,6 @@ namespace GenericTasks
 						   1,
 						   Scheduler::Interval::HOURS_48);
 #endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
-		Scheduler::AddTask(task_main,
-						   "ble task",
-						   4096,
-						   nullptr,
-						   1,
-						   Scheduler::Interval::MINUTES_1);
 		// Add tasks to the scheduler. Add the UploadTask as the last task.
 		Scheduler::AddTask(HeartbeatTask,
 						   "Heartbeat task",

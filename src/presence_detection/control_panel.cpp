@@ -1,4 +1,5 @@
 #include <control_panel.hpp>
+#include <mac_address.hpp>
 
 #include <cstdlib>
 #include <vector>
@@ -10,6 +11,7 @@
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include <esp_gatt_common_api.h>
+#include <esp_gap_bt_api.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
@@ -31,8 +33,11 @@
 #define PRESS_INPUT_PIN 38
 #define RIGHT_INPUT_PIN 39
 
-enum class Event {idle, select, remove};
-enum class ButtonActions {left, press, right};
+constexpr const char *NVS_NAMESPACE = "twomes_storage";
+constexpr const char *TAG = "MAC Address";
+
+enum class Event {idle, select, info, remove};
+enum class ButtonActions {up, press, down, longPress};
 
 
 namespace ControlPanel
@@ -43,31 +48,88 @@ namespace ControlPanel
   
     void Panelstate(ButtonActions button)
     {
-
+        static uint8_t selectedItem = 0, SelectedItemForRemoval;
         switch (state)
         {
         case Event::idle:
-                if (button == ButtonActions::press)
+                // go out of idle the moment of interaction 
+                if (button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
                 {
-                    ESP_LOGI("State", "button pressed");
                     state = Event::select;
                     sc.Clear();
+                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
                 }
                 
             break;
         case Event::select:
-                if (button == ButtonActions::left)
+                if (button == ButtonActions::up)
                 {
-                    ESP_LOGI("State", "left button pressed");
+                    if(!selectedItem)
+                    {
+                        selectedItem--;
+                    }
                 }
-                else if (button == ButtonActions::right)
+                else if (button == ButtonActions::down)
                 {
-                    ESP_LOGI("State", "right button pressed");
+                    selectedItem++;
                 }
+
+                if (button == ButtonActions::press && selectedItem == 0)
+                {   
+                    sc.Clear();
+                    sc.InfoScreen();
+                    state = Event::info;
+                    break;
+                }
+                else if (button == ButtonActions::press)
+                {
+                    state = Event::remove;
+                    sc.Clear();
+                    sc.RemoveSmartphone(getSmartphones(), selectedItem-1);//-1 because info is also a selectedItem and the phone list should start at 0
+                    SelectedItemForRemoval = selectedItem-1;
+                    selectedItem = 0;
+                    break;
+                }
+
+                sc.DisplaySmartphones(getSmartphones(), selectedItem);
                 
             break;
+        case Event::info:
+                if(button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
+                {
+                    state = Event::select;
+                }
         case Event::remove:
-            /* code */
+                if (button == ButtonActions::up)
+                {
+                    if(!selectedItem)
+                    {
+                        selectedItem--;
+                    }
+                }
+                else if (button == ButtonActions::down)
+                {
+                    selectedItem++;
+                }
+
+                if((button == ButtonActions::press && selectedItem == 1) || selectedItem == 2)
+                {   
+                    state = Event::select;
+                    sc.Clear();
+                    selectedItem = 0;
+                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    break;
+                }
+                else if(button == ButtonActions::press && selectedItem == 0)
+                {
+                    MACAddres::removeMacAddress(SelectedItemForRemoval);
+                    state = Event::select;
+                    sc.Clear();
+                    selectedItem = 0;
+                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    break;
+                }
+                sc.RemoveSmartphone(getSmartphones(), selectedItem);
             break;
         
         default:
@@ -77,9 +139,19 @@ namespace ControlPanel
 
     }
 
-    void left()
+    std::string getSmartphones()
+    {   
+        bool empty = false;
+        
+        std::string smartphoneList;
+        auto err = NVS::Get(NVS_NAMESPACE, "smartphones", smartphoneList);
+
+        return smartphoneList;
+    }
+
+    void up()
     {
-        Panelstate(ButtonActions::left);
+        Panelstate(ButtonActions::up);
     }
 
     void press()
@@ -87,9 +159,14 @@ namespace ControlPanel
         Panelstate(ButtonActions::press);
     }
 
-    void right()
+    void down()
     {
-        Panelstate(ButtonActions::right);
+        Panelstate(ButtonActions::down);
+    }
+
+    void longPress()
+    {
+        Panelstate(ButtonActions::longPress);
     }
 
     
@@ -124,11 +201,12 @@ namespace ControlPanel
         err = gpio_config(&rightButton);
         Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
 
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "Calibrate C02", 0, left, nullptr);
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Calibrate C02", 0, press, nullptr);
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Calibrate C02", 0, right, nullptr);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "up", 1, up, nullptr);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 1, press, longPress);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 1, down, nullptr);
 
         state = Event::idle;
+
     }    
     
 }

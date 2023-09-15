@@ -69,7 +69,7 @@ constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"name\":\"%s\"}";
-constexpr const char *POST_PROVISIONING_INFO_TEXT = "Scan for info";
+constexpr const char *POST_PROVISIONING_INFO_TEXT = "Info? Scan!";
 
 constexpr int LONG_BUTTON_PRESS_DURATION = 10 * 2; // Number of half seconds to wait: (10 s * 2 halfseconds)
 
