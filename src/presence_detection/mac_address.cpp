@@ -61,9 +61,6 @@ namespace MACAddres
     {
         bool doubleMACAddress = false, empty = false;
         std::string macAddressList, smartphoneList;
-        // used for debugging
-        // NVS::Erase(NVS_NAMESPACE, "mac_addresses");
-        // NVS::Erase(NVS_NAMESPACE, "smartphones");
         auto err = NVS::Get(NVS_NAMESPACE, "smartphones", smartphoneList);
         err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList);
         if (err == ESP_ERR_NVS_NOT_FOUND)
@@ -76,13 +73,11 @@ namespace MACAddres
             auto macAddressStrings = Strings::Split(macAddressList, ';');
 
             // loop true all current MAC adresses
-            ESP_LOGI(TAG, "Stored adresses:");
             for (const auto &address : macAddressStrings)
             {
-                ESP_LOGI(TAG, "%s", address.c_str());
                 if(address.compare(newAddress) == 0)
                 {
-                    ESP_LOGI(TAG, "MAC address is already stored.");
+                    ESP_LOGW(TAG, "MAC address is already stored.");
                     doubleMACAddress = true;
                 }
             }
@@ -133,16 +128,17 @@ namespace MACAddres
             for (const auto &address : macAddressStrings)
             {
                
-                if(count != id && count > 0)
-                {
-                    newMacAddressList += (";" + address);
-                }
-                else if(count != id && count <= 0)
+                
+                if((count != id && count <= 0) || (id == 0 && count == 1))
                 {
                     newMacAddressList += address;
                 }
+                else if(count != id && count > 0)
+                {
+                    newMacAddressList += (";" + address);
+                }
                 
-               count++;
+                count++;
             }
 
             count = 0;
@@ -151,17 +147,17 @@ namespace MACAddres
             //loop trough all smartphones to create a new list without the selected phone
             for (const auto &smartphone : smartphoneStrings)
             {
-                
-                if (count != id && count > 0)
-                {
-                    newSmartphoneList += (";" + smartphone);
-                }
-                else if(count != id && count <= 0)
+                if((count != id && count <= 0) || (id == 0 && count == 1))
                 {
                     newSmartphoneList += smartphone;
                 }
+                else if (count != id && count > 0)
+                {
+                    newSmartphoneList += (";" + smartphone);
+                }
+               
                 
-               count++;
+                count++;
             }
         
         NVS::Erase(NVS_NAMESPACE, "mac_addresses");

@@ -166,9 +166,7 @@ namespace PresenceDetection
 			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
 			{
 				MACAddres::new_paired_device(param);
-			}
-
-			ESP_LOGI("GAP", "event: %d", event);			
+			}			
 		}
 
 		/**
@@ -224,13 +222,18 @@ namespace PresenceDetection
 			{
 				ESP_LOGW(TAG, "Retrieving Bluetooth MAC-addresses for presence detection from NVS was unsuccessful. "
 							  "It is possible that no MAC-addresses were added to NVS storage.");
-				// Not critical and we already logged this. Return ESP_OK.
-				return ESP_OK;
+				// Not critical and we already logged this.
 			}
 			else if (err != ESP_OK)
 			{
 				ESP_LOGE(TAG, "An error occured when reading MAC-addresses from NVS.");
 				return err;
+			}
+
+			//empty s_macAddresses to prevent mulitple occasions of the same phone
+			while (!s_macAddresses.empty())
+			{
+				s_macAddresses.pop_back();
 			}
 
 			auto macAddressStrings = Strings::Split(macAddressList, ';');
@@ -287,14 +290,14 @@ namespace PresenceDetection
 			err = InitializeBluetooth();
 			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
 
-			err = InitializeMacAddresses();
-			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");
-
 			// Add a formatted for the countPresence property.
 			Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%d");
 
 			s_initialized = true;
 		}
+
+		err = InitializeMacAddresses();
+		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");
 
 		// Reset responses.
 		s_responseCount = 0;

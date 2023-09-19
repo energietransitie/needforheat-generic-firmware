@@ -64,7 +64,7 @@ namespace ControlPanel
         case Event::select:
                 if (button == ButtonActions::up)
                 {
-                    if(!selectedItem)
+                    if(selectedItem)
                     {
                         selectedItem--;
                     }
@@ -85,9 +85,9 @@ namespace ControlPanel
                 {
                     state = Event::remove;
                     sc.Clear();
-                    sc.RemoveSmartphone(getSmartphones(), selectedItem-1);//-1 because info is also a selectedItem and the phone list should start at 0
-                    SelectedItemForRemoval = selectedItem-1;
-                    selectedItem = 0;
+                    SelectedItemForRemoval = selectedItem-1;//-1 because info is also a selectedItem and the phone list should start at 0
+                    selectedItem = 0; 
+                    sc.RemoveSmartphone(getSmartphones(),selectedItem, SelectedItemForRemoval);
                     break;
                 }
 
@@ -98,6 +98,10 @@ namespace ControlPanel
                 if(button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
                 {
                     state = Event::select;
+                    sc.Clear();
+                    selectedItem = 0;
+                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    break;
                 }
         case Event::remove:
                 if (button == ButtonActions::up)
@@ -129,7 +133,7 @@ namespace ControlPanel
                     sc.DisplaySmartphones(getSmartphones(), selectedItem);
                     break;
                 }
-                sc.RemoveSmartphone(getSmartphones(), selectedItem);
+                sc.RemoveSmartphone(getSmartphones(), selectedItem, SelectedItemForRemoval);
             break;
         
         default:
@@ -201,9 +205,10 @@ namespace ControlPanel
         err = gpio_config(&rightButton);
         Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
 
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "up", 1, up, nullptr);
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 1, press, longPress);
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 1, down, nullptr);
+        
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, longPress);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 0, down, nullptr);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "up", 0, up, nullptr);
 
         state = Event::idle;
 

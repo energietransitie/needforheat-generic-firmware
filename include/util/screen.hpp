@@ -48,9 +48,10 @@ public:
 	 * Prompt to remove phone.
 	 * 
 	 * @param smartphones String cointaing all smartphones
-	 * @param position Current selected smartphone 
+	 * @param position Current selected button
+	 * @param phoneID Current selected smartphone  
 	 */
-	void RemoveSmartphone(std::string smartphones, uint8_t position);
+	void RemoveSmartphone(std::string smartphones, uint8_t position, uint8_t phoneID);
 
 private:
 	/**

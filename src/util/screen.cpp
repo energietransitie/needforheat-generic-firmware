@@ -68,6 +68,7 @@ void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
 
 	// loop true all current smartphones
 	smartphoneStrings = Strings::Split("+ deelnemen;" +smartphones, ';');
+	//yAxis += 20*(position-1);
 	
 	for (const auto &smartphone : smartphoneStrings)
 	{
@@ -82,7 +83,7 @@ void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
 		if(position == 0 || count == prevPos || count == position)
 		{
 			//draw all the smartphones	
-			m_display.fillRect(10, yAxis, size, 20);
+			m_display.fillRect(10, yAxis, size+10, 20);
 			if (count == 0)
 			{
 				m_display.drawString((smartphone).c_str(), 10, yAxis);
@@ -90,12 +91,9 @@ void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
 			else
 			{
 				m_display.drawString(("- " + smartphone).c_str(), 10, yAxis);
-			}
-			
-			
-			yAxis+=20;
+			}	
 		}
-		
+		yAxis+=20;
 		count++;
 	}  	
 	prevPos = position;
@@ -125,11 +123,10 @@ void Screen::InfoScreen()
 }
 
 
-void Screen::RemoveSmartphone(std::string smartphones, uint8_t position)
+void Screen::RemoveSmartphone(std::string smartphones, uint8_t position, uint8_t phoneID)
 {		
 	int32_t size = m_display.width() - 20;
 	uint8_t count = 0;
-	static uint8_t prevPos = 0;
 	std::vector<std::string> smartphoneStrings;
 
 	m_display.setTextSize(2); 
@@ -139,7 +136,7 @@ void Screen::RemoveSmartphone(std::string smartphones, uint8_t position)
 	
 	for (const auto &smartphone : smartphoneStrings)
 	{
-		if(count == position)
+		if(count == phoneID)
 		{
 			m_display.drawString(smartphone.c_str(), 10, 10); 
 			break;

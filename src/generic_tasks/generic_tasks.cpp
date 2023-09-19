@@ -4,7 +4,6 @@
 #include <measurements.hpp>
 #include <secure_upload.hpp>
 #include <generic_esp_32.hpp>
-#include <demo.hpp>
 
 #ifdef M5STACK_COREINK
 #include <specific_m5coreink/battery_voltage.hpp>
@@ -58,6 +57,7 @@ namespace GenericTasks
 	void AddTasksToScheduler()
 	{
 #ifdef M5STACK_COREINK
+
 		Scheduler::AddTask(TimeSyncTask,
 						   "Time sync task",
 						   4096,
@@ -74,12 +74,21 @@ namespace GenericTasks
 #endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_TWOMES_STRESS_TEST
 		Scheduler::AddTask(PresenceDetection::PresenceDetectionTask,
 						   "Presence detection task",
 						   4096,
 						   nullptr,
 						   1,
 						   Scheduler::Interval::MINUTES_1);
+#else
+		Scheduler::AddTask(PresenceDetection::PresenceDetectionTask,
+						   "Presence detection task",
+						   4096,
+						   nullptr,
+						   1,
+						   Scheduler::Interval::MINUTES_10);
+#endif // CONFIG_TWOMES_STRESS_TEST
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
 
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
