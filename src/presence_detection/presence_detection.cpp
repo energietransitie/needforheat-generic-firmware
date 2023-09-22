@@ -12,6 +12,7 @@
 #include <esp_bt_main.h>
 #include <esp_gatt_common_api.h>
 #include <esp_gap_bt_api.h>
+#include <esp_a2dp_api.h>
 
 #include <esp_bt_device.h>
 
@@ -166,7 +167,19 @@ namespace PresenceDetection
 			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
 			{
 				MACAddres::new_paired_device(param);
-			}			
+			}
+		}
+
+		/**
+		 * Callback that runs on A2DP event.
+		 */
+		void A2DPCallback(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
+		{
+			if (event == ESP_A2D_CONNECTION_STATE_EVT && param->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED)
+			{
+				// Device connected. Immediately disconnect.
+				esp_bt_gap_remove_bond_device(param->conn_stat.remote_bda);
+			}
 		}
 
 		/**
@@ -204,6 +217,14 @@ namespace PresenceDetection
 			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
 				return err;
 
+			err = esp_a2d_register_callback(A2DPCallback);
+			if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
+				return err;
+
+			err = esp_a2d_sink_init();
+			if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
+				return err;
+
 			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
 			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
 				return err;
@@ -232,7 +253,7 @@ namespace PresenceDetection
 				return err;
 			}
 
-			//empty s_macAddresses to prevent mulitple occasions of the same phone
+			// empty s_macAddresses to prevent mulitple occasions of the same phone
 			while (!s_macAddresses.empty())
 			{
 				s_macAddresses.pop_back();
