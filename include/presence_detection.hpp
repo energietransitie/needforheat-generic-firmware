@@ -3,10 +3,18 @@
 #include <string>
 
 #include <esp_bt_defs.h>
+#include <esp_err.h>
 #include <mac_address.hpp>
 
 namespace PresenceDetection
 {
+    /**
+	 * Initialize bluetooth and buttons for presence detection.
+     * 
+     * @returns ESP error.
+	 */
+    esp_err_t Initialize();
+
     /**
      * Add a Bluetooth MAC-address to scan for presence detection.
      * 

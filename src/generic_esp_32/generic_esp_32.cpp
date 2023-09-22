@@ -36,6 +36,10 @@
 #include <wifi_provisioning/scheme_ble.h>
 #endif // CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#include <presence_detection.hpp>
+#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+
 #ifdef ESP32DEV
 #include "platform_esp32_dev.hpp"
 #endif // ESP32DEV
@@ -745,6 +749,11 @@ namespace GenericESP32Firmware
 #endif
 
         ActivateDevice();
+
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+        err = PresenceDetection::Initialize();
+		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
+#endif // CONFIG_TWOMES_PRESENCE
 
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.

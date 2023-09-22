@@ -183,58 +183,6 @@ namespace PresenceDetection
 		}
 
 		/**
-		 * Initialize bluetooth.
-		 */
-		esp_err_t InitializeBluetooth()
-		{
-			esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-
-			auto err = esp_bt_controller_init(&bluetoothConfig);
-			if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
-				return err;
-
-			err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
-			if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
-				return err;
-
-			err = esp_bluedroid_init();
-			if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
-				return err;
-
-			err = esp_bluedroid_enable();
-			if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
-				return err;
-
-			err = esp_ble_gatt_set_local_mtu(500);
-			if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
-				return err;
-
-			err = esp_bt_dev_set_device_name(dev_name);
-			if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
-				return err;
-
-			err = esp_bt_gap_register_callback(GapCallback);
-			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
-				return err;
-
-			err = esp_a2d_register_callback(A2DPCallback);
-			if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
-				return err;
-
-			err = esp_a2d_sink_init();
-			if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
-				return err;
-
-			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
-				return err;
-
-			ControlPanel::initialzeButtons();
-
-			return ESP_OK;
-		}
-
-		/**
 		 * Retrieve MAC-addresses from NVS.
 		 */
 		esp_err_t InitializeMacAddresses()
@@ -294,6 +242,55 @@ namespace PresenceDetection
 		}
 	} // namespace
 
+	esp_err_t Initialize()
+	{
+		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+
+		auto err = esp_bt_controller_init(&bluetoothConfig);
+		if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
+			return err;
+
+		err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+		if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
+			return err;
+
+		err = esp_bluedroid_init();
+		if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
+			return err;
+
+		err = esp_bluedroid_enable();
+		if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
+			return err;
+
+		err = esp_ble_gatt_set_local_mtu(500);
+		if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
+			return err;
+
+		err = esp_bt_dev_set_device_name(dev_name);
+		if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
+			return err;
+
+		err = esp_bt_gap_register_callback(GapCallback);
+		if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
+			return err;
+
+		err = esp_a2d_register_callback(A2DPCallback);
+		if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
+			return err;
+
+		err = esp_a2d_sink_init();
+		if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
+			return err;
+
+		err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+		if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+			return err;
+
+		ControlPanel::initialzeButtons();
+
+		return ESP_OK;
+	}
+
 	void AddMacAddress(const esp_bd_addr_t &mac)
 	{
 		s_macAddresses.push_back(mac);
@@ -310,9 +307,6 @@ namespace PresenceDetection
 
 		if (!s_initialized)
 		{
-			err = InitializeBluetooth();
-			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
-
 			// Add a formatted for the countPresence property.
 			Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%d");
 
