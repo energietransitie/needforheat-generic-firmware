@@ -196,6 +196,10 @@ namespace PresenceDetection
 			if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
 				return err;
 
+			err = esp_bt_dev_set_device_name(dev_name);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
+				return err;
+
 			err = esp_bt_gap_register_callback(GapCallback);
 			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
 				return err;
@@ -203,8 +207,6 @@ namespace PresenceDetection
 			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
 			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
 				return err;
-
-    		esp_bt_dev_set_device_name(dev_name);
 
 			ControlPanel::initialzeButtons();
 
