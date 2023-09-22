@@ -185,7 +185,7 @@ namespace ControlPanel
         leftButton.pull_down_en = GPIO_PULLDOWN_DISABLE;
         leftButton.pull_up_en = GPIO_PULLUP_ENABLE;
         auto err = gpio_config(&leftButton);
-        Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
+        Error::CheckAppendName(err, "ControlPanel", "An error occured when configuring GPIO for rocker button 'up'");
 
         gpio_config_t pressButton = {};
         pressButton.intr_type = GPIO_INTR_NEGEDGE;
@@ -194,7 +194,7 @@ namespace ControlPanel
         pressButton.pull_down_en = GPIO_PULLDOWN_DISABLE;
         pressButton.pull_up_en = GPIO_PULLUP_ENABLE;
         err = gpio_config(&pressButton);
-        Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
+        Error::CheckAppendName(err, "ControlPanel", "An error occured when configuring GPIO for rocker button 'press'");
 
         gpio_config_t rightButton = {};
         rightButton.intr_type = GPIO_INTR_NEGEDGE;
@@ -203,7 +203,7 @@ namespace ControlPanel
         rightButton.pull_down_en = GPIO_PULLDOWN_DISABLE;
         rightButton.pull_up_en = GPIO_PULLUP_ENABLE;
         err = gpio_config(&rightButton);
-        Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
+        Error::CheckAppendName(err, "ControlPanel", "An error occured when configuring GPIO for rocker button 'down'");
 
         
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, longPress);
