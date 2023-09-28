@@ -134,20 +134,6 @@ namespace GenericESP32Firmware
 #endif // M5STACK_COREINK
 
         /**
-         * Reset wireless settings and delete the bearer to force re-activation.
-         */
-        void ResetWireless()
-        {
-            BlinkLED(LED_WIFI_RESET, 5);
-
-            auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
-            Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
-
-            esp_wifi_restore();
-            esp_restart();
-        }
-
-        /**
          * Event handler for WiFi and provisioning events.
          */
         void WifiEventHandler(void *arg, esp_event_base_t eventBase, int32_t eventID, void *eventData)
@@ -807,6 +793,17 @@ namespace GenericESP32Firmware
 
             vTaskDelay(Delay::MilliSeconds(NTP_MAX_WAIT_MS));
         }
+    }
+
+    void ResetWireless()
+    {
+        BlinkLED(LED_WIFI_RESET, 5);
+
+        auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
+        Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
+
+        esp_wifi_restore();
+        esp_restart();
     }
 
     int PostHTTPSToBackend(const std::string &endpoint,
