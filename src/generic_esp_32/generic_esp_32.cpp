@@ -37,7 +37,7 @@
 #endif // CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-#include <presence_detection.hpp>
+#include <control_panel.hpp>
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
 
 #ifdef ESP32DEV
@@ -751,8 +751,7 @@ namespace GenericESP32Firmware
         ActivateDevice();
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-        err = PresenceDetection::Initialize();
-		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
+        ControlPanel::initialzeButtons();
 #endif // CONFIG_TWOMES_PRESENCE
 
 #ifdef M5STACK_COREINK
