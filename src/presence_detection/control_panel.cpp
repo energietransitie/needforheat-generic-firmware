@@ -16,6 +16,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
 
+#include <presence_detection.hpp>
 #include <scheduler.hpp>
 #include <measurements.hpp>
 #include <secure_upload.hpp>
@@ -49,6 +50,9 @@ namespace ControlPanel
     void Panelstate(ButtonActions button)
     {
         static uint8_t selectedItem = 0, SelectedItemForRemoval;
+
+        static PresenceDetection::UseBluetooth *useBluetoothPtr = nullptr;
+
         switch (state)
         {
         case Event::idle:
@@ -78,6 +82,13 @@ namespace ControlPanel
                 {   
                     sc.Clear();
                     sc.InfoScreen();
+
+                    // Request Bluetooth.
+                    PresenceDetection::InitializeOptions options{};
+                    options.EnableA2DPSink = true;
+                    options.EnableDiscoverable = true;
+                    useBluetoothPtr = new PresenceDetection::UseBluetooth(options);
+
                     state = Event::info;
                     break;
                 }
@@ -97,6 +108,10 @@ namespace ControlPanel
         case Event::info:
                 if(button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
                 {
+                    // Release bluetooth.
+                    if (useBluetoothPtr != nullptr)
+                        delete useBluetoothPtr;
+
                     state = Event::select;
                     sc.Clear();
                     selectedItem = 0;
