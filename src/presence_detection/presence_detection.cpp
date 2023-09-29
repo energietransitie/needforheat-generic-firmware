@@ -18,6 +18,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
+#include <freertos/semphr.h>
 
 #include <scheduler.hpp>
 #include <measurements.hpp>
@@ -140,6 +141,8 @@ namespace PresenceDetection
 
 		static EventGroupHandle_t s_events = xEventGroupCreate();
 
+		static QueueHandle_t s_btMutex = xSemaphoreCreateMutex();
+
 		auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 
 		/**
@@ -246,6 +249,8 @@ namespace PresenceDetection
 	{
 		ESP_LOGD(TAG, "Enabling Bluetooth");
 
+		xSemaphoreTake(s_btMutex, portMAX_DELAY);
+
 		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
 		auto err = esp_bt_controller_init(&bluetoothConfig);
@@ -349,6 +354,8 @@ namespace PresenceDetection
 			auto err = esp_bt_controller_deinit();
 			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing BT controller"))
 				return err;
+
+			xSemaphoreGive(s_btMutex);
 		}
 
 		return ESP_OK;
@@ -421,6 +428,14 @@ namespace PresenceDetection
 			auto err = DeinitializeBluetooth(deinitOptions);
 			Error::CheckAppendName(err, TAG, "An error occured when deinitializing Bluetooth with UseBluetooth");
 		}
+	}
+
+	void WaitIfBluetoothActive()
+	{
+		// Wait until mutex is available.
+		xSemaphoreTake(s_btMutex, portMAX_DELAY);
+		// Immediately release.
+		xSemaphoreGive(s_btMutex);
 	}
 
 	void AddMacAddress(const esp_bd_addr_t &mac)

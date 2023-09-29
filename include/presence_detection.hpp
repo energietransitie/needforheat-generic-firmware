@@ -107,6 +107,15 @@ namespace PresenceDetection
     };
 
     /**
+     * Wait if Bluetooth is active.
+     * 
+     * If BT is active, this function will block.
+     * Once BT is no longer active, it will return.
+     * It will return immediately if BT is not active.
+     */
+    void WaitIfBluetoothActive();
+
+    /**
      * Add a Bluetooth MAC-address to scan for presence detection.
      *
      * @param mac Bluetooth MAC-address as esp_bd_addr_t.
