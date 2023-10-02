@@ -8,6 +8,10 @@ constexpr const char *TAG = "Screen";
 constexpr float TEXT_SIZE_MAX = 3.5; // Maximum text size. Any bigger and it will clip the QR code.
 constexpr float TEXT_SIZE_MIN = 1; // Minimum text size. Any smaller and the text becomes unreadable.
 
+std::string Screen::s_infoURL;
+std::string Screen::s_infoText;
+int Screen::s_infoPadding = 0;
+
 Screen::Screen()
 {
 	m_display.init_without_reset();
@@ -54,6 +58,21 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 			 m_display.height(),
 			 size,
 			 text.empty() ? "n" : "y");
+}
+
+void Screen::SetInfoQRDetails(const std::string &payload, int padding, const std::string &text)
+{
+	s_infoURL = payload;
+	s_infoPadding = padding;
+	s_infoText = text;
+}
+
+void Screen::DisplayInfoQR()
+{
+	if (s_infoURL.empty())
+		return;
+	
+	DisplayQR(s_infoURL, s_infoPadding, s_infoText);
 }
 
 void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)

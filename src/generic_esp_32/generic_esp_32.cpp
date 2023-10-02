@@ -742,7 +742,8 @@ namespace GenericESP32Firmware
 
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.
-        s_screen.DisplayQR(GetInfoURL(), QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+        s_screen.SetInfoQRDetails(GetInfoURL(), QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+        s_screen.DisplayInfoQR();
 #endif // M5STACK_COREINK
 
         if (s_postProvisioningNeeded)
