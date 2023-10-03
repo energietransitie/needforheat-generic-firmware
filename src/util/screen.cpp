@@ -41,6 +41,7 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 		m_display.setTextDatum(textdatum_t::middle_center);
 
 		// Calculate text size.
+		m_display.setTextSize(1.0F);
 		float textSize = ((float)m_display.width() - (float)padding * 2.0f) / (float)m_display.textWidth(text.c_str());
 		textSize = std::max(std::min(textSize, TEXT_SIZE_MAX), TEXT_SIZE_MIN);
 		m_display.setTextSize(textSize);
