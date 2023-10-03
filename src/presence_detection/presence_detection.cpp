@@ -18,6 +18,7 @@
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
+#include <freertos/semphr.h>
 
 #include <scheduler.hpp>
 #include <measurements.hpp>
@@ -140,6 +141,8 @@ namespace PresenceDetection
 
 		static EventGroupHandle_t s_events = xEventGroupCreate();
 
+		static QueueHandle_t s_btMutex = xSemaphoreCreateMutex();
+
 		auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 
 		/**
@@ -242,8 +245,12 @@ namespace PresenceDetection
 		}
 	} // namespace
 
-	esp_err_t Initialize()
+	esp_err_t InitializeBluetooth(InitializeOptions options)
 	{
+		ESP_LOGD(TAG, "Enabling Bluetooth");
+
+		xSemaphoreTake(s_btMutex, portMAX_DELAY);
+
 		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
 		auto err = esp_bt_controller_init(&bluetoothConfig);
@@ -274,21 +281,161 @@ namespace PresenceDetection
 		if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
 			return err;
 
-		err = esp_a2d_register_callback(A2DPCallback);
-		if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
-			return err;
+		if (options.EnableA2DPSink)
+		{
+			ESP_LOGD(TAG, "Enabling A2DP");
 
-		err = esp_a2d_sink_init();
-		if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
-			return err;
+			static bool callBackRegistered = false;
 
-		err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
-		if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
-			return err;
+			if (!callBackRegistered)
+			{
+				err = esp_a2d_register_callback(A2DPCallback);
+				if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
+					return err;
 
-		ControlPanel::initialzeButtons();
+				callBackRegistered = true;
+			}
+
+			err = esp_a2d_sink_init();
+			if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
+				return err;
+		}
+
+		if (options.EnableDiscoverable)
+		{
+			ESP_LOGD(TAG, "Enabling Bluetooth discoverable");
+
+			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+				return err;
+		}
 
 		return ESP_OK;
+	}
+
+	esp_err_t DeinitializeBluetooth(DeinitializeOptions options)
+	{
+		esp_err_t err;
+
+		if (options.DisableDiscoverable)
+		{
+			ESP_LOGD(TAG, "Disabling Bluetooth discoverable");
+
+			err = esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+				return err;
+		}
+
+		if (options.DisableA2DPSink)
+		{
+			ESP_LOGD(TAG, "Disabling A2DP");
+
+			err = esp_a2d_sink_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing A2DP sink"))
+				return err;
+		}
+
+		if (options.DisableBluetooth)
+		{
+			ESP_LOGD(TAG, "Disabling Bluetooth");
+
+			err = esp_bluedroid_disable();
+			if (Error::CheckAppendName(err, TAG, "An error occured when disabling bluedroid"))
+				return err;
+
+			err = esp_bluedroid_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing bluedroid"))
+				return err;
+
+			err = esp_bt_controller_disable();
+			if (Error::CheckAppendName(err, TAG, "An error occured when disabling BT controller"))
+				return err;
+
+			auto err = esp_bt_controller_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing BT controller"))
+				return err;
+
+			xSemaphoreGive(s_btMutex);
+		}
+
+		return ESP_OK;
+	}
+
+	int UseBluetooth::s_useCount = 0;
+	// Keep track of how many users want A2DP to be enabled.
+	int UseBluetooth::s_a2dpCount = 0;
+	// Keep track how many users want the device to be discoverable.
+	int UseBluetooth::s_discoverableCount = 0;
+
+	UseBluetooth::UseBluetooth(InitializeOptions options)
+		: m_optionsUsed(options)
+	{
+		s_useCount++;
+
+		if (options.EnableA2DPSink)
+			s_a2dpCount++;
+
+		if (options.EnableDiscoverable)
+			s_discoverableCount++;
+
+		InitializeOptions initOptions{};
+
+		// A2DP used for the first time.
+		if (s_a2dpCount == 1)
+			initOptions.EnableA2DPSink = true;
+
+		// Discoverable used for the first time.
+		if (s_discoverableCount == 1)
+			initOptions.EnableDiscoverable = true;
+
+		// Any option was just used for the first time.
+		if (s_useCount == 1 || s_a2dpCount == 1 || s_discoverableCount == 1)
+		{
+			auto err = InitializeBluetooth(initOptions);
+			Error::CheckAppendName(err, TAG, "An error occured when initializing Bluetooth with UseBluetooth");
+		}
+	}
+
+	UseBluetooth::~UseBluetooth()
+	{
+		DeinitializeOptions deinitOptions{};
+
+		s_useCount--;
+		if (s_useCount == 0)
+			deinitOptions.DisableBluetooth = true;
+
+		if (m_optionsUsed.EnableA2DPSink)
+		{
+			s_a2dpCount--;
+
+			// A2DP no longer needed.
+			if (s_a2dpCount == 0)
+				deinitOptions.DisableA2DPSink = true;
+		}
+
+		if (m_optionsUsed.EnableDiscoverable)
+		{
+			s_discoverableCount--;
+
+			// Discoverable no longer needed.
+			if (s_discoverableCount == 0)
+				deinitOptions.DisableDiscoverable = true;
+		}
+
+		// Any option was just used for the last time.
+		if (deinitOptions.DisableBluetooth || deinitOptions.DisableA2DPSink || deinitOptions.DisableDiscoverable)
+		{
+			auto err = DeinitializeBluetooth(deinitOptions);
+			Error::CheckAppendName(err, TAG, "An error occured when deinitializing Bluetooth with UseBluetooth");
+		}
+	}
+
+	void WaitIfBluetoothActive()
+	{
+		// Wait until mutex is available.
+		xSemaphoreTake(s_btMutex, portMAX_DELAY);
+		// Immediately release.
+		xSemaphoreGive(s_btMutex);
 	}
 
 	void AddMacAddress(const esp_bd_addr_t &mac)
@@ -312,6 +459,11 @@ namespace PresenceDetection
 
 			s_initialized = true;
 		}
+
+		InitializeOptions initOptions{};
+		initOptions.EnableA2DPSink = false;
+		initOptions.EnableDiscoverable = false;
+		UseBluetooth bt(initOptions);
 
 		err = InitializeMacAddresses();
 		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");

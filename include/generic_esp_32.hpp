@@ -35,6 +35,11 @@ namespace GenericESP32Firmware
     void InitializeTimeSync();
 
     /**
+     * Reset wireless settings and delete the bearer to force re-activation.
+     */
+    void ResetWireless();
+
+    /**
      * Send an HTTPS POST request to the backend API.
      *
      * @param endpoint API endpoint.

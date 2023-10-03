@@ -37,7 +37,7 @@
 #endif // CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-#include <presence_detection.hpp>
+#include <control_panel.hpp>
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
 
 #ifdef ESP32DEV
@@ -132,20 +132,6 @@ namespace GenericESP32Firmware
             powerpin_reset();
         }
 #endif // M5STACK_COREINK
-
-        /**
-         * Reset wireless settings and delete the bearer to force re-activation.
-         */
-        void ResetWireless()
-        {
-            BlinkLED(LED_WIFI_RESET, 5);
-
-            auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
-            Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
-
-            esp_wifi_restore();
-            esp_restart();
-        }
 
         /**
          * Event handler for WiFi and provisioning events.
@@ -477,6 +463,25 @@ namespace GenericESP32Firmware
         }
 
         /**
+         * Determine if post provisioning is needed.
+         * 
+         * This function will restart the ESP if needed.
+         * 
+         * @returns true if post provisionings steps are needed.
+         */
+        bool PostProvisioningNeeded()
+        {
+            uint32_t postProvisioningDone = 0;
+            NVS::Get(NVS_NAMESPACE, "ppDone", postProvisioningDone);
+            if (postProvisioningDone == 0)
+            {
+                ESP_LOGD(TAG, "Post provisioning needs to happen");
+                return true;
+            }
+            return false;
+        }
+
+        /**
          * This function will run only when the device is just provisioned.
          */
         void PostProvisioning()
@@ -498,6 +503,12 @@ namespace GenericESP32Firmware
 
             // Run all tasks in the scheduler once.
             Scheduler::RunAll();
+
+            uint32_t ppDone = 1;
+            auto err = NVS::Set(NVS_NAMESPACE, "ppDone", ppDone);
+            Error::CheckAppendName(err, TAG, "An error occurred when setting NVS key ppDone");
+            
+            ESP_LOGD(TAG, "Post provisioning tasks ran");
         }
 
         /**
@@ -751,16 +762,16 @@ namespace GenericESP32Firmware
         ActivateDevice();
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-        err = PresenceDetection::Initialize();
-		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
+        ControlPanel::initialzeButtons();
 #endif // CONFIG_TWOMES_PRESENCE
 
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.
-        s_screen.DisplayQR(GetInfoURL(), QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+        s_screen.SetInfoQRDetails(GetInfoURL(), QR_PADDING, POST_PROVISIONING_INFO_TEXT);
+        s_screen.DisplayInfoQR();
 #endif // M5STACK_COREINK
 
-        if (s_postProvisioningNeeded)
+        if (PostProvisioningNeeded())
             PostProvisioning();
 
         ESP_LOGI(TAG, "Finished initialization.");
@@ -808,6 +819,20 @@ namespace GenericESP32Firmware
 
             vTaskDelay(Delay::MilliSeconds(NTP_MAX_WAIT_MS));
         }
+    }
+
+    void ResetWireless()
+    {
+        BlinkLED(LED_WIFI_RESET, 5);
+
+        auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
+        Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
+
+        // Remove key so we do post provisioning steps.
+        NVS::Erase(NVS_NAMESPACE, "ppDone");
+
+        esp_wifi_restore();
+        esp_restart();
     }
 
     int PostHTTPSToBackend(const std::string &endpoint,

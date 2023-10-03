@@ -16,6 +16,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
 
+#include <presence_detection.hpp>
 #include <scheduler.hpp>
 #include <measurements.hpp>
 #include <secure_upload.hpp>
@@ -26,6 +27,7 @@
 #include <util/strings.hpp>
 #include <util/buttons.hpp>
 #include <util/screen.hpp>
+#include <util/timer.hpp>
 #include <driver/gpio.h>
 
 
@@ -36,19 +38,39 @@
 constexpr const char *NVS_NAMESPACE = "twomes_storage";
 constexpr const char *TAG = "MAC Address";
 
+constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;
+
 enum class Event {idle, select, info, remove};
 enum class ButtonActions {up, press, down, longPress};
 
-
 namespace ControlPanel
 {
-    
     Event state;
     Screen sc;
+
+    static PresenceDetection::UseBluetooth *useBluetoothPtr = nullptr;
+
+    void ExitControlPanel()
+    {
+        // Release bluetooth.
+        if (useBluetoothPtr != nullptr)
+            delete useBluetoothPtr;
+
+        // Show information about what this device does on the screen.
+        sc.DisplayInfoQR();
+
+        state = Event::idle;
+    }
+
+    static Timer::Timer s_timer("ExitControlPanel", ExitControlPanel, EXIT_TIMEOUT_S);
   
     void Panelstate(ButtonActions button)
     {
         static uint8_t selectedItem = 0, SelectedItemForRemoval;
+
+        // Reset timer, since this function ran because of a button press.
+        s_timer.StartOrReset();
+
         switch (state)
         {
         case Event::idle:
@@ -78,6 +100,13 @@ namespace ControlPanel
                 {   
                     sc.Clear();
                     sc.InfoScreen();
+
+                    // Request Bluetooth.
+                    PresenceDetection::InitializeOptions options{};
+                    options.EnableA2DPSink = true;
+                    options.EnableDiscoverable = true;
+                    useBluetoothPtr = new PresenceDetection::UseBluetooth(options);
+
                     state = Event::info;
                     break;
                 }
@@ -97,6 +126,10 @@ namespace ControlPanel
         case Event::info:
                 if(button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
                 {
+                    // Release bluetooth.
+                    if (useBluetoothPtr != nullptr)
+                        delete useBluetoothPtr;
+
                     state = Event::select;
                     sc.Clear();
                     selectedItem = 0;
