@@ -86,8 +86,8 @@ void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
 	m_display.setTextSize(2);
 	m_display.drawString("Smartphones:", 10, 10);  
 
-	// loop true all current smartphones
-	smartphoneStrings = Strings::Split("+ deelnemen;" +smartphones, ';');
+	// iterate over all onboarded smartphones
+	smartphoneStrings = Strings::Split("+ toevoegen;" + smartphones, ';');
 	//yAxis += 20*(position-1);
 	
 	for (const auto &smartphone : smartphoneStrings)
@@ -122,23 +122,15 @@ void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
 void Screen::InfoScreen()
 {
 	m_display.setTextSize(2);
-	m_display.drawString("Smartphones", 10, 10); 
-	
-	m_display.drawString("toevoegen:", 10, 30); 
-	
-	m_display.setTextSize(1.5);
-	m_display.drawString("Nog een smartphone ", 10, 50); 
-	m_display.drawString("meetellen? Ga op die", 10, 65); 
-	m_display.drawString("smartphone naar ", 10, 80); 
-	m_display.drawString("Bluetooth en koppel", 10, 95); 
-	m_display.drawString("met de naam:", 10, 110); 
-	
-	m_display.setTextSize(1);
-	m_display.drawString(PresenceDetection::getDevName().c_str(), 10, 125); 
+	m_display.drawString("Toevoegen?", 10, 10); 
 
+	m_display.setTextSize(1.5);
+	m_display.drawString("Ga op je mobiel", 10, 30); 
+	m_display.drawString("naar Bluetooth", 10, 45); 
+	m_display.drawString("en koppel met", 10, 60); 
+	m_display.drawString(PresenceDetection::getDevName().c_str(), 10, 75); 
 	m_display.setTextSize(2);
 	m_display.drawString("Terug", 10, m_display.height()-20); 
-	
 
 }
 
