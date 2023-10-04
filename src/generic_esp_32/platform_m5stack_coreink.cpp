@@ -1,7 +1,5 @@
 #include "platform_m5stack_coreink.hpp"
 
-#include <driver/gpio.h>
-
 #include <specific_m5coreink/powerpin.h>
 #include <util/buzzer.hpp>
 
