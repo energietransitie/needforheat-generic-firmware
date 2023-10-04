@@ -4,9 +4,11 @@
 
 
 enum class ButtonActions {up, press, down, longPress};
+enum class Event {idle, select, info, remove};
 
 namespace ControlPanel
 {
+    Event state;
      /**
      * InitilizeButtons.
      * 
