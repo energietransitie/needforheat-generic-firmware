@@ -2,6 +2,9 @@
 
 #include <string>
 
+
+enum class ButtonActions {up, press, down, longPress};
+
 namespace ControlPanel
 {
      /**
@@ -16,4 +19,10 @@ namespace ControlPanel
      * This collects all the participating smartphones
      */
     std::string getSmartphones();
+    /**
+     * Panelstate
+     * 
+     * this is the statemachine 
+     */
+    void Panelstate(ButtonActions button);
 }

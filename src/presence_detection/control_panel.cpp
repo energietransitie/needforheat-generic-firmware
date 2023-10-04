@@ -37,7 +37,6 @@ constexpr const char *NVS_NAMESPACE = "twomes_storage";
 constexpr const char *TAG = "MAC Address";
 
 enum class Event {idle, select, info, remove};
-enum class ButtonActions {up, press, down, longPress};
 
 
 namespace ControlPanel
@@ -168,11 +167,6 @@ namespace ControlPanel
         Panelstate(ButtonActions::down);
     }
 
-    void longPress()
-    {
-        Panelstate(ButtonActions::longPress);
-    }
-
     
 
     void initialzeButtons()
@@ -206,7 +200,7 @@ namespace ControlPanel
         Error::CheckAppendName(err, "Main", "An error occured when configuring GPIO for calibration button.");
 
         
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, longPress);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, nullptr);
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 0, down, nullptr);
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "up", 0, up, nullptr);
 
