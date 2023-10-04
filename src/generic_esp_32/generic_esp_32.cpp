@@ -7,7 +7,6 @@
 #include <esp_event.h>
 #include <esp_wifi.h>
 #include <wifi_provisioning/manager.h>
-#include <driver/gpio.h>
 #include <esp_sntp.h>
 #include <esp32/rom/crc.h>
 
@@ -94,6 +93,8 @@ namespace GenericESP32Firmware
         static int s_wifiConnectRetries = 0;
 
         static bool s_postProvisioningNeeded = false;
+
+        static gpio_num_t s_wifiResetLED = LED_WIFI_RESET;
 
 #ifdef M5STACK_COREINK
         static Screen s_screen;
@@ -821,9 +822,17 @@ namespace GenericESP32Firmware
         }
     }
 
+    void SetResetWirelessLED(gpio_num_t gpioNum)
+    {
+        s_wifiResetLED = gpioNum;
+    }
+
     void ResetWireless()
     {
-        BlinkLED(LED_WIFI_RESET, 5);
+        // Blink LED if it is set.
+        // When CONFIG_TWOMES_CUSTOM_GPIO is used, the default value will be GPIO_NUM_MAX.
+        if (s_wifiResetLED != GPIO_NUM_MAX)
+            BlinkLED(s_wifiResetLED, 5);
 
         auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
         Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");

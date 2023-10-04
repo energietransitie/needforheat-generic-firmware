@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include <driver/gpio.h>
+
 #include <util/http_util.hpp>
 
 constexpr const char *ENDPOINT_VARIABLE_UPLOAD = "/v2/upload";
@@ -33,6 +35,16 @@ namespace GenericESP32Firmware
      * This will sync every hour by default, controlled by CONFIG_LWIP_SNTP_UPDATE_DELAY.
      */
     void InitializeTimeSync();
+
+    /**
+     * Configure the LED to blink when ResetWireless() is called.
+     * 
+     * This function only needs to be called when using CONFIG_TWOMES_CUSTOM_GPIO.
+     * The GPIO will NOT be configured for you.
+     * 
+     * @param gpioNum LED GPIO.
+     */
+    void SetResetWirelessLED(gpio_num_t gpioNum);
 
     /**
      * Reset wireless settings and delete the bearer to force re-activation.
