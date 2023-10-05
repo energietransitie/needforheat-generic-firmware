@@ -41,13 +41,10 @@ constexpr const char *TAG = "MAC Address";
 constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;
 constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in presence_detection.cpp
 
-enum class Menu {idle, read_onboarded, create_onboarded, delete_onboarded};
-enum class ButtonActions {up, press, down};
-
 namespace ControlPanel
 {
-    Menu menuState;
     Screen sc;
+    Menu menuState;
 
     static PresenceDetection::UseBluetooth *useBluetoothPtr = nullptr;
 
@@ -129,7 +126,7 @@ namespace ControlPanel
                 {
                     menuState = Menu::read_onboarded;
                     selectedLine = 1;
-                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                 }
                 break;
             case Menu::read_onboarded:
@@ -142,7 +139,7 @@ namespace ControlPanel
                         if (selectedLine < 1) {
                             selectedLine = getSmartphones().size() + 2;
                         }
-                        sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                        ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     }
                 }
                 else if (button == ButtonActions::down)
@@ -152,11 +149,11 @@ namespace ControlPanel
                     if (selectedLine > (getSmartphones().size() + 2)) {
                         selectedLine = 1;
                     }
-                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                 }
                 if (button == ButtonActions::press && selectedLine == 1)
                 {   
-                    sc.CreateOnboardedSmartphone();
+                    CreateOnboardedSmartphone();
                     // Make device discoverable as Bluetooth Classic-only device with A2DP profile
                     PresenceDetection::InitializeOptions options{};
                     options.EnableA2DPSink = true;
@@ -174,7 +171,7 @@ namespace ControlPanel
                         menuState = Menu::delete_onboarded;
                         smartphoneIndex = selectedLine - 2;// phone
                         selectedLine = 3; 
-                        sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                        DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
                     }
                     break;
                 }
@@ -188,7 +185,7 @@ namespace ControlPanel
 
                     menuState = Menu::read_onboarded;
                     selectedLine = 1;
-                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
             case Menu::delete_onboarded:
@@ -201,7 +198,7 @@ namespace ControlPanel
                         if (selectedLine <= 1) {
                             selectedLine = 4;
                         }
-                        sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                        DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
                         break;
                     }
                 }
@@ -212,14 +209,14 @@ namespace ControlPanel
                     if (selectedLine > 4) {
                         selectedLine = 2;
                     }
-                    sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                    DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
                     break;
                 }
                 if((button == ButtonActions::press && selectedLine == 3) || selectedLine == 4)
                 {   
                     menuState = Menu::read_onboarded;
                     selectedLine = 1;
-                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
                 else if(button == ButtonActions::press && selectedLine == 2)
@@ -227,7 +224,7 @@ namespace ControlPanel
                     MACAddres::deleteOnboardedSmartphoneFromNVS(smartphoneIndex);
                     menuState = Menu::read_onboarded;
                     selectedLine = 1;
-                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
         }

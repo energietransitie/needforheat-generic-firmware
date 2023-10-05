@@ -51,14 +51,6 @@ public:
 	void DisplayInfoQR();
 
 	/**
-	 * Display smartphones.
-	 * 
-	 * @param smartphoneList vector of Strings containing all onboarded smartphones
-	 * @param position Current selected smartphone 
-	 */
-	void ReadOnboardedSmartphones(std::vector<std::string> smartphoneList, uint8_t position);
-
-	/**
 	 * Display menu.
 	 * 
 	 * @param menItems array of strins containing all menu items (first item: title, last item: back)
@@ -66,20 +58,6 @@ public:
 	 * @param menuSize total number of items in menu.
 	 */
 	void DrawMenu(std::vector<std::string> lines, int selectedLine);
-
-	/**
-	 * Info prompt on how to participate with presence detection.
-	 */
-	void CreateOnboardedSmartphone();
-
-	/**
-	 * Prompt to remove phone.
-	 * 
-	 * @param smartphoneList vector of Strings containing all onboarded smartphones
-	 * @param position Current selected button
-	 * @param phoneID Current selected smartphone  
-	 */
-	void DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t selectedLine, uint8_t phoneID);
 
 private:
 	// Storage for Info QR.

@@ -28,6 +28,7 @@
 #include <util/format.hpp>
 #include <util/nvs.hpp>
 #include <util/strings.hpp>
+#include <util/buzzer.hpp>
 
 constexpr const char *TAG = "Presence detection";
 constexpr const char *NVS_NAMESPACE = "twomes_storage";
@@ -170,6 +171,14 @@ namespace PresenceDetection
 			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
 			{
 				MACAddres::addOnboardedSmartphone(param);
+				// Buzz the buzzer for 200 ms to signal the devices are paired
+				Buzzer::Buzz(200);
+				// imitate a button press that pressed return 
+				if(ControlPanel::menuState == Menu::create_onboarded)
+				{
+					ControlPanel::OnboardingMenuState(ButtonActions::press);
+				}
+
 			}
 		}
 
