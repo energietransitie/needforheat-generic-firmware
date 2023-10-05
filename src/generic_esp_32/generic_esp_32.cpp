@@ -122,13 +122,23 @@ namespace GenericESP32Firmware
             }
         }
 
+        // Forward declare.
+        std::string GetBearer();
+
 #ifdef M5STACK_COREINK
         void PowerOff()
         {
-            // Buzz the buzzer 500ms to signal power off.
-            Buzzer::Buzz(500);
+            // Buzz the buzzer 1000ms to signal power off.
+            Buzzer::Buzz(1000);
 
-            s_screen.Clear();
+            auto bearer = GetBearer();
+            if (!bearer.empty())
+            {
+                // Device was provisioned and activated.
+                s_screen.DisplayInfoQR();
+            }
+            // If the device was not provisioned and activated,
+            // the provisioning QR will still be on screen.
 
             powerpin_reset();
         }
