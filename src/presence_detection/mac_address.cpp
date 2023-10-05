@@ -1,4 +1,5 @@
 #include <mac_address.hpp>
+#include <presence_detection.hpp>
 
 #include <cstdlib>
 #include <vector>
@@ -47,22 +48,21 @@ namespace MACAddres
     return std::string((char *)str);
     }
 
-    void new_paired_device(esp_bt_gap_cb_param_t *param)
+    void addOnboardedSmartphone(esp_bt_gap_cb_param_t *param)
     {
         char bda_str[MACAddressLength];
-        ESP_LOGI(TAG, "Device found: %s", bda2str(param->disc_res.bda, bda_str, 18));
+        ESP_LOGI(TAG, "Paired with MAC address: %s", bda2str(param->disc_res.bda, bda_str, 18));
         
-        ESP_LOGI(TAG, "name: %s", converter(param->auth_cmpl.device_name).c_str());
-        //macaddress nvs
-        addMacAddress(bda2str(param->disc_res.bda, bda_str, 18), converter(param->auth_cmpl.device_name));
+        ESP_LOGI(TAG, "Paired with Bluetooth name: %s", converter(param->auth_cmpl.device_name).c_str());
+        addOnboardedSmartphoneToNVS(bda2str(param->disc_res.bda, bda_str, 18), converter(param->auth_cmpl.device_name));
     }
 
-    esp_err_t addMacAddress(std::string newAddress, std::string newSmartphone)
+    esp_err_t addOnboardedSmartphoneToNVS(std::string newMacAddress, std::string newBluetoothName)
     {
-        bool doubleMACAddress = false, empty = false;
+        bool doubleMacAddress = false, empty = false;
         std::string macAddressList, smartphoneList;
-        auto err = NVS::Get(NVS_NAMESPACE, "smartphones", smartphoneList);
-        err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList);
+        auto err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, smartphoneList);
+        err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, macAddressList);
         if (err == ESP_ERR_NVS_NOT_FOUND)
         {
             empty = true;
@@ -73,29 +73,29 @@ namespace MACAddres
             auto macAddressStrings = Strings::Split(macAddressList, ';');
 
             // loop true all current MAC adresses
-            for (const auto &address : macAddressStrings)
+            for (const auto &existingMacAddress : macAddressStrings)
             {
-                if(address.compare(newAddress) == 0)
+                if(existingMacAddress.compare(newMacAddress) == 0)
                 {
                     ESP_LOGW(TAG, "MAC address is already stored.");
-                    doubleMACAddress = true;
+                    doubleMacAddress = true;
                 }
             }
         }
         
 
         //if the new MAC address is not found or there are no MAC adresses add the new address to nvs
-        if (!doubleMACAddress || empty)
+        if (!doubleMacAddress || empty)
         {   
             if (empty)
             {
-                err = NVS::Set(NVS_NAMESPACE, "mac_addresses", newAddress);
-                err = NVS::Set(NVS_NAMESPACE, "smartphones", newSmartphone);
+                err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, newMacAddress);
+                err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, newBluetoothName);
             }
             else
             {
-                err = NVS::Set(NVS_NAMESPACE, "mac_addresses", macAddressList + ";" + newAddress);
-                err = NVS::Set(NVS_NAMESPACE, "smartphones", smartphoneList + ";" + newSmartphone);
+                err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, macAddressList + ";" + newMacAddress);
+                err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, smartphoneList + ";" + newBluetoothName);
             }
 
             if (err != ESP_OK)
@@ -108,13 +108,13 @@ namespace MACAddres
         return ESP_OK;
     }
 
-    esp_err_t removeMacAddress(uint8_t id)
+    esp_err_t deleteOnboardedSmartphoneFromNVS(uint8_t id)
     {
-        bool doubleMACAddress = false, empty = false;
+        bool doubleMacAddress = false, empty = false;
         std::string macAddressList, smartphoneList, newMacAddressList, newSmartphoneList;
         uint8_t count = 0;
-        auto err = NVS::Get(NVS_NAMESPACE, "smartphones", smartphoneList);
-        err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList); 
+        auto err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, smartphoneList);
+        err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, macAddressList); 
         if (err == ESP_ERR_NVS_NOT_FOUND)
         {
             empty = true;
@@ -160,14 +160,14 @@ namespace MACAddres
                 count++;
             }
         
-        NVS::Erase(NVS_NAMESPACE, "mac_addresses");
-        NVS::Erase(NVS_NAMESPACE, "smartphones"); 
+        NVS::Erase(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY);
+        NVS::Erase(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY); 
 
         //When theres no phones left dont's set nvs, otherwise if we set it without value it will still think that it's not empty
         if(newSmartphoneList.compare("") != 0)
         {
-        err = NVS::Set(NVS_NAMESPACE, "smartphones", newSmartphoneList);
-        err = NVS::Set(NVS_NAMESPACE, "mac_addresses", newMacAddressList);
+        err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, newSmartphoneList);
+        err = NVS::Set(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, newMacAddressList);
         }
     
         if (err != ESP_OK)

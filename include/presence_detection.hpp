@@ -6,6 +6,9 @@
 #include <esp_err.h>
 #include <mac_address.hpp>
 
+#define NVS_ONBOARDED_BT_NAMES_KEY "bt_names"
+#define NVS_ONBOARDED_MAC_ADDRESSES_KEY "mac_addresses"
+
 namespace PresenceDetection
 {
     /**
@@ -120,7 +123,7 @@ namespace PresenceDetection
      *
      * @param mac Bluetooth MAC-address as esp_bd_addr_t.
      */
-    void AddMacAddress(const esp_bd_addr_t &mac);
+    void addOnboardedSmartphoneToNVS(const esp_bd_addr_t &mac);
 
     /**
      * Add a Bluetooth MAC-address to scan for presence detection.
@@ -130,7 +133,7 @@ namespace PresenceDetection
      *
      * @param mac Bluetooth MAC-address as a string.
      */
-    void AddMacAddress(const std::string &mac);
+    void addOnboardedSmartphoneToNVS(const std::string &mac);
 
     /**
      * Presence detection task.

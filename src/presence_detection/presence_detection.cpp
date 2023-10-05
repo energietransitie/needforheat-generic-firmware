@@ -39,7 +39,7 @@ constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
 constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
-constexpr const char *dev_name = "OK_NeedForHeat_tel_mij";
+
 
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
@@ -169,7 +169,7 @@ namespace PresenceDetection
 			}
 			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
 			{
-				MACAddres::new_paired_device(param);
+				MACAddres::addOnboardedSmartphone(param);
 			}
 		}
 
@@ -191,7 +191,7 @@ namespace PresenceDetection
 		esp_err_t InitializeMacAddresses()
 		{
 			std::string macAddressList;
-			auto err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList);
+			auto err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, macAddressList);
 			if (err == ESP_ERR_NVS_NOT_FOUND)
 			{
 				ESP_LOGW(TAG, "Retrieving Bluetooth MAC-addresses for presence detection from NVS was unsuccessful. "
@@ -273,7 +273,7 @@ namespace PresenceDetection
 		if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
 			return err;
 
-		err = esp_bt_dev_set_device_name(dev_name);
+		err = esp_bt_dev_set_device_name(getDevName().c_str());
 		if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
 			return err;
 
@@ -438,12 +438,12 @@ namespace PresenceDetection
 		xSemaphoreGive(s_btMutex);
 	}
 
-	void AddMacAddress(const esp_bd_addr_t &mac)
+	void addOnboardedSmartphoneToNVS(const esp_bd_addr_t &mac)
 	{
 		s_macAddresses.push_back(mac);
 	}
 
-	void AddMacAddress(const std::string &mac)
+	void addOnboardedSmartphoneToNVS(const std::string &mac)
 	{
 		s_macAddresses.push_back(mac);
 	}
@@ -490,6 +490,7 @@ namespace PresenceDetection
 
 	std::string getDevName()
 	{
-		return dev_name;
+		constexpr const char * ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in screen.cpp
+		return ONBOARDING_PAIR_NAME;
 	}
 } // namespace PresenceDetection

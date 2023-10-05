@@ -40,12 +40,12 @@ constexpr const char *TAG = "MAC Address";
 
 constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;
 
-enum class Event {idle, select, info, remove};
-enum class ButtonActions {up, press, down, longPress};
+enum class Menu {idle, read_onboarded, create_onboarded, delete_onboarded};
+enum class ButtonActions {up, press, down};
 
 namespace ControlPanel
 {
-    Event state;
+    Menu menuState;
     Screen sc;
 
     static PresenceDetection::UseBluetooth *useBluetoothPtr = nullptr;
@@ -59,154 +59,161 @@ namespace ControlPanel
         // Show information about what this device does on the screen.
         sc.DisplayInfoQR();
 
-        state = Event::idle;
+        menuState = Menu::idle;
     }
 
     static Timer::Timer s_timer("ExitControlPanel", ExitControlPanel, EXIT_TIMEOUT_S);
   
-    void Panelstate(ButtonActions button)
+    void OnboardingMenuState(ButtonActions button)
     {
-        static uint8_t selectedItem = 0, SelectedItemForRemoval;
+        static uint8_t selectedLine = 1, smartphoneIndex;
 
         // Reset timer, since this function ran because of a button press.
         s_timer.StartOrReset();
 
-        switch (state)
+        switch (menuState)
         {
-        case Event::idle:
+            case Menu::idle:
                 // go out of idle the moment of interaction 
-                if (button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
+                if (button == ButtonActions::up || button == ButtonActions::down || button == ButtonActions::press) 
                 {
-                    state = Event::select;
+                    menuState = Menu::read_onboarded;
+                    selectedLine = 1;
                     sc.Clear();
-                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                 }
-                
-            break;
-        case Event::select:
+                break;
+            case Menu::read_onboarded:
                 if (button == ButtonActions::up)
                 {
-                    if(selectedItem)
+                    if (selectedLine) //TODO: why this guard?
                     {
-                        selectedItem--;
+                        selectedLine--;
+                        //jump to last menu item if selectedLine <= 1
+                        if (selectedLine < 1) {
+                            selectedLine = getSmartphones().size() + 2;
+                        }
+                        sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     }
                 }
                 else if (button == ButtonActions::down)
                 {
-                    selectedItem++;
+                    selectedLine++;
+                    //jump to first menu item if selectedLine >= last menu item
+                    if (selectedLine > (getSmartphones().size() + 2)) {
+                        selectedLine = 1;
+                    }
+                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                 }
-
-                if (button == ButtonActions::press && selectedItem == 0)
+                if (button == ButtonActions::press && selectedLine == 1)
                 {   
                     sc.Clear();
-                    sc.InfoScreen();
-
-                    // Request Bluetooth.
+                    sc.CreateOnboardedSmartphone();
+                    // Make device discoverable as Bluetooth Classic-only device with A2DP profile
                     PresenceDetection::InitializeOptions options{};
                     options.EnableA2DPSink = true;
                     options.EnableDiscoverable = true;
                     useBluetoothPtr = new PresenceDetection::UseBluetooth(options);
 
-                    state = Event::info;
+                    menuState = Menu::create_onboarded;
                     break;
                 }
                 else if (button == ButtonActions::press)
                 {
-                    state = Event::remove;
-                    sc.Clear();
-                    SelectedItemForRemoval = selectedItem-1;//-1 because info is also a selectedItem and the phone list should start at 0
-                    selectedItem = 0; 
-                    sc.RemoveSmartphone(getSmartphones(),selectedItem, SelectedItemForRemoval);
+                    if (selectedLine == (getSmartphones().size() + 2)) {
+                        ExitControlPanel();
+                    } else {
+                        menuState = Menu::delete_onboarded;
+                        sc.Clear();
+                        smartphoneIndex = selectedLine - 2;// phone
+                        selectedLine = 3; 
+                        sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                    }
                     break;
                 }
-
-                sc.DisplaySmartphones(getSmartphones(), selectedItem);
-                
-            break;
-        case Event::info:
-                if(button == ButtonActions::press || button == ButtonActions::up || button == ButtonActions::down)
+                break;
+            case Menu::create_onboarded:
+                if(button == ButtonActions::press)
                 {
                     // Release bluetooth.
                     if (useBluetoothPtr != nullptr)
                         delete useBluetoothPtr;
 
-                    state = Event::select;
+                    menuState = Menu::read_onboarded;
                     sc.Clear();
-                    selectedItem = 0;
-                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    selectedLine = 1;
+                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
-        case Event::remove:
+            case Menu::delete_onboarded:
                 if (button == ButtonActions::up)
                 {
-                    if(!selectedItem)
+                    if(selectedLine) //TODO: why this guard?
                     {
-                        selectedItem--;
+                        selectedLine--;
+                        //jump to last menu item if selectedLine <= 1
+                        if (selectedLine <= 1) {
+                            selectedLine = 4;
+                        }
+                        sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                        break;
                     }
                 }
                 else if (button == ButtonActions::down)
                 {
-                    selectedItem++;
+                    selectedLine++;
+                    //jump to first menu item if selectedLine >= last menu item
+                    if (selectedLine > 4) {
+                        selectedLine = 2;
+                    }
+                    sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                    break;
                 }
-
-                if((button == ButtonActions::press && selectedItem == 1) || selectedItem == 2)
+                if((button == ButtonActions::press && selectedLine == 3) || selectedLine == 4)
                 {   
-                    state = Event::select;
+                    menuState = Menu::read_onboarded;
                     sc.Clear();
-                    selectedItem = 0;
-                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    selectedLine = 1;
+                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
-                else if(button == ButtonActions::press && selectedItem == 0)
+                else if(button == ButtonActions::press && selectedLine == 2)
                 {
-                    MACAddres::removeMacAddress(SelectedItemForRemoval);
-                    state = Event::select;
+                    MACAddres::deleteOnboardedSmartphoneFromNVS(smartphoneIndex);
+                    menuState = Menu::read_onboarded;
                     sc.Clear();
-                    selectedItem = 0;
-                    sc.DisplaySmartphones(getSmartphones(), selectedItem);
+                    selectedLine = 1;
+                    sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
                 }
-                sc.RemoveSmartphone(getSmartphones(), selectedItem, SelectedItemForRemoval);
-            break;
-        
-        default:
-            break;
         }
-
-
     }
 
-    std::string getSmartphones()
+    std::vector<std::string> getSmartphones()
     {   
         bool empty = false;
-        
-        std::string smartphoneList;
-        auto err = NVS::Get(NVS_NAMESPACE, "smartphones", smartphoneList);
+        char delimiter = ';'; 
+        std::string smartphones;
+        auto err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_BT_NAMES_KEY, smartphones);
+    	std::vector<std::string> smartphoneList = Strings::Split(smartphones, delimiter);
 
         return smartphoneList;
     }
 
     void up()
     {
-        Panelstate(ButtonActions::up);
+        OnboardingMenuState(ButtonActions::up);
     }
 
     void press()
     {
-        Panelstate(ButtonActions::press);
+        OnboardingMenuState(ButtonActions::press);
     }
 
     void down()
     {
-        Panelstate(ButtonActions::down);
+        OnboardingMenuState(ButtonActions::down);
     }
-
-    void longPress()
-    {
-        Panelstate(ButtonActions::longPress);
-    }
-
-    
 
     void initialzeButtons()
     {
@@ -239,11 +246,11 @@ namespace ControlPanel
         Error::CheckAppendName(err, "ControlPanel", "An error occured when configuring GPIO for rocker button 'down'");
 
         
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, longPress);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, nullptr);
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 0, down, nullptr);
-        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "up", 0, up, nullptr);
+        Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "Up", 0, up, nullptr);
 
-        state = Event::idle;
+        menuState = Menu::idle;
 
     }    
     

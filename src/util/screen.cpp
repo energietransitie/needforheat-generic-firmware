@@ -1,12 +1,20 @@
 #include <util/screen.hpp>
 #include <presence_detection.hpp>
+#include <vector>
+#include <string>
 
 #include <esp_log.h>
 
 constexpr const char *TAG = "Screen";
+constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in presence_detection.cpp
 
 constexpr float TEXT_SIZE_MAX = 3.5; // Maximum text size. Any bigger and it will clip the QR code.
 constexpr float TEXT_SIZE_MIN = 1; // Minimum text size. Any smaller and the text becomes unreadable.
+#define TEXT_SIZE     2
+#define MAX_MENU_SIZE 10  	// Maximum number of menu items (including title and final item)
+#define MARGIN_TOP 10  		// Top margin in pixels
+#define MARGIN_LEFT 10  	// Left margin in pixels
+#define MARGIN_LINE 2	  	// Margin between lines in pixels
 
 std::string Screen::s_infoURL;
 std::string Screen::s_infoText;
@@ -61,6 +69,52 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 			 text.empty() ? "n" : "y");
 }
 
+void Screen::DrawMenu(std::vector<std::string> menuLines, int selectedLine) 
+{
+	// Clear();
+	m_display.setTextSize(TEXT_SIZE);
+	int menuSize = menuLines.size();;
+	int lineHeight = m_display.fontHeight() + MARGIN_LINE; // Get line height dynamically
+
+	// Calculate the position of the last line (bottom of the screen)
+	int lastLineY = m_display.height() - lineHeight;
+
+	// Draw the title (not highlighted)
+	m_display.setTextColor(TFT_BLACK);
+	m_display.setCursor(MARGIN_LEFT, MARGIN_TOP); 
+	m_display.print(menuLines[0].c_str());
+
+	// Draw menu items
+	for (int i = 1; i < menuSize - 1; i++)
+	{
+			if (i == selectedLine)
+			{
+				// Highlighted item
+				m_display.fillRect(0, i * lineHeight + MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
+				m_display.setTextColor(TFT_WHITE);
+			} else 
+			{
+				m_display.setTextColor(TFT_BLACK);
+			}
+			m_display.setCursor(MARGIN_LEFT, i * lineHeight + MARGIN_TOP );
+			m_display.print(menuLines[i].c_str());
+	}
+
+	// Draw the last line (always at the bottom)
+	if (selectedLine == menuSize - 1)
+	{
+		m_display.fillRect(0, lastLineY, m_display.width(), lineHeight, TFT_BLACK);
+		m_display.setTextColor(TFT_WHITE);
+	} else 
+	{
+		m_display.setTextColor(TFT_BLACK);
+	}
+	m_display.setCursor(MARGIN_LEFT, lastLineY);
+	m_display.print(menuLines[menuSize - 1].c_str());
+	m_display.setTextColor(TFT_BLACK);
+}
+
+
 void Screen::SetInfoQRDetails(const std::string &payload, int padding, const std::string &text)
 {
 	s_infoURL = payload;
@@ -76,104 +130,50 @@ void Screen::DisplayInfoQR()
 	DisplayQR(s_infoURL, s_infoPadding, s_infoText);
 }
 
-void Screen::DisplaySmartphones(std::string smartphones, uint8_t position)
+void Screen::ReadOnboardedSmartphones(std::vector<std::string> smartphoneList, uint8_t position)
 {		
-	int32_t size = m_display.width() - 20;
-	uint8_t count = 0, yAxis = 30;
-	static uint8_t prevPos = 0;
-	std::vector<std::string> smartphoneStrings;
+	// Create a list of text to display
+	std::vector<std::string> onboardedLines = {
+		"SMARTPHONES:", 
+		"+ toevoegen"
+	};
 
-	m_display.setTextSize(2);
-	m_display.drawString("Smartphones:", 10, 10);  
+    // Extend the OnboardedLines vector with the splitted strings
+    onboardedLines.insert(onboardedLines.end(), smartphoneList.begin(), smartphoneList.end());
 
-	// iterate over all onboarded smartphones
-	smartphoneStrings = Strings::Split("+ toevoegen;" + smartphones, ';');
-	//yAxis += 20*(position-1);
-	
-	for (const auto &smartphone : smartphoneStrings)
-	{
-		if(count == position)
-		{
-			m_display.setTextSize(2);  
-		}
-		else
-		{
-			m_display.setTextSize(1.5);  
-		}
-		if(position == 0 || count == prevPos || count == position)
-		{
-			//draw all the smartphones	
-			m_display.fillRect(10, yAxis, size+10, 20);
-			if (count == 0)
-			{
-				m_display.drawString((smartphone).c_str(), 10, yAxis);
-			}
-			else
-			{
-				m_display.drawString(("- " + smartphone).c_str(), 10, yAxis);
-			}	
-		}
-		yAxis+=20;
-		count++;
-	}  	
-	prevPos = position;
+	// Add "terug" to the end of the OnboardedLines vector
+    onboardedLines.push_back("terug");
+	DrawMenu(onboardedLines, position);
 }
 
-void Screen::InfoScreen()
+void Screen::CreateOnboardedSmartphone()
 {
-	m_display.setTextSize(2);
-	m_display.drawString("Toevoegen?", 10, 10); 
+	// Create a list of text to display
+	std::vector<std::string> createOnboardedSmartphoneScreenLines = {
+		"TOEVOEGEN?", 
+		"Ga op je mobiel",
+		"naar Bluetooth",
+		"en koppel met:",
+	};
 
-	m_display.setTextSize(1.5);
-	m_display.drawString("Ga op je mobiel", 10, 30); 
-	m_display.drawString("naar Bluetooth", 10, 45); 
-	m_display.drawString("en koppel met", 10, 60); 
-	m_display.drawString(PresenceDetection::getDevName().c_str(), 10, 75); 
-	m_display.setTextSize(2);
-	m_display.drawString("Terug", 10, m_display.height()-20); 
+	// Add Bluetooth device name to the end of the OnboardedLines vector
+    createOnboardedSmartphoneScreenLines.push_back(ONBOARDING_PAIR_NAME);
 
+	// Add "terug" to the end of the OnboardedLines vector
+
+    createOnboardedSmartphoneScreenLines.push_back("terug");
+	DrawMenu(createOnboardedSmartphoneScreenLines, 5);
 }
 
 
-void Screen::RemoveSmartphone(std::string smartphones, uint8_t position, uint8_t phoneID)
+void Screen::DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t selectedLine, uint8_t phoneID)
 {		
-	int32_t size = m_display.width() - 20;
-	uint8_t count = 0;
-	std::vector<std::string> smartphoneStrings;
-
-	m_display.setTextSize(2); 
-
-	// loop true all current smartphones
-	smartphoneStrings = Strings::Split(smartphones, ';');
-	
-	for (const auto &smartphone : smartphoneStrings)
-	{
-		if(count == phoneID)
-		{
-			m_display.drawString(smartphone.c_str(), 10, 10); 
-			break;
-		}
-		count++;
-	}  	
-	
-	m_display.drawString("Verwijderen?", 10, 30); 
-
-	
-	if(position == 1)
-	{	
-		m_display.setTextSize(1.5); 
-		m_display.fillRect(10, 60, size, 30);
-		m_display.drawString("Ja", 10, 60); 
-		m_display.setTextSize(2); 
-		m_display.fillRect(10, 90, size, 30);
-		m_display.drawString("Nee", 10, 90); 
-	}
-	else
-	{	
-		m_display.fillRect(10, 60, size, 30);
-		m_display.drawString("Ja", 10, 60); 
-		m_display.setTextSize(1.5); 
-		m_display.fillRect(10, 90, size, 30);
-		m_display.drawString("Nee", 10, 90); 
-	}
+	std::vector<std::string> infoScreenLines = {
+		smartphoneList[phoneID].c_str(),
+		"VERWIJDEREN?", 
+		"Ja",
+		"Nee",
+		"terug"
+	};
+	DrawMenu(infoScreenLines, selectedLine);
 }

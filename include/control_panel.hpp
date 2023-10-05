@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 namespace ControlPanel
 {
@@ -10,10 +11,11 @@ namespace ControlPanel
      * This initilises the button togher with starting the state machine
      */
     void initialzeButtons();
+
     /**
      * getSmartphones.
      * 
      * This collects all the participating smartphones
      */
-    std::string getSmartphones();
+    std::vector<std::string> getSmartphones();
 }
