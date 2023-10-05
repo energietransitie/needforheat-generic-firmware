@@ -79,7 +79,6 @@ namespace ControlPanel
                 {
                     menuState = Menu::read_onboarded;
                     selectedLine = 1;
-                    sc.Clear();
                     sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                 }
                 break;
@@ -107,7 +106,6 @@ namespace ControlPanel
                 }
                 if (button == ButtonActions::press && selectedLine == 1)
                 {   
-                    sc.Clear();
                     sc.CreateOnboardedSmartphone();
                     // Make device discoverable as Bluetooth Classic-only device with A2DP profile
                     PresenceDetection::InitializeOptions options{};
@@ -124,7 +122,6 @@ namespace ControlPanel
                         ExitControlPanel();
                     } else {
                         menuState = Menu::delete_onboarded;
-                        sc.Clear();
                         smartphoneIndex = selectedLine - 2;// phone
                         selectedLine = 3; 
                         sc.DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
@@ -140,7 +137,6 @@ namespace ControlPanel
                         delete useBluetoothPtr;
 
                     menuState = Menu::read_onboarded;
-                    sc.Clear();
                     selectedLine = 1;
                     sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
@@ -172,7 +168,6 @@ namespace ControlPanel
                 if((button == ButtonActions::press && selectedLine == 3) || selectedLine == 4)
                 {   
                     menuState = Menu::read_onboarded;
-                    sc.Clear();
                     selectedLine = 1;
                     sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;
@@ -181,7 +176,6 @@ namespace ControlPanel
                 {
                     MACAddres::deleteOnboardedSmartphoneFromNVS(smartphoneIndex);
                     menuState = Menu::read_onboarded;
-                    sc.Clear();
                     selectedLine = 1;
                     sc.ReadOnboardedSmartphones(getSmartphones(), selectedLine);
                     break;

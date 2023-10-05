@@ -71,7 +71,7 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 
 void Screen::DrawMenu(std::vector<std::string> menuLines, int selectedLine) 
 {
-	// Clear();
+	Clear();
 	m_display.setTextSize(TEXT_SIZE);
 	int menuSize = menuLines.size();;
 	int lineHeight = m_display.fontHeight() + MARGIN_LINE; // Get line height dynamically
