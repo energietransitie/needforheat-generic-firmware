@@ -39,6 +39,7 @@ constexpr const char *NVS_NAMESPACE = "twomes_storage";
 constexpr const char *TAG = "MAC Address";
 
 constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;
+constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in presence_detection.cpp
 
 enum class Menu {idle, read_onboarded, create_onboarded, delete_onboarded};
 enum class ButtonActions {up, press, down};
@@ -49,6 +50,55 @@ namespace ControlPanel
     Screen sc;
 
     static PresenceDetection::UseBluetooth *useBluetoothPtr = nullptr;
+
+    void ReadOnboardedSmartphones(std::vector<std::string> smartphoneList, uint8_t position)
+    {		
+        // Create a list of text to display
+        std::vector<std::string> onboardedLines = {
+            "SMARTPHONES:", 
+            "+ toevoegen"
+        };
+
+        // Extend the OnboardedLines vector with the splitted strings
+        onboardedLines.insert(onboardedLines.end(), smartphoneList.begin(), smartphoneList.end());
+
+        // Add "terug" to the end of the OnboardedLines vector
+        onboardedLines.push_back("terug");
+        sc.DrawMenu(onboardedLines, position);
+    }
+
+    void CreateOnboardedSmartphone()
+    {
+        // Create a list of text to display
+        std::vector<std::string> createOnboardedSmartphoneScreenLines = {
+            "TOEVOEGEN?", 
+            "Ga op je mobiel",
+            "naar Bluetooth",
+            "en koppel met:",
+        };
+
+        // Add Bluetooth device name to the end of the OnboardedLines vector
+        createOnboardedSmartphoneScreenLines.push_back(ONBOARDING_PAIR_NAME);
+
+        // Add "terug" to the end of the OnboardedLines vector
+
+        createOnboardedSmartphoneScreenLines.push_back("terug");
+        sc.DrawMenu(createOnboardedSmartphoneScreenLines, 5);
+    }
+
+
+    void DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t selectedLine, uint8_t phoneID)
+    {		
+        std::vector<std::string> infoScreenLines = {
+            smartphoneList[phoneID].c_str(),
+            "VERWIJDEREN?", 
+            "Ja",
+            "Nee",
+            "terug"
+        };
+        sc.DrawMenu(infoScreenLines, selectedLine);
+    }
+
 
     void ExitControlPanel()
     {

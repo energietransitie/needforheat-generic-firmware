@@ -6,7 +6,6 @@
 #include <esp_log.h>
 
 constexpr const char *TAG = "Screen";
-constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in presence_detection.cpp
 
 constexpr float TEXT_SIZE_MAX = 3.5; // Maximum text size. Any bigger and it will clip the QR code.
 constexpr float TEXT_SIZE_MIN = 1; // Minimum text size. Any smaller and the text becomes unreadable.
@@ -128,52 +127,4 @@ void Screen::DisplayInfoQR()
 		return;
 	
 	DisplayQR(s_infoURL, s_infoPadding, s_infoText);
-}
-
-void Screen::ReadOnboardedSmartphones(std::vector<std::string> smartphoneList, uint8_t position)
-{		
-	// Create a list of text to display
-	std::vector<std::string> onboardedLines = {
-		"SMARTPHONES:", 
-		"+ toevoegen"
-	};
-
-    // Extend the OnboardedLines vector with the splitted strings
-    onboardedLines.insert(onboardedLines.end(), smartphoneList.begin(), smartphoneList.end());
-
-	// Add "terug" to the end of the OnboardedLines vector
-    onboardedLines.push_back("terug");
-	DrawMenu(onboardedLines, position);
-}
-
-void Screen::CreateOnboardedSmartphone()
-{
-	// Create a list of text to display
-	std::vector<std::string> createOnboardedSmartphoneScreenLines = {
-		"TOEVOEGEN?", 
-		"Ga op je mobiel",
-		"naar Bluetooth",
-		"en koppel met:",
-	};
-
-	// Add Bluetooth device name to the end of the OnboardedLines vector
-    createOnboardedSmartphoneScreenLines.push_back(ONBOARDING_PAIR_NAME);
-
-	// Add "terug" to the end of the OnboardedLines vector
-
-    createOnboardedSmartphoneScreenLines.push_back("terug");
-	DrawMenu(createOnboardedSmartphoneScreenLines, 5);
-}
-
-
-void Screen::DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t selectedLine, uint8_t phoneID)
-{		
-	std::vector<std::string> infoScreenLines = {
-		smartphoneList[phoneID].c_str(),
-		"VERWIJDEREN?", 
-		"Ja",
-		"Nee",
-		"terug"
-	};
-	DrawMenu(infoScreenLines, selectedLine);
 }
