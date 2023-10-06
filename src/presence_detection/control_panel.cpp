@@ -58,8 +58,11 @@ namespace ControlPanel
             "+ toevoegen"
         };
 
-        // Extend the OnboardedLines vector with the splitted strings
-        onboardedLines.insert(onboardedLines.end(), smartphoneList.begin(), smartphoneList.end());
+        // Add smartphones with prefix "- " to the onboardedLines vector
+        for (const std::string& smartphoneName : smartphoneList) {
+            // onboardedLines.push_back("- " + smartphoneName);
+            onboardedLines.push_back(smartphoneName);
+        }
 
         // Add "terug" to the end of the OnboardedLines vector
         onboardedLines.push_back("terug");
