@@ -110,8 +110,10 @@ namespace ControlPanel
 
         // Release bluetooth (doing this after e-ink update screen seems more stable)
         if (useBluetoothPtr != nullptr)
+        {
             delete useBluetoothPtr;
-
+            useBluetoothPtr = nullptr;
+        }
     }
 
     static Timer::Timer s_timer("ExitControlPanel", ExitControlPanel, EXIT_TIMEOUT_S);
@@ -191,7 +193,10 @@ namespace ControlPanel
 
                     // Release bluetooth (doing this after e-ink screen update seems more stable)
                     if (useBluetoothPtr != nullptr)
+                    {
                         delete useBluetoothPtr;
+                        useBluetoothPtr = nullptr;
+                    }
 
                     break;
                 }
