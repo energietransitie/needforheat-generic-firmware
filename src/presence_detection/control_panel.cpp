@@ -174,6 +174,7 @@ namespace ControlPanel
                 else if (button == ButtonActions::press)
                 {
                     if (highlightedLine == (getSmartphones().size() + 2)) {
+                        s_timer.Stop();
                         ExitControlPanel();
                     } else {
                         menuState = Menu::delete_onboarded;

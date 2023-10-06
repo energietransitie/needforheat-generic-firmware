@@ -50,7 +50,10 @@ namespace Timer
     void Timer::Stop()
     {
         if (m_taskHandleValid)
+        {
+            m_taskHandleValid = false;
             vTaskDelete(m_taskHandle);
+        }
 
         ESP_LOGD(TAG, "Timer \"%s\" was stopped", m_name.c_str());
     }
