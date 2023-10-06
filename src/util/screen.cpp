@@ -9,11 +9,11 @@ constexpr const char *TAG = "Screen";
 
 constexpr float TEXT_SIZE_MAX = 3.5; // Maximum text size. Any bigger and it will clip the QR code.
 constexpr float TEXT_SIZE_MIN = 1; // Minimum text size. Any smaller and the text becomes unreadable.
-#define TEXT_SIZE     2
+#define M5_COREINK_TEXT_SIZE     2
 #define MAX_MENU_SIZE 10  	// Maximum number of menu items (including title and final item)
-#define MARGIN_TOP 10  		// Top margin in pixels
-#define MARGIN_LEFT 10  	// Left margin in pixels
-#define MARGIN_LINE 2	  	// Margin between lines in pixels
+#define M5_COREINK_MARGIN_TOP 10  		// Top margin in pixels
+#define M5_COREINK_MARGIN_LEFT 10  	// Left margin in pixels
+#define M5_COREINK_MARGIN_LINE 2	  	// Margin between lines in pixels
 
 std::string Screen::s_infoURL;
 std::string Screen::s_infoText;
@@ -24,7 +24,7 @@ Screen::Screen()
 	m_display.init_without_reset();
 	m_display.setEpdMode(epd_mode_t::epd_text);
 
-	ESP_LOGI(TAG, "Initialed display with width: %d and height: %d", m_display.width(), m_display.height());
+	// ESP_LOGI(TAG, "Initialed display with width: %d and height: %d", m_display.width(), m_display.height());
 }
 
 void Screen::Clear()
@@ -60,27 +60,27 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 
 	m_display.qrcode(payload.c_str(), (m_display.width() - size) / 2, padding, size);
 
-	ESP_LOGI(TAG,
-			 "Displaying QR: screen_size = %dx%d, qr_size = %d, with text = %s",
-			 m_display.width(),
-			 m_display.height(),
-			 size,
-			 text.empty() ? "n" : "y");
+	// ESP_LOGI(TAG,
+	// 		 "Displaying QR: screen_size = %dx%d, qr_size = %d, with text = %s",
+	// 		 m_display.width(),
+	// 		 m_display.height(),
+	// 		 size,
+	// 		 text.empty() ? "n" : "y");
 }
 
 void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine) 
 {
 	Clear();
-	m_display.setTextSize(TEXT_SIZE);
+	m_display.setTextSize(M5_COREINK_TEXT_SIZE);
 	int menuSize = menuLines.size();;
-	int lineHeight = m_display.fontHeight() + MARGIN_LINE; // Get line height dynamically
+	int lineHeight = m_display.fontHeight() + M5_COREINK_MARGIN_LINE; // Get line height dynamically
 
 	// Calculate the position of the last line (bottom of the screen)
 	int lastLineY = m_display.height() - lineHeight;
 
 	// Draw the title (not highlighted)
 	m_display.setTextColor(TFT_BLACK);
-	m_display.setCursor(MARGIN_LEFT, MARGIN_TOP); 
+	m_display.setCursor(M5_COREINK_MARGIN_LEFT, M5_COREINK_MARGIN_TOP); 
 	m_display.print(menuLines[0].c_str());
 
 	// Draw menu items
@@ -89,13 +89,13 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine)
 			if (i == highlightedLine)
 			{
 				// Highlighted item
-				m_display.fillRect(0, i * lineHeight + MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
+				m_display.fillRect(0, i * lineHeight + M5_COREINK_MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
 				m_display.setTextColor(TFT_WHITE);
 			} else 
 			{
 				m_display.setTextColor(TFT_BLACK);
 			}
-			m_display.setCursor(MARGIN_LEFT, i * lineHeight + MARGIN_TOP );
+			m_display.setCursor(M5_COREINK_MARGIN_LEFT, i * lineHeight + M5_COREINK_MARGIN_TOP );
 			m_display.print(menuLines[i].c_str());
 	}
 
@@ -108,7 +108,7 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine)
 	{
 		m_display.setTextColor(TFT_BLACK);
 	}
-	m_display.setCursor(MARGIN_LEFT, lastLineY);
+	m_display.setCursor(M5_COREINK_MARGIN_LEFT, lastLineY);
 	m_display.print(menuLines[menuSize - 1].c_str());
 	m_display.setTextColor(TFT_BLACK);
 }
