@@ -44,7 +44,7 @@ constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;
 constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in presence_detection.cpp
 
 // mutex to protect access to the shared resource useBluetoothPtr 
-static portMUX_TYPE useBluetoothPtrMutex = portMUX_INITIALIZER_UNLOCKED;
+// static portMUX_TYPE useBluetoothPtrMutex = portMUX_INITIALIZER_UNLOCKED;
 
 namespace ControlPanel
 {
@@ -105,10 +105,10 @@ namespace ControlPanel
     void ExitControlPanel()
     {
         // Release bluetooth.
-        portENTER_CRITICAL(&useBluetoothPtrMutex);
+        // portENTER_CRITICAL(&useBluetoothPtrMutex);
         if (useBluetoothPtr != nullptr)
             delete useBluetoothPtr;
-        portEXIT_CRITICAL(&useBluetoothPtrMutex);
+        // portEXIT_CRITICAL(&useBluetoothPtrMutex);
 
         // Show information about what this device does on the screen.
         sc.DisplayInfoQR();
@@ -166,9 +166,9 @@ namespace ControlPanel
                     options.EnableA2DPSink = true;
                     options.EnableDiscoverable = true;
 
-                    portENTER_CRITICAL(&useBluetoothPtrMutex);
+                    // portENTER_CRITICAL(&useBluetoothPtrMutex);
                     useBluetoothPtr = new PresenceDetection::UseBluetooth(options);
-                    portEXIT_CRITICAL(&useBluetoothPtrMutex);
+                    // portEXIT_CRITICAL(&useBluetoothPtrMutex);
 
                     menuState = Menu::create_onboarded;
                     break;
@@ -190,10 +190,10 @@ namespace ControlPanel
                 if(button == ButtonActions::press)
                 {
                     // Release bluetooth.
-                    portENTER_CRITICAL(&useBluetoothPtrMutex);
+                    // portENTER_CRITICAL(&useBluetoothPtrMutex);
                     if (useBluetoothPtr != nullptr)
                         delete useBluetoothPtr;
-                    portEXIT_CRITICAL(&useBluetoothPtrMutex);
+                    // portEXIT_CRITICAL(&useBluetoothPtrMutex);
 
                     menuState = Menu::read_onboarded;
                     highlightedLine = 1;
