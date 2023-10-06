@@ -68,7 +68,7 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 			 text.empty() ? "n" : "y");
 }
 
-void Screen::DrawMenu(std::vector<std::string> menuLines, int selectedLine) 
+void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine) 
 {
 	Clear();
 	m_display.setTextSize(TEXT_SIZE);
@@ -86,7 +86,7 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int selectedLine)
 	// Draw menu items
 	for (int i = 1; i < menuSize - 1; i++)
 	{
-			if (i == selectedLine)
+			if (i == highlightedLine)
 			{
 				// Highlighted item
 				m_display.fillRect(0, i * lineHeight + MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
@@ -100,7 +100,7 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int selectedLine)
 	}
 
 	// Draw the last line (always at the bottom)
-	if (selectedLine == menuSize - 1)
+	if (highlightedLine == menuSize - 1)
 	{
 		m_display.fillRect(0, lastLineY, m_display.width(), lineHeight, TFT_BLACK);
 		m_display.setTextColor(TFT_WHITE);
