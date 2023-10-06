@@ -89,7 +89,7 @@ namespace ControlPanel
     }
 
 
-    void DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t selectedLine, uint8_t phoneID)
+    void DeleteOnboardedSmartphone(std::vector<std::string> smartphoneList, uint8_t highlightedLine, uint8_t phoneID)
     {		
         std::vector<std::string> infoScreenLines = {
             smartphoneList[phoneID].c_str(),
@@ -98,7 +98,7 @@ namespace ControlPanel
             "Nee",
             "terug"
         };
-        sc.DrawMenu(infoScreenLines, selectedLine);
+        sc.DrawMenu(infoScreenLines, highlightedLine);
     }
 
 
@@ -120,7 +120,7 @@ namespace ControlPanel
   
     void OnboardingMenuState(ButtonActions button)
     {
-        static uint8_t selectedLine = 1, smartphoneIndex;
+        static uint8_t highlightedLine = 1, smartphoneIndex;
 
         // Reset timer, since this function ran because of a button press.
         s_timer.StartOrReset();
@@ -132,33 +132,33 @@ namespace ControlPanel
                 if (button == ButtonActions::up || button == ButtonActions::down || button == ButtonActions::press) 
                 {
                     menuState = Menu::read_onboarded;
-                    selectedLine = 1;
-                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    highlightedLine = 1;
+                    ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                 }
                 break;
             case Menu::read_onboarded:
                 if (button == ButtonActions::up)
                 {
-                    if (selectedLine) //TODO: why this guard?
+                    if (highlightedLine) //TODO: why this guard?
                     {
-                        selectedLine--;
-                        //jump to last menu item if selectedLine <= 1
-                        if (selectedLine < 1) {
-                            selectedLine = getSmartphones().size() + 2;
+                        highlightedLine--;
+                        //jump to last menu item if highlightedLine <= 1
+                        if (highlightedLine < 1) {
+                            highlightedLine = getSmartphones().size() + 2;
                         }
-                        ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                        ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                     }
                 }
                 else if (button == ButtonActions::down)
                 {
-                    selectedLine++;
-                    //jump to first menu item if selectedLine >= last menu item
-                    if (selectedLine > (getSmartphones().size() + 2)) {
-                        selectedLine = 1;
+                    highlightedLine++;
+                    //jump to first menu item if highlightedLine >= last menu item
+                    if (highlightedLine > (getSmartphones().size() + 2)) {
+                        highlightedLine = 1;
                     }
-                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                 }
-                if (button == ButtonActions::press && selectedLine == 1)
+                if (button == ButtonActions::press && highlightedLine == 1)
                 {   
                     CreateOnboardedSmartphone();
                     // Make device discoverable as Bluetooth Classic-only device with A2DP profile
@@ -175,13 +175,13 @@ namespace ControlPanel
                 }
                 else if (button == ButtonActions::press)
                 {
-                    if (selectedLine == (getSmartphones().size() + 2)) {
+                    if (highlightedLine == (getSmartphones().size() + 2)) {
                         ExitControlPanel();
                     } else {
                         menuState = Menu::delete_onboarded;
-                        smartphoneIndex = selectedLine - 2;// phone
-                        selectedLine = 3; 
-                        DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                        smartphoneIndex = highlightedLine - 2;// phone
+                        highlightedLine = 3; 
+                        DeleteOnboardedSmartphone(getSmartphones(), highlightedLine, smartphoneIndex);
                     }
                     break;
                 }
@@ -196,47 +196,47 @@ namespace ControlPanel
                     portEXIT_CRITICAL(&useBluetoothPtrMutex);
 
                     menuState = Menu::read_onboarded;
-                    selectedLine = 1;
-                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    highlightedLine = 1;
+                    ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                     break;
                 }
             case Menu::delete_onboarded:
                 if (button == ButtonActions::up)
                 {
-                    if(selectedLine) //TODO: why this guard?
+                    if(highlightedLine) //TODO: why this guard?
                     {
-                        selectedLine--;
-                        //jump to last menu item if selectedLine <= 1
-                        if (selectedLine <= 1) {
-                            selectedLine = 4;
+                        highlightedLine--;
+                        //jump to last menu item if highlightedLine <= 1
+                        if (highlightedLine <= 1) {
+                            highlightedLine = 4;
                         }
-                        DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                        DeleteOnboardedSmartphone(getSmartphones(), highlightedLine, smartphoneIndex);
                         break;
                     }
                 }
                 else if (button == ButtonActions::down)
                 {
-                    selectedLine++;
-                    //jump to first menu item if selectedLine >= last menu item
-                    if (selectedLine > 4) {
-                        selectedLine = 2;
+                    highlightedLine++;
+                    //jump to first menu item if highlightedLine >= last menu item
+                    if (highlightedLine > 4) {
+                        highlightedLine = 2;
                     }
-                    DeleteOnboardedSmartphone(getSmartphones(), selectedLine, smartphoneIndex);
+                    DeleteOnboardedSmartphone(getSmartphones(), highlightedLine, smartphoneIndex);
                     break;
                 }
-                if((button == ButtonActions::press && selectedLine == 3) || selectedLine == 4)
+                if((button == ButtonActions::press && highlightedLine == 3) || highlightedLine == 4)
                 {   
                     menuState = Menu::read_onboarded;
-                    selectedLine = 1;
-                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    highlightedLine = 1;
+                    ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                     break;
                 }
-                else if(button == ButtonActions::press && selectedLine == 2)
+                else if(button == ButtonActions::press && highlightedLine == 2)
                 {
                     MACAddres::deleteOnboardedSmartphoneFromNVS(smartphoneIndex);
                     menuState = Menu::read_onboarded;
-                    selectedLine = 1;
-                    ReadOnboardedSmartphones(getSmartphones(), selectedLine);
+                    highlightedLine = 1;
+                    ReadOnboardedSmartphones(getSmartphones(), highlightedLine);
                     break;
                 }
         }

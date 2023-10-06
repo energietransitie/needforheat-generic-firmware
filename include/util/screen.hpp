@@ -54,10 +54,10 @@ public:
 	 * Display menu.
 	 * 
 	 * @param menItems array of strins containing all menu items (first item: title, last item: back)
-	 * @param selectedLine Current hightlighted item
+	 * @param highlightedLine Current hightlighted item
 	 * @param menuSize total number of items in menu.
 	 */
-	void DrawMenu(std::vector<std::string> lines, int selectedLine);
+	void DrawMenu(std::vector<std::string> lines, int highlightedLine);
 
 private:
 	// Storage for Info QR.
