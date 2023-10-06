@@ -45,6 +45,8 @@ constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
 constexpr EventBits_t EVENT_RESPONSE_RECEIVED = 1 << 1;
+constexpr EventBits_t EVENT_BT_ENABLED = 1 << 2;
+constexpr EventBits_t EVENT_BT_DISABLED = 1 << 3;
 
 namespace PresenceDetection
 {
@@ -141,8 +143,6 @@ namespace PresenceDetection
 		static int s_responseCount = 0;
 
 		static EventGroupHandle_t s_events = xEventGroupCreate();
-
-		static QueueHandle_t s_btMutex = xSemaphoreCreateMutex();
 
 		auto secureUploadQueue = SecureUpload::Queue::GetInstance();
 
@@ -258,7 +258,8 @@ namespace PresenceDetection
 	{
 		ESP_LOGD(TAG, "Enabling Bluetooth");
 
-		xSemaphoreTake(s_btMutex, portMAX_DELAY);
+		xEventGroupClearBits(s_events, EVENT_BT_DISABLED);
+		xEventGroupSetBits(s_events, EVENT_BT_ENABLED);
 
 		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
@@ -364,7 +365,8 @@ namespace PresenceDetection
 			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing BT controller"))
 				return err;
 
-			xSemaphoreGive(s_btMutex);
+			xEventGroupSetBits(s_events, EVENT_BT_DISABLED);
+			xEventGroupClearBits(s_events, EVENT_BT_ENABLED);
 		}
 
 		return ESP_OK;
@@ -441,10 +443,19 @@ namespace PresenceDetection
 
 	void WaitIfBluetoothActive()
 	{
-		// Wait until mutex is available.
-		xSemaphoreTake(s_btMutex, portMAX_DELAY);
-		// Immediately release.
-		xSemaphoreGive(s_btMutex);
+		auto events = xEventGroupGetBits(s_events);
+		if (!(events & EVENT_BT_ENABLED))
+		{
+			// BT is not enabled. We can return right away.
+			return;
+		}
+
+		ESP_LOGD(TAG, "Waiting in WaitIfBluetoothActive");
+
+		// Wait until BT is disabled. Do not clear bits.
+		xEventGroupWaitBits(s_events, EVENT_BT_DISABLED, pdFALSE, pdTRUE, portMAX_DELAY);
+
+		ESP_LOGD(TAG, "Returning from WaitIfBluetoothActive");
 	}
 
 	void addOnboardedSmartphoneToNVS(const esp_bd_addr_t &mac)
