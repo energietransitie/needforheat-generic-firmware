@@ -10,10 +10,9 @@ constexpr const char *TAG = "Screen";
 constexpr float TEXT_SIZE_MAX = 3.5; // Maximum text size. Any bigger and it will clip the QR code.
 constexpr float TEXT_SIZE_MIN = 1; // Minimum text size. Any smaller and the text becomes unreadable.
 #define M5_COREINK_TEXT_SIZE     2
-// #define MAX_MENU_SIZE 10  	// Maximum number of menu items (including title and final item)
-// #define M5_COREINK_MARGIN_TOP 10  		// Top margin in pixels
-// #define M5_COREINK_MARGIN_LEFT 10  	// Left margin in pixels
-// #define M5_COREINK_MARGIN_LINE 2	  	// Margin between lines in pixels
+#define E_INK_MARGIN_TOP 10  		// Top margin in pixels
+// #define E_INK_MARGIN_LEFT 10  	// Left margin in pixels
+// #define E_INK_MARGIN_LINE 2	  	// Margin between lines in pixels
 
 std::string Screen::s_infoURL;
 std::string Screen::s_infoText;
@@ -77,7 +76,7 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine)
 
 	// Draw the title (not highlighted)
 	e_ink_display.setTextColor(TFT_BLACK, TFT_WHITE);
-	e_ink_display.setCursor(0, 0); 
+	e_ink_display.setCursor(0, E_INK_MARGIN_TOP); 
 	e_ink_display.println(menuLines[0].c_str());
 
 	// Draw menu items
