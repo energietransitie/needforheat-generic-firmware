@@ -1,4 +1,5 @@
 #include "presence_detection.hpp"
+#include "control_panel.hpp"
 
 #include <cstdlib>
 #include <vector>
@@ -11,9 +12,13 @@
 #include <esp_bt_main.h>
 #include <esp_gatt_common_api.h>
 #include <esp_gap_bt_api.h>
+#include <esp_a2dp_api.h>
+
+#include <esp_bt_device.h>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
+#include <freertos/semphr.h>
 
 #include <scheduler.hpp>
 #include <measurements.hpp>
@@ -23,6 +28,7 @@
 #include <util/format.hpp>
 #include <util/nvs.hpp>
 #include <util/strings.hpp>
+#include <util/buzzer.hpp>
 
 constexpr const char *TAG = "Presence detection";
 constexpr const char *NVS_NAMESPACE = "twomes_storage";
@@ -35,9 +41,12 @@ constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 
 constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
 
+
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
 constexpr EventBits_t EVENT_RESPONSE_RECEIVED = 1 << 1;
+constexpr EventBits_t EVENT_BT_ENABLED = 1 << 2;
+constexpr EventBits_t EVENT_BT_DISABLED = 1 << 3;
 
 namespace PresenceDetection
 {
@@ -159,40 +168,30 @@ namespace PresenceDetection
 					ESP_LOGD(TAG, "All name requests have returned.");
 				}
 			}
+			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
+			{
+				MACAddres::addOnboardedSmartphone(param);
+				// Buzz the buzzer for 200 ms to signal the devices are paired
+				Buzzer::Buzz(200);
+				// imitate a button press that pressed return 
+				if(ControlPanel::menuState == Menu::create_onboarded)
+				{
+					ControlPanel::OnboardingMenuState(ButtonActions::press);
+				}
+
+			}
 		}
 
 		/**
-		 * Initialize bluetooth.
+		 * Callback that runs on A2DP event.
 		 */
-		esp_err_t InitializeBluetooth()
+		void A2DPCallback(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
 		{
-			esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
-
-			auto err = esp_bt_controller_init(&bluetoothConfig);
-			if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
-				return err;
-
-			err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
-			if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
-				return err;
-
-			err = esp_bluedroid_init();
-			if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
-				return err;
-
-			err = esp_bluedroid_enable();
-			if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
-				return err;
-
-			err = esp_ble_gatt_set_local_mtu(500);
-			if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
-				return err;
-
-			err = esp_bt_gap_register_callback(GapCallback);
-			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
-				return err;
-
-			return ESP_OK;
+			if (event == ESP_A2D_CONNECTION_STATE_EVT && param->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED)
+			{
+				// Device connected. Immediately disconnect.
+				esp_bt_gap_remove_bond_device(param->conn_stat.remote_bda);
+			}
 		}
 
 		/**
@@ -201,18 +200,23 @@ namespace PresenceDetection
 		esp_err_t InitializeMacAddresses()
 		{
 			std::string macAddressList;
-			auto err = NVS::Get(NVS_NAMESPACE, "mac_addresses", macAddressList);
+			auto err = NVS::Get(NVS_NAMESPACE, NVS_ONBOARDED_MAC_ADDRESSES_KEY, macAddressList);
 			if (err == ESP_ERR_NVS_NOT_FOUND)
 			{
 				ESP_LOGW(TAG, "Retrieving Bluetooth MAC-addresses for presence detection from NVS was unsuccessful. "
 							  "It is possible that no MAC-addresses were added to NVS storage.");
-				// Not critical and we already logged this. Return ESP_OK.
-				return ESP_OK;
+				// Not critical and we already logged this.
 			}
 			else if (err != ESP_OK)
 			{
 				ESP_LOGE(TAG, "An error occured when reading MAC-addresses from NVS.");
 				return err;
+			}
+
+			// empty s_macAddresses to prevent mulitple occasions of the same phone
+			while (!s_macAddresses.empty())
+			{
+				s_macAddresses.pop_back();
 			}
 
 			auto macAddressStrings = Strings::Split(macAddressList, ';');
@@ -250,12 +254,216 @@ namespace PresenceDetection
 		}
 	} // namespace
 
-	void AddMacAddress(const esp_bd_addr_t &mac)
+	esp_err_t InitializeBluetooth(InitializeOptions options)
+	{
+		ESP_LOGD(TAG, "Enabling Bluetooth");
+
+		xEventGroupClearBits(s_events, EVENT_BT_DISABLED);
+		xEventGroupSetBits(s_events, EVENT_BT_ENABLED);
+
+		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+
+		auto err = esp_bt_controller_init(&bluetoothConfig);
+		if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
+			return err;
+
+		err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+		if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
+			return err;
+
+		err = esp_bluedroid_init();
+		if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
+			return err;
+
+		err = esp_bluedroid_enable();
+		if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
+			return err;
+
+		err = esp_ble_gatt_set_local_mtu(500);
+		if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
+			return err;
+
+		err = esp_bt_dev_set_device_name(getDevName().c_str());
+		if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
+			return err;
+
+		err = esp_bt_gap_register_callback(GapCallback);
+		if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
+			return err;
+
+		if (options.EnableA2DPSink)
+		{
+			ESP_LOGD(TAG, "Enabling A2DP");
+
+			static bool callBackRegistered = false;
+
+			if (!callBackRegistered)
+			{
+				err = esp_a2d_register_callback(A2DPCallback);
+				if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
+					return err;
+
+				callBackRegistered = true;
+			}
+
+			err = esp_a2d_sink_init();
+			if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
+				return err;
+		}
+
+		if (options.EnableDiscoverable)
+		{
+			ESP_LOGD(TAG, "Enabling Bluetooth discoverable");
+
+			err = esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+				return err;
+		}
+
+		return ESP_OK;
+	}
+
+	esp_err_t DeinitializeBluetooth(DeinitializeOptions options)
+	{
+		esp_err_t err;
+
+		if (options.DisableDiscoverable)
+		{
+			ESP_LOGD(TAG, "Disabling Bluetooth discoverable");
+
+			err = esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting scan mode"))
+				return err;
+		}
+
+		if (options.DisableA2DPSink)
+		{
+			ESP_LOGD(TAG, "Disabling A2DP");
+
+			err = esp_a2d_sink_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing A2DP sink"))
+				return err;
+		}
+
+		if (options.DisableBluetooth)
+		{
+			ESP_LOGD(TAG, "Disabling Bluetooth");
+
+			err = esp_bluedroid_disable();
+			if (Error::CheckAppendName(err, TAG, "An error occured when disabling bluedroid"))
+				return err;
+
+			err = esp_bluedroid_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing bluedroid"))
+				return err;
+
+			err = esp_bt_controller_disable();
+			if (Error::CheckAppendName(err, TAG, "An error occured when disabling BT controller"))
+				return err;
+
+			auto err = esp_bt_controller_deinit();
+			if (Error::CheckAppendName(err, TAG, "An error occured when deinitializing BT controller"))
+				return err;
+
+			xEventGroupSetBits(s_events, EVENT_BT_DISABLED);
+			xEventGroupClearBits(s_events, EVENT_BT_ENABLED);
+		}
+
+		return ESP_OK;
+	}
+
+	int UseBluetooth::s_useCount = 0;
+	// Keep track of how many users want A2DP to be enabled.
+	int UseBluetooth::s_a2dpCount = 0;
+	// Keep track how many users want the device to be discoverable.
+	int UseBluetooth::s_discoverableCount = 0;
+
+	UseBluetooth::UseBluetooth(InitializeOptions options)
+		: m_optionsUsed(options)
+	{
+		s_useCount++;
+
+		if (options.EnableA2DPSink)
+			s_a2dpCount++;
+
+		if (options.EnableDiscoverable)
+			s_discoverableCount++;
+
+		InitializeOptions initOptions{};
+
+		// A2DP used for the first time.
+		if (s_a2dpCount == 1)
+			initOptions.EnableA2DPSink = true;
+
+		// Discoverable used for the first time.
+		if (s_discoverableCount == 1)
+			initOptions.EnableDiscoverable = true;
+
+		// Any option was just used for the first time.
+		if (s_useCount == 1 || s_a2dpCount == 1 || s_discoverableCount == 1)
+		{
+			auto err = InitializeBluetooth(initOptions);
+			Error::CheckAppendName(err, TAG, "An error occured when initializing Bluetooth with UseBluetooth");
+		}
+	}
+
+	UseBluetooth::~UseBluetooth()
+	{
+		DeinitializeOptions deinitOptions{};
+
+		s_useCount--;
+		if (s_useCount == 0)
+			deinitOptions.DisableBluetooth = true;
+
+		if (m_optionsUsed.EnableA2DPSink)
+		{
+			s_a2dpCount--;
+
+			// A2DP no longer needed.
+			if (s_a2dpCount == 0)
+				deinitOptions.DisableA2DPSink = true;
+		}
+
+		if (m_optionsUsed.EnableDiscoverable)
+		{
+			s_discoverableCount--;
+
+			// Discoverable no longer needed.
+			if (s_discoverableCount == 0)
+				deinitOptions.DisableDiscoverable = true;
+		}
+
+		// Any option was just used for the last time.
+		if (deinitOptions.DisableBluetooth || deinitOptions.DisableA2DPSink || deinitOptions.DisableDiscoverable)
+		{
+			auto err = DeinitializeBluetooth(deinitOptions);
+			Error::CheckAppendName(err, TAG, "An error occured when deinitializing Bluetooth with UseBluetooth");
+		}
+	}
+
+	void WaitIfBluetoothActive()
+	{
+		auto events = xEventGroupGetBits(s_events);
+		if (!(events & EVENT_BT_ENABLED))
+		{
+			// BT is not enabled. We can return right away.
+			return;
+		}
+
+		ESP_LOGD(TAG, "Waiting in WaitIfBluetoothActive");
+
+		// Wait until BT is disabled. Do not clear bits.
+		xEventGroupWaitBits(s_events, EVENT_BT_DISABLED, pdFALSE, pdTRUE, portMAX_DELAY);
+
+		ESP_LOGD(TAG, "Returning from WaitIfBluetoothActive");
+	}
+
+	void addOnboardedSmartphoneToNVS(const esp_bd_addr_t &mac)
 	{
 		s_macAddresses.push_back(mac);
 	}
 
-	void AddMacAddress(const std::string &mac)
+	void addOnboardedSmartphoneToNVS(const std::string &mac)
 	{
 		s_macAddresses.push_back(mac);
 	}
@@ -266,17 +474,19 @@ namespace PresenceDetection
 
 		if (!s_initialized)
 		{
-			err = InitializeBluetooth();
-			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeBluetooth()");
-
-			err = InitializeMacAddresses();
-			Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");
-
 			// Add a formatted for the countPresence property.
 			Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%d");
 
 			s_initialized = true;
 		}
+
+		InitializeOptions initOptions{};
+		initOptions.EnableA2DPSink = false;
+		initOptions.EnableDiscoverable = false;
+		UseBluetooth bt(initOptions);
+
+		err = InitializeMacAddresses();
+		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::InitializeMacAddresses()");
 
 		// Reset responses.
 		s_responseCount = 0;
@@ -296,5 +506,11 @@ namespace PresenceDetection
 		secureUploadQueue.AddMeasurement(measurement);
 
 		ESP_LOGD(TAG, "task finished.");
+	}
+
+	std::string getDevName()
+	{
+		constexpr const char * ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in screen.cpp
+		return ONBOARDING_PAIR_NAME;
 	}
 } // namespace PresenceDetection

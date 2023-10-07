@@ -1,6 +1,7 @@
 #include <util/http_util.hpp>
 
 #include <util/delay.hpp>
+#include <util/nvs.hpp>
 
 constexpr int HTTPS_CONNECTION_RETRIES = 10;
 constexpr int HTTPS_RETRY_WAIT_MS = 1 * 1000; // 1 second.
@@ -68,6 +69,11 @@ namespace HTTPUtil
             Error::CheckAppendName(err, TAG, "An error occured when setting header");
         }
 
+        // Check if provisioning is done.
+        // Use this info to skip retries if provisioning is not done.
+        uint32_t postProvisioningDone = 0;
+        NVS::Get("twomes_storage", "ppDone", postProvisioningDone);
+
         for (int tries = 1; tries <= HTTPS_CONNECTION_RETRIES; tries++)
         {
             err = esp_http_client_open(client, dataSend.size());
@@ -80,6 +86,10 @@ namespace HTTPUtil
                      tries,
                      HTTPS_CONNECTION_RETRIES,
                      esp_log_system_timestamp());
+
+            // Don't retry. We need to finish provisioning quickly.
+            if (postProvisioningDone == 0)
+                break;
 
             vTaskDelay(Delay::MilliSeconds(HTTPS_RETRY_WAIT_MS));
         }

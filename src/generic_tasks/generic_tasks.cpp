@@ -34,6 +34,10 @@ namespace GenericTasks
 		// until the other tasks have finished.
 		Scheduler::WaitForOtherTasks(taskInfo);
 
+#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+		PresenceDetection::WaitIfBluetoothActive();
+#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+
 		secureUploadQueue.Upload();
 	}
 
@@ -57,6 +61,7 @@ namespace GenericTasks
 	void AddTasksToScheduler()
 	{
 #ifdef M5STACK_COREINK
+
 		Scheduler::AddTask(TimeSyncTask,
 						   "Time sync task",
 						   4096,
@@ -73,12 +78,21 @@ namespace GenericTasks
 #endif // M5STACK_COREINK
 
 #ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_TWOMES_STRESS_TEST
+		Scheduler::AddTask(PresenceDetection::PresenceDetectionTask,
+						   "Presence detection task",
+						   4096,
+						   nullptr,
+						   1,
+						   Scheduler::Interval::MINUTES_1);
+#else
 		Scheduler::AddTask(PresenceDetection::PresenceDetectionTask,
 						   "Presence detection task",
 						   4096,
 						   nullptr,
 						   1,
 						   Scheduler::Interval::MINUTES_10);
+#endif // CONFIG_TWOMES_STRESS_TEST
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION
 
 #ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
@@ -90,8 +104,7 @@ namespace GenericTasks
 						   1,
 						   Scheduler::Interval::HOURS_48);
 #endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
-
-		// Add tasks to the scheduler. Add the UploadTask as the last task.
+	   // Add tasks to the scheduler. Add the UploadTask as the last task.
 		Scheduler::AddTask(HeartbeatTask,
 						   "Heartbeat task",
 						   4096,

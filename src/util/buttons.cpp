@@ -26,6 +26,14 @@ namespace Buttons
          */
         void IRAM_ATTR ISRHandlerGPIO(void *pvParams)
         {
+            auto button = reinterpret_cast<Button *>(pvParams);
+
+            // Button was not actually pressed.
+            // This is a workaround for a know error for some GPIO's with the ISR in esp-idf v4.4.0.
+            // See https://github.com/espressif/esp-idf/issues/1096.
+            if (gpio_get_level(button->gpioNum) != button->trigger)
+                return;
+
             xQueueSendFromISR(s_gpioEventQueue, pvParams, NULL);
         }
 
@@ -104,7 +112,7 @@ namespace Buttons
 
                 err = xTaskCreatePinnedToCore(ButtonPressHandlerTask,
                                               "ButtonPressHandlerTask",
-                                              2048,
+                                              4096,
                                               nullptr,
                                               10,
                                               nullptr,
