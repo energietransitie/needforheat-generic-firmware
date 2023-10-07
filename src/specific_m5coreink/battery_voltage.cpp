@@ -6,7 +6,7 @@
 #include <secure_upload.hpp>
 #include <measurements.hpp>
 
-constexpr const char *MEASUREMENT_PROPERTY_NAME = "battery_voltage__V";
+constexpr const char *BATTERY_MEASUREMENT_PROPERTY_NAME = "battery_voltage__V";
 
 namespace M5CoreInkSpecific
 {
@@ -29,7 +29,7 @@ namespace M5CoreInkSpecific
             esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_12, 3600, &s_adcChars);
 
             // Add a formatter for the batteryVoltage property.
-            Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%.2f");
+            Measurements::Measurement::AddFormatter(BATTERY_MEASUREMENT_PROPERTY_NAME, "%.2f");
 
             s_initialized = true;
         }
@@ -40,7 +40,7 @@ namespace M5CoreInkSpecific
         auto batteryVoltage = ((float)rawVoltage_mV) * 25.1 / 5.1 / 1000;
 
         // Send data to queue.
-        Measurements::Measurement batteryVoltageMeasurement(MEASUREMENT_PROPERTY_NAME, batteryVoltage);
+        Measurements::Measurement batteryVoltageMeasurement(BATTERY_MEASUREMENT_PROPERTY_NAME, batteryVoltage);
         secureUploadQueue.AddMeasurement(batteryVoltageMeasurement);
     }
 } // namespace M5CoreInkSpecific
