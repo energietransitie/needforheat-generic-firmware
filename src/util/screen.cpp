@@ -79,38 +79,38 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine)
 	int lastLineY = m_display.height() - lineHeight;
 
 	// Draw the title (not highlighted)
-	m_display.setTextColor(TFT_BLACK);
+	m_display.setTextColor(TFT_BLACK, TFT_WHITE);
 	m_display.setCursor(M5_COREINK_MARGIN_LEFT, M5_COREINK_MARGIN_TOP); 
-	m_display.print(menuLines[0].c_str());
+	m_display.println(menuLines[0].c_str());
 
 	// Draw menu items
 	for (int i = 1; i < menuSize - 1; i++)
 	{
 			if (i == highlightedLine)
 			{
-				// Highlighted item
-				m_display.fillRect(0, i * lineHeight + M5_COREINK_MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
-				m_display.setTextColor(TFT_WHITE);
+				// Highlighted item: colors reversed
+				// m_display.fillRect(0, i * lineHeight + M5_COREINK_MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
+				m_display.setTextColor(TFT_WHITE, TFT_BLACK);
 			} else 
 			{
-				m_display.setTextColor(TFT_BLACK);
+				m_display.setTextColor(TFT_BLACK, TFT_WHITE);
 			}
-			m_display.setCursor(M5_COREINK_MARGIN_LEFT, i * lineHeight + M5_COREINK_MARGIN_TOP );
-			m_display.print(menuLines[i].c_str());
+			// m_display.setCursor(M5_COREINK_MARGIN_LEFT, i * lineHeight + M5_COREINK_MARGIN_TOP );
+			m_display.println(menuLines[i].c_str());
 	}
 
 	// Draw the last line (always at the bottom)
 	if (highlightedLine == menuSize - 1)
 	{
-		m_display.fillRect(0, lastLineY, m_display.width(), lineHeight, TFT_BLACK);
-		m_display.setTextColor(TFT_WHITE);
+		// Highlighted item: colors reversed
+		// m_display.fillRect(0, lastLineY, m_display.width(), lineHeight, TFT_BLACK);
+		m_display.setTextColor(TFT_WHITE, TFT_BLACK);
 	} else 
 	{
-		m_display.setTextColor(TFT_BLACK);
+		m_display.setTextColor(TFT_BLACK, TFT_WHITE);
 	}
 	m_display.setCursor(M5_COREINK_MARGIN_LEFT, lastLineY);
 	m_display.print(menuLines[menuSize - 1].c_str());
-	m_display.setTextColor(TFT_BLACK);
 }
 
 
