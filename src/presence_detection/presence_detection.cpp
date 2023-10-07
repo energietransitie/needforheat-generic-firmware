@@ -39,7 +39,8 @@ constexpr int RESPONSE_MAX_WAIT_MS = 20 * 1000; // 20 seconds.
 constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 #endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
 
-constexpr const char *MEASUREMENT_PROPERTY_NAME = "occupancy__p";
+constexpr const char *OCCUPANCY_MEASUREMENT_PROPERTY_NAME = "occupancy__p";
+constexpr const char *ONBOARDED_MEASUREMENT_PROPERTY_NAME = "onboarded__p";
 
 
 // Event for when all sent responses have returned.
@@ -474,8 +475,9 @@ namespace PresenceDetection
 
 		if (!s_initialized)
 		{
-			// Add a formatted for the countPresence property.
-			Measurements::Measurement::AddFormatter(MEASUREMENT_PROPERTY_NAME, "%d");
+			// Add a formatted for the presence detection properties.
+			Measurements::Measurement::AddFormatter(OCCUPANCY_MEASUREMENT_PROPERTY_NAME, "%d");
+			Measurements::Measurement::AddFormatter(ONBOARDED_MEASUREMENT_PROPERTY_NAME, "%d");
 
 			s_initialized = true;
 		}
@@ -502,8 +504,15 @@ namespace PresenceDetection
 		ESP_LOGD(TAG, "Received %d name request response(s).", s_responseCount);
 
 		// Send data to queue.
-		Measurements::Measurement measurement(MEASUREMENT_PROPERTY_NAME, s_responseCount);
-		secureUploadQueue.AddMeasurement(measurement);
+		Measurements::Measurement measurement_occupancy__p(OCCUPANCY_MEASUREMENT_PROPERTY_NAME, s_responseCount);
+		secureUploadQueue.AddMeasurement(measurement_occupancy__p);
+
+
+		int8_t onboarded__p = ControlPanel::getSmartphones().size();
+		ESP_LOGD(TAG, "Number of smartphones onboarded: %d", onboarded__p);
+
+		Measurements::Measurement measurement_onboarded__p(ONBOARDED_MEASUREMENT_PROPERTY_NAME, onboarded__p);
+		secureUploadQueue.AddMeasurement(measurement_onboarded__p);
 
 		ESP_LOGD(TAG, "task finished.");
 	}
