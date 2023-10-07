@@ -69,5 +69,5 @@ private:
 	/**
 	 * LGFX display.
 	 */
-	LGFX m_display;
+	LGFX e_ink_display;
 };

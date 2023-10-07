@@ -21,49 +21,49 @@ int Screen::s_infoPadding = 0;
 
 Screen::Screen()
 {
-	m_display.init_without_reset();
-	m_display.setEpdMode(epd_mode_t::epd_text);
+	e_ink_display.init_without_reset();
+	e_ink_display.setEpdMode(epd_mode_t::epd_text);
 
-	// ESP_LOGI(TAG, "Initialed display with width: %d and height: %d", m_display.width(), m_display.height());
+	// ESP_LOGI(TAG, "Initialed display with width: %d and height: %d", e_ink_display.width(), e_ink_display.height());
 }
 
 void Screen::Clear()
 {
-	m_display.setEpdMode(epd_mode_t::epd_quality);
-	m_display.clear();
-	m_display.setEpdMode(epd_mode_t::epd_text);
+	e_ink_display.setEpdMode(epd_mode_t::epd_quality);
+	e_ink_display.clear();
+	e_ink_display.setEpdMode(epd_mode_t::epd_text);
 }
 
 void Screen::DisplayQR(const std::string &payload, int padding, const std::string &text)
 {
 	Clear();
 
-	int32_t size = std::min(m_display.width(), m_display.height()) - padding * 2;
+	int32_t size = std::min(e_ink_display.width(), e_ink_display.height()) - padding * 2;
 
 	if (!text.empty())
 	{
 		// Remove another padding from the QR code size.
 		size -= padding;
 
-		m_display.setTextDatum(textdatum_t::middle_center);
+		e_ink_display.setTextDatum(textdatum_t::middle_center);
 
 		// Calculate text size.
-		m_display.setTextSize(1.0F);
-		float textSize = ((float)m_display.width() - (float)padding * 2.0f) / (float)m_display.textWidth(text.c_str());
+		e_ink_display.setTextSize(1.0F);
+		float textSize = ((float)e_ink_display.width() - (float)padding * 2.0f) / (float)e_ink_display.textWidth(text.c_str());
 		textSize = std::max(std::min(textSize, TEXT_SIZE_MAX), TEXT_SIZE_MIN);
-		m_display.setTextSize(textSize);
+		e_ink_display.setTextSize(textSize);
 
-		int32_t displayCenter = m_display.width() / 2;
-		int32_t belowQRCenter = m_display.height() - (m_display.height() - (padding + size)) / 2;
-		m_display.drawString(text.c_str(), displayCenter, belowQRCenter);
+		int32_t displayCenter = e_ink_display.width() / 2;
+		int32_t belowQRCenter = e_ink_display.height() - (e_ink_display.height() - (padding + size)) / 2;
+		e_ink_display.drawString(text.c_str(), displayCenter, belowQRCenter);
 	}
 
-	m_display.qrcode(payload.c_str(), (m_display.width() - size) / 2, padding, size);
+	e_ink_display.qrcode(payload.c_str(), (e_ink_display.width() - size) / 2, padding, size);
 
 	// ESP_LOGI(TAG,
 	// 		 "Displaying QR: screen_size = %dx%d, qr_size = %d, with text = %s",
-	// 		 m_display.width(),
-	// 		 m_display.height(),
+	// 		 e_ink_display.width(),
+	// 		 e_ink_display.height(),
 	// 		 size,
 	// 		 text.empty() ? "n" : "y");
 }
@@ -71,17 +71,17 @@ void Screen::DisplayQR(const std::string &payload, int padding, const std::strin
 void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine) 
 {
 	Clear();
-	m_display.setTextSize(M5_COREINK_TEXT_SIZE);
+	e_ink_display.setTextSize(M5_COREINK_TEXT_SIZE);
 	int menuSize = menuLines.size();;
-	int lineHeight = m_display.fontHeight() + M5_COREINK_MARGIN_LINE; // Get line height dynamically
+	int lineHeight = e_ink_display.fontHeight() + M5_COREINK_MARGIN_LINE; // Get line height dynamically
 
 	// Calculate the position of the last line (bottom of the screen)
-	int lastLineY = m_display.height() - lineHeight;
+	int lastLineY = e_ink_display.height() - lineHeight;
 
 	// Draw the title (not highlighted)
-	m_display.setTextColor(TFT_BLACK, TFT_WHITE);
-	m_display.setCursor(M5_COREINK_MARGIN_LEFT, M5_COREINK_MARGIN_TOP); 
-	m_display.println(menuLines[0].c_str());
+	e_ink_display.setTextColor(TFT_BLACK, TFT_WHITE);
+	e_ink_display.setCursor(M5_COREINK_MARGIN_LEFT, M5_COREINK_MARGIN_TOP); 
+	e_ink_display.println(menuLines[0].c_str());
 
 	// Draw menu items
 	for (int i = 1; i < menuSize - 1; i++)
@@ -89,28 +89,28 @@ void Screen::DrawMenu(std::vector<std::string> menuLines, int highlightedLine)
 			if (i == highlightedLine)
 			{
 				// Highlighted item: colors reversed
-				// m_display.fillRect(0, i * lineHeight + M5_COREINK_MARGIN_TOP , m_display.width(), lineHeight, TFT_BLACK);
-				m_display.setTextColor(TFT_WHITE, TFT_BLACK);
+				// e_ink_display.fillRect(0, i * lineHeight + M5_COREINK_MARGIN_TOP , e_ink_display.width(), lineHeight, TFT_BLACK);
+				e_ink_display.setTextColor(TFT_WHITE, TFT_BLACK);
 			} else 
 			{
-				m_display.setTextColor(TFT_BLACK, TFT_WHITE);
+				e_ink_display.setTextColor(TFT_BLACK, TFT_WHITE);
 			}
-			// m_display.setCursor(M5_COREINK_MARGIN_LEFT, i * lineHeight + M5_COREINK_MARGIN_TOP );
-			m_display.println(menuLines[i].c_str());
+			// e_ink_display.setCursor(M5_COREINK_MARGIN_LEFT, i * lineHeight + M5_COREINK_MARGIN_TOP );
+			e_ink_display.println(menuLines[i].c_str());
 	}
 
 	// Draw the last line (always at the bottom)
 	if (highlightedLine == menuSize - 1)
 	{
 		// Highlighted item: colors reversed
-		// m_display.fillRect(0, lastLineY, m_display.width(), lineHeight, TFT_BLACK);
-		m_display.setTextColor(TFT_WHITE, TFT_BLACK);
+		// e_ink_display.fillRect(0, lastLineY, e_ink_display.width(), lineHeight, TFT_BLACK);
+		e_ink_display.setTextColor(TFT_WHITE, TFT_BLACK);
 	} else 
 	{
-		m_display.setTextColor(TFT_BLACK, TFT_WHITE);
+		e_ink_display.setTextColor(TFT_BLACK, TFT_WHITE);
 	}
-	m_display.setCursor(M5_COREINK_MARGIN_LEFT, lastLineY);
-	m_display.print(menuLines[menuSize - 1].c_str());
+	e_ink_display.setCursor(M5_COREINK_MARGIN_LEFT, lastLineY);
+	e_ink_display.print(menuLines[menuSize - 1].c_str());
 }
 
 
