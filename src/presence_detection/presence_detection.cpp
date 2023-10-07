@@ -504,15 +504,15 @@ namespace PresenceDetection
 		ESP_LOGD(TAG, "Received %d name request response(s).", s_responseCount);
 
 		// Send data to queue.
-		Measurements::Measurement measurement(OCCUPANCY_MEASUREMENT_PROPERTY_NAME, s_responseCount);
-		secureUploadQueue.AddMeasurement(measurement);
+		Measurements::Measurement measurement_occupancy__p(OCCUPANCY_MEASUREMENT_PROPERTY_NAME, s_responseCount);
+		secureUploadQueue.AddMeasurement(measurement_occupancy__p);
 
 
 		int8_t onboarded__p = ControlPanel::getSmartphones().size();
 		ESP_LOGD(TAG, "Number of smartphones onboarded: %d", onboarded__p);
 
-		Measurements::Measurement measurement(ONBOARDED_MEASUREMENT_PROPERTY_NAME, onboarded__p);
-		secureUploadQueue.AddMeasurement(measurement);
+		Measurements::Measurement measurement_onboarded__p(ONBOARDED_MEASUREMENT_PROPERTY_NAME, onboarded__p);
+		secureUploadQueue.AddMeasurement(measurement_onboarded__p);
 
 		ESP_LOGD(TAG, "task finished.");
 	}
