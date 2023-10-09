@@ -7,7 +7,6 @@
 #include <esp_event.h>
 #include <esp_wifi.h>
 #include <wifi_provisioning/manager.h>
-#include <driver/gpio.h>
 #include <esp_sntp.h>
 #include <esp32/rom/crc.h>
 
@@ -95,6 +94,8 @@ namespace GenericESP32Firmware
 
         static bool s_postProvisioningNeeded = false;
 
+        static gpio_num_t s_wifiResetLED = LED_WIFI_RESET;
+
 #ifdef M5STACK_COREINK
         static Screen s_screen;
 
@@ -121,13 +122,23 @@ namespace GenericESP32Firmware
             }
         }
 
+        // Forward declare.
+        std::string GetBearer();
+
 #ifdef M5STACK_COREINK
         void PowerOff()
         {
-            // Buzz the buzzer 500ms to signal power off.
-            Buzzer::Buzz(500);
+            // Buzz the buzzer 1000ms to signal power off.
+            Buzzer::Buzz(1000);
 
-            s_screen.Clear();
+            auto bearer = GetBearer();
+            if (!bearer.empty())
+            {
+                // Device was provisioned and activated.
+                s_screen.DisplayInfoQR();
+            }
+            // If the device was not provisioned and activated,
+            // the provisioning QR will still be on screen.
 
             powerpin_reset();
         }
@@ -821,9 +832,17 @@ namespace GenericESP32Firmware
         }
     }
 
+    void SetResetWirelessLED(gpio_num_t gpioNum)
+    {
+        s_wifiResetLED = gpioNum;
+    }
+
     void ResetWireless()
     {
-        BlinkLED(LED_WIFI_RESET, 5);
+        // Blink LED if it is set.
+        // When CONFIG_TWOMES_CUSTOM_GPIO is used, the default value will be GPIO_NUM_MAX.
+        if (s_wifiResetLED != GPIO_NUM_MAX)
+            BlinkLED(s_wifiResetLED, 5);
 
         auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
         Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");

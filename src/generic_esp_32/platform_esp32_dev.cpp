@@ -1,7 +1,5 @@
 #include "platform_esp32_dev.hpp"
 
-#include <driver/gpio.h>
-
 namespace ESP32Dev
 {
     esp_err_t InitializeGPIO()
