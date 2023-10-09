@@ -489,6 +489,10 @@ namespace PresenceDetection
 			s_initialized = true;
 		}
 
+		// At this time, we can't run onboarding and presence detection at the same time.
+		// This is a temporary fix, to wait until onboarding is done.
+		WaitIfBluetoothActive();
+
 		InitializeOptions initOptions{};
 		initOptions.EnableA2DPSink = false;
 		initOptions.EnableDiscoverable = false;
