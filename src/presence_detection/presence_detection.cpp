@@ -42,7 +42,6 @@ constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
 constexpr const char *OCCUPANCY_MEASUREMENT_PROPERTY_NAME = "occupancy__p";
 constexpr const char *ONBOARDED_MEASUREMENT_PROPERTY_NAME = "onboarded__p";
 
-
 // Event for when all sent responses have returned.
 constexpr EventBits_t EVENT_RESPONSES_FINISHED = 1 << 0;
 constexpr EventBits_t EVENT_RESPONSE_RECEIVED = 1 << 1;
@@ -152,9 +151,11 @@ namespace PresenceDetection
 		 */
 		void GapCallback(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
 		{
-			if (event == ESP_BT_GAP_READ_REMOTE_NAME_EVT)
+			std::string remoteName = reinterpret_cast<const char *>(param->read_rmt_name.rmt_name);
+
+			switch (event)
 			{
-				std::string remoteName = reinterpret_cast<const char *>(param->read_rmt_name.rmt_name);
+			case ESP_BT_GAP_READ_REMOTE_NAME_EVT:
 
 				if (!remoteName.empty())
 					s_responseCount++;
@@ -168,18 +169,24 @@ namespace PresenceDetection
 					xEventGroupSetBits(s_events, EVENT_RESPONSES_FINISHED);
 					ESP_LOGD(TAG, "All name requests have returned.");
 				}
-			}
-			else if (event == ESP_BT_GAP_AUTH_CMPL_EVT)
-			{
+				break;
+			case ESP_BT_GAP_AUTH_CMPL_EVT:
 				MACAddres::addOnboardedSmartphone(param);
-				// Buzz the buzzer for 200 ms to signal the devices are paired
+				break;
+			case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:
+				// Device disconnect is complete. Now we can exit the onboarding menu.
+
+				// Buzz the buzzer for 200 ms to signal the devices are paired.
 				Buzzer::Buzz(200);
-				// imitate a button press that pressed return 
-				if(ControlPanel::menuState == Menu::create_onboarded)
+
+				// imitate a button press that pressed return.
+				if (ControlPanel::menuState == Menu::create_onboarded)
 				{
 					ControlPanel::OnboardingMenuState(ButtonActions::press);
 				}
-
+				break;
+			default:
+				break;
 			}
 		}
 
@@ -507,7 +514,6 @@ namespace PresenceDetection
 		Measurements::Measurement measurement_occupancy__p(OCCUPANCY_MEASUREMENT_PROPERTY_NAME, s_responseCount);
 		secureUploadQueue.AddMeasurement(measurement_occupancy__p);
 
-
 		int8_t onboarded__p = ControlPanel::getSmartphones().size();
 		ESP_LOGD(TAG, "Number of smartphones onboarded: %d", onboarded__p);
 
@@ -519,7 +525,7 @@ namespace PresenceDetection
 
 	std::string getDevName()
 	{
-		constexpr const char * ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in screen.cpp
+		constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in screen.cpp
 		return ONBOARDING_PAIR_NAME;
 	}
 } // namespace PresenceDetection
