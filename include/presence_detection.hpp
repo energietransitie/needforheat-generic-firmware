@@ -17,6 +17,13 @@ namespace PresenceDetection
     struct InitializeOptions
     {
         /**
+         * Enable Bluetooth;
+         * The entire Bluetooth stack will be enabled.
+         * Only use this if BT stack is not yet enabled.
+         */
+        bool EnableBluetooth;
+
+        /**
          * Enable A2DP sink.
          * This should be enabled if you want an iPhone to be able to pair.
          */

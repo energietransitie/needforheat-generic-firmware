@@ -32,7 +32,6 @@
 #include <util/timer.hpp>
 #include <driver/gpio.h>
 
-
 #define LEFT_INPUT_PIN 37
 #define PRESS_INPUT_PIN 38
 #define RIGHT_INPUT_PIN 39
@@ -45,6 +44,14 @@ constexpr const char *ONBOARDING_PAIR_NAME = "NeedForHeat_OK"; // change also in
 
 namespace ControlPanel
 {
+    constexpr const EventBits_t EVENT_BUTTON_UP = 1 << 0;
+    constexpr const EventBits_t EVENT_BUTTON_PRESS = 1 << 1;
+    constexpr const EventBits_t EVENT_BUTTON_DOWN = 1 << 2;
+    constexpr const EventBits_t EVENT_BACK = 1 << 3;
+    constexpr const EventBits_t EVENT_ALL_EVENTS = EVENT_BUTTON_UP | EVENT_BUTTON_PRESS | EVENT_BUTTON_DOWN | EVENT_BACK;
+
+    static EventGroupHandle_t s_events = xEventGroupCreate();
+
     Screen sc;
     Menu menuState;
 
@@ -116,8 +123,41 @@ namespace ControlPanel
         }
     }
 
+    void ExitOnboardingScreen()
+    {
+        xEventGroupSetBits(s_events, EVENT_BACK);
+    }
+
     static Timer::Timer s_timer("ExitControlPanel", ExitControlPanel, EXIT_TIMEOUT_S);
-  
+
+    void MenuTask(void *pvParams)
+    {
+        while (true)
+        {
+            auto events = xEventGroupWaitBits(s_events, EVENT_ALL_EVENTS, pdTRUE, pdFALSE, portMAX_DELAY);
+
+            switch (events)
+            {
+            case EVENT_BUTTON_UP:
+                OnboardingMenuState(ButtonActions::up);
+                break;
+            case EVENT_BUTTON_PRESS:
+                OnboardingMenuState(ButtonActions::press);
+                break;
+            case EVENT_BUTTON_DOWN:
+                OnboardingMenuState(ButtonActions::down);
+                break;
+            case EVENT_BACK:
+                // imitate a button press that pressed return.
+                if (menuState == Menu::create_onboarded)
+                {
+                    OnboardingMenuState(ButtonActions::press);
+                }
+                break;
+            }
+        }
+    }
+
     void OnboardingMenuState(ButtonActions button)
     {
         static uint8_t highlightedLine = 1, smartphoneIndex;
@@ -256,17 +296,17 @@ namespace ControlPanel
 
     void up()
     {
-        OnboardingMenuState(ButtonActions::up);
+        xEventGroupSetBits(s_events, EVENT_BUTTON_UP);
     }
 
     void press()
     {
-        OnboardingMenuState(ButtonActions::press);
+        xEventGroupSetBits(s_events, EVENT_BUTTON_PRESS);
     }
 
     void down()
     {
-        OnboardingMenuState(ButtonActions::down);
+        xEventGroupSetBits(s_events, EVENT_BUTTON_DOWN);
     }
 
     void initialzeButtons()
@@ -299,13 +339,21 @@ namespace ControlPanel
         err = gpio_config(&rightButton);
         Error::CheckAppendName(err, "ControlPanel", "An error occured when configuring GPIO for rocker button 'down'");
 
-        
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_38, "Press", 0, press, nullptr);
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_39, "Down", 0, down, nullptr);
         Buttons::ButtonPressHandler::AddButton(GPIO_NUM_37, "Up", 0, up, nullptr);
 
-        menuState = Menu::idle;
+        auto success = xTaskCreatePinnedToCore(MenuTask,
+                                               "MenuTask",
+                                               4096,
+                                               nullptr,
+                                               1,
+                                               nullptr,
+                                               APP_CPU_NUM);
+        if (success != pdPASS)
+            ESP_LOGE(TAG, "An error occurred when starting task MenuTask");
 
-    }    
-    
+        menuState = Menu::idle;
+    }
+
 }
