@@ -304,31 +304,18 @@ namespace PresenceDetection
 			if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
 				return err;
 
-			// The callback should only be registered once during runtime.
-			static bool callbackRegistered = false;
-			if (!callbackRegistered)
-			{
-				err = esp_bt_gap_register_callback(GapCallback);
-				if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
-					return err;
-
-				callbackRegistered = true;
-			}
+			err = esp_bt_gap_register_callback(GapCallback);
+			if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
+				return err;
 		}
 
 		if (options.EnableA2DPSink)
 		{
 			ESP_LOGD(TAG, "Enabling A2DP");
 
-			static bool callBackRegistered = false;
-			if (!callBackRegistered)
-			{
-				err = esp_a2d_register_callback(A2DPCallback);
-				if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
-					return err;
-
-				callBackRegistered = true;
-			}
+			err = esp_a2d_register_callback(A2DPCallback);
+			if (Error::CheckAppendName(err, TAG, "An error occured when registering A2DP callback"))
+				return err;
 
 			err = esp_a2d_sink_init();
 			if (Error::CheckAppendName(err, TAG, "An error occured when initializing A2DP sink"))
