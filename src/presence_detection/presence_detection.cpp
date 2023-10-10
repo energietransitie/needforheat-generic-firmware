@@ -174,6 +174,9 @@ namespace PresenceDetection
 				MACAddres::addOnboardedSmartphone(param);
 				break;
 			case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:
+				if (param->remove_bond_dev_cmpl.status != ESP_BT_STATUS_SUCCESS)
+					break;
+
 				// Device disconnect is complete. Now we can exit the onboarding menu.
 
 				// Buzz the buzzer for 200 ms to signal the devices are paired.
@@ -264,47 +267,63 @@ namespace PresenceDetection
 
 	esp_err_t InitializeBluetooth(InitializeOptions options)
 	{
-		ESP_LOGD(TAG, "Enabling Bluetooth");
+		esp_err_t err;
 
-		xEventGroupClearBits(s_events, EVENT_BT_DISABLED);
-		xEventGroupSetBits(s_events, EVENT_BT_ENABLED);
+		if (options.EnableBluetooth)
+		{
+			ESP_LOGD(TAG, "Enabling Bluetooth");
 
-		esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
+			xEventGroupClearBits(s_events, EVENT_BT_DISABLED);
+			xEventGroupSetBits(s_events, EVENT_BT_ENABLED);
 
-		auto err = esp_bt_controller_init(&bluetoothConfig);
-		if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
-			return err;
+			auto status = esp_bt_controller_get_status();
+			ESP_LOGD(TAG, "BT controller status: %d", status);
 
-		err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
-		if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
-			return err;
+			ESP_LOGD(TAG, "Bluedroid status: %d", esp_bluedroid_get_status());
 
-		err = esp_bluedroid_init();
-		if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
-			return err;
+			esp_bt_controller_config_t bluetoothConfig = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
 
-		err = esp_bluedroid_enable();
-		if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
-			return err;
+			err = esp_bt_controller_init(&bluetoothConfig);
+			if (Error::CheckAppendName(err, TAG, "An error occured when initializing BT controller"))
+				return err;
 
-		err = esp_ble_gatt_set_local_mtu(500);
-		if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
-			return err;
+			err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
+			if (Error::CheckAppendName(err, TAG, "An error occured when enabling BT controller"))
+				return err;
 
-		err = esp_bt_dev_set_device_name(getDevName().c_str());
-		if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
-			return err;
+			err = esp_bluedroid_init();
+			if (Error::CheckAppendName(err, TAG, "An error occured when initializing bluedroid"))
+				return err;
 
-		err = esp_bt_gap_register_callback(GapCallback);
-		if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
-			return err;
+			err = esp_bluedroid_enable();
+			if (Error::CheckAppendName(err, TAG, "An error occured when enabling bluedroid"))
+				return err;
+
+			err = esp_ble_gatt_set_local_mtu(500);
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting local MTU"))
+				return err;
+
+			err = esp_bt_dev_set_device_name(getDevName().c_str());
+			if (Error::CheckAppendName(err, TAG, "An error occured when setting device name"))
+				return err;
+
+			// The callback should only be registered once during runtime.
+			static bool callbackRegistered = false;
+			if (!callbackRegistered)
+			{
+				err = esp_bt_gap_register_callback(GapCallback);
+				if (Error::CheckAppendName(err, TAG, "An error occured when registering GAP callback"))
+					return err;
+
+				callbackRegistered = true;
+			}
+		}
 
 		if (options.EnableA2DPSink)
 		{
 			ESP_LOGD(TAG, "Enabling A2DP");
 
 			static bool callBackRegistered = false;
-
 			if (!callBackRegistered)
 			{
 				err = esp_a2d_register_callback(A2DPCallback);
@@ -398,6 +417,10 @@ namespace PresenceDetection
 			s_discoverableCount++;
 
 		InitializeOptions initOptions{};
+
+		// BT used for the first time.
+		if (s_useCount == 1)
+			initOptions.EnableBluetooth = true;
 
 		// A2DP used for the first time.
 		if (s_a2dpCount == 1)
