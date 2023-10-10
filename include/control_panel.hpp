@@ -10,6 +10,11 @@ namespace ControlPanel
 {
     extern Menu menuState;
 
+    /**
+     * Exit the onboarding screen.
+     */
+    void ExitOnboardingScreen();
+
      /**
      * InitilizeButtons.
      * 
