@@ -60,7 +60,7 @@ Currently ready:
 * Over-the-Air (OTA) firmware updates
 * Presence Detection (with deploy-time onboarding of static Bluetooth MAC addresses to be counted)
 * And on [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) only
-  * Display QR-code for on e-ink screen
+  * Display QR-code on e-ink screen, for provisioning
   * Display Info?Scan! QR-code that links to device FAQ page on e-ink screen after provisionins
   * Run-time onboarding of smartphones to be counted, using menu on e-ink screen
 
