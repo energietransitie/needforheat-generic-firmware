@@ -58,8 +58,11 @@ Currently ready:
 * Wi-Fi reset via long button press
 * Example code
 * Over-the-Air (OTA) firmware updates
-* Display provisioning QR-code on e-ink screen ([M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) only)
-* Presence Detection (device preparation-time definition of tracked Bluetooth addresses)
+* Presence Detection (with deploy-time onboarding of static Bluetooth MAC addresses to be counted)
+* And on [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) only
+  * Display QR-code on e-ink screen, for provisioning
+  * Display Info?Scan! QR-code that links to device FAQ page on e-ink screen after provisionins
+  * Run-time onboarding of smartphones to be counted, using menu on e-ink screen
 
 To-do:
 
@@ -69,7 +72,6 @@ To-do:
  	* ready for device activation
  	* device activation
  	* (last time) a heartbeat was sent
-* Presence Detection (runtime definition of tracked Bluetooth addresses)
 * Support for ESP8266
 
 ## Status
@@ -81,13 +83,16 @@ This software is available under the [Apache 2.0 license](./LICENSE.md), Copyrig
 ## Credits
 This software is made by:
 * Nick van Ravenzwaaij ·  [@n-vr](https://github.com/n-vr)
-* Kevin Jansen ·  [@KevinJan18](https://github.com/KevinJan18)
-* Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
+
+Run-time onboarding for presence detection using the e-ink screen was recently added by: 
+* Joël van de Weg · [@JoelvdWeg](https://github.com/JoelvdWeg)
 
 Thanks also go to:
+* Jorrin Kievit · [@JorrinKievit](https://github.com/JorrinKievit)
+* Kevin Jansen ·  [@KevinJan18](https://github.com/KevinJan18)
 * Sjors Smit ·  [@Shorts1999](https://github.com/Shorts1999)
 * Stijn Wingens · [@stijnwingens](https://github.com/stijnwingens)
-* Jorrin Kievit · [@JorrinKievit](https://github.com/JorrinKievit)
+* Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
 
 Product owner:
 * Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
