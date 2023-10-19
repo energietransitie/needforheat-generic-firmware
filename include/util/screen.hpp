@@ -58,4 +58,5 @@ private:
 	 * LGFX display.
 	 */
 	LGFX m_display;
+	LGFX_Sprite canvas;
 };

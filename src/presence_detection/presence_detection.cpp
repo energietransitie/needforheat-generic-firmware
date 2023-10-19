@@ -170,10 +170,9 @@ namespace PresenceDetection
 				// Buzz the buzzer for 200 ms to signal the devices are paired
 				Buzzer::Buzz(200);
 				// imitate a button press that pressed return 
-				if(ControlPanel::state == Event::info)
-				{
+				
 					ControlPanel::Panelstate(ButtonActions::press);
-				}
+				
 			}			
 		}
 

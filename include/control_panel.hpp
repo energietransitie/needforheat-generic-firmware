@@ -8,7 +8,6 @@ enum class Event {idle, select, info, remove};
 
 namespace ControlPanel
 {
-    Event state;
      /**
      * InitilizeButtons.
      * 

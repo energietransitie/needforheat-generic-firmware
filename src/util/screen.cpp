@@ -107,18 +107,23 @@ void Screen::InfoScreen()
 	m_display.drawString("toevoegen:", 10, 30); 
 	
 	m_display.setTextSize(1.5);
-	m_display.drawString("Nog een smartphone ", 10, 50); 
-	m_display.drawString("meetellen? Ga op die", 10, 65); 
-	m_display.drawString("smartphone naar ", 10, 80); 
-	m_display.drawString("Bluetooth en koppel", 10, 95); 
-	m_display.drawString("met de naam:", 10, 110); 
-	
+	static constexpr char text [] = "Nog een smartphone meetellen? Ga op die smartphone naar Bluetooth en koppel met de naam:";
+	canvas.createSprite(m_display.width(), 50); 
+	canvas.setTextSize(1.5);
+	canvas.setBaseColor(0xFFFFFFu);//background color doens't seem to work
+	canvas.setTextColor(0);
+	canvas.print(text);
+	canvas.pushSprite(&m_display,0,50);
+
 	m_display.setTextSize(1);
 	m_display.drawString(PresenceDetection::getDevName().c_str(), 10, 125); 
 
-	m_display.setTextSize(2);
-	m_display.drawString("Terug", 10, m_display.height()-20); 
+	 
+
 	
+
+	m_display.setTextSize(2);
+	m_display.drawString("Terug", 10, m_display.height()-20);
 
 }
 

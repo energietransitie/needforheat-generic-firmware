@@ -36,15 +36,12 @@
 constexpr const char *NVS_NAMESPACE = "twomes_storage";
 constexpr const char *TAG = "MAC Address";
 
-enum class Event {idle, select, info, remove};
-
 
 namespace ControlPanel
 {
-    
-    Event state;
     Screen sc;
-  
+    Event state;
+    
     void Panelstate(ButtonActions button)
     {
         static uint8_t selectedItem = 0, SelectedItemForRemoval;
