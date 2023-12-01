@@ -18,11 +18,12 @@ namespace M5CoreInkSpecific
 
             vTaskDelay(Delay::Seconds(*timeout));
 
-            Screen screen;
-            screen.Clear();
+            ESP_LOGD(TAG, "PowerOffTimeout");
+            // Screen screen;
+            // screen.Clear();
 
-            // Allow some time for the screen to clear properly.
-            vTaskDelay(Delay::MilliSeconds(300));
+            // // Allow some time for the screen to clear properly.
+            // vTaskDelay(Delay::MilliSeconds(300));
 
             // Power off the M5CoreINK.
             powerpin_reset();
@@ -47,6 +48,8 @@ namespace M5CoreInkSpecific
         if (err != pdPASS)
         {
             ESP_LOGE(TAG, "PowerOffTimeout task failed to start.");
+        } else {
+            ESP_LOGD(TAG, "PowerOffTimeout task started; timeout= %u s.", m_timeout_s);
         }
     }
 
