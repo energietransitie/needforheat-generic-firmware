@@ -102,26 +102,6 @@ namespace GenericESP32Firmware
         static M5CoreInkSpecific::PowerOffTimeout s_powerOffTimeout(PRE_PROVISIONING_POWER_OFF_TIMEOUT_S);
 #endif // M5STACK_COREINK
 
-        /**
-         * Blink an LED on the device.
-         *
-         * @param gpioNum GPIO number where LED is connected.
-         * @param amount Amount of times to flash the LED.
-         */
-        void BlinkLED(gpio_num_t gpioNum, int amount)
-        {
-            auto level = gpio_get_level(gpioNum);
-
-            for (int i = 0; i < amount * 2; i++)
-            {
-                // Flip level
-                level ^= 1;
-
-                gpio_set_level(gpioNum, level);
-                vTaskDelay(200 / portTICK_PERIOD_MS);
-            }
-        }
-
         // Forward declare.
         std::string GetBearer();
 
@@ -475,9 +455,9 @@ namespace GenericESP32Firmware
 
         /**
          * Determine if post provisioning is needed.
-         * 
+         *
          * This function will restart the ESP if needed.
-         * 
+         *
          * @returns true if post provisionings steps are needed.
          */
         bool PostProvisioningNeeded()
@@ -518,7 +498,7 @@ namespace GenericESP32Firmware
             uint32_t ppDone = 1;
             auto err = NVS::Set(NVS_NAMESPACE, "ppDone", ppDone);
             Error::CheckAppendName(err, TAG, "An error occurred when setting NVS key ppDone");
-            
+
             ESP_LOGD(TAG, "Post provisioning tasks ran");
         }
 
@@ -852,6 +832,20 @@ namespace GenericESP32Firmware
 
         esp_wifi_restore();
         esp_restart();
+    }
+
+    void BlinkLED(gpio_num_t gpioNum, int amount)
+    {
+        auto level = gpio_get_level(gpioNum);
+
+        for (int i = 0; i < amount * 2; i++)
+        {
+            // Flip level
+            level ^= 1;
+
+            gpio_set_level(gpioNum, level);
+            vTaskDelay(200 / portTICK_PERIOD_MS);
+        }
     }
 
     int PostHTTPSToBackend(const std::string &endpoint,

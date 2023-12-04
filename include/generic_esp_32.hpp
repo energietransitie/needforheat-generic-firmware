@@ -52,6 +52,14 @@ namespace GenericESP32Firmware
     void ResetWireless();
 
     /**
+     * Blink an LED on the device.
+     *
+     * @param gpioNum GPIO number where LED is connected.
+     * @param amount Amount of times to flash the LED.
+     */
+    void BlinkLED(gpio_num_t gpioNum, int amount);
+
+    /**
      * Send an HTTPS POST request to the backend API.
      *
      * @param endpoint API endpoint.
