@@ -21,52 +21,35 @@ namespace SecureUpload
 		return q;
 	}
 
-	Queue::Queue()
-		: m_measurementQueue(xQueueCreate(UPLOAD_QUEUE_MAX, sizeof(Measurements::Measurement *)))
-	{
-		ESP_LOGD(TAG, "Queue created.");
-	}
-
 	void Queue::AddMeasurement(const Measurements::Measurement &measurement)
 	{
-		auto measurementPtr = new Measurements::Measurement(std::move(measurement));
-
-		auto err = xQueueSend(m_measurementQueue, &measurementPtr, 0);
-		if (err != pdTRUE)
-			ESP_LOGE(TAG, "An error occured when adding an item to the queue: no space.");
+		m_measurements.Add(measurement);
 	}
 
 	void Queue::Upload()
 	{
+		auto items = m_measurements.GetItems();
+
+		if (items.size() == 0)
+		{
+			ESP_LOGD(TAG, "There were no measurements in the upload queue.");
+			return;
+		}
+
 		auto uploadObject = cJSON_CreateObject();
 
 		// Add device upload time.
 		auto uploadTime = cJSON_CreateNumber(time(nullptr));
 		cJSON_AddItemToObject(uploadObject, "device_time", uploadTime);
 
-		// Ddd measurements array
-		auto measurements = cJSON_CreateArray();
-		cJSON_AddItemToObject(uploadObject, "measurements", measurements);
-
-		int measurementItems = 0;
-
-		while (true)
+		// add property_measurements array
+		auto propertyMeasurements = cJSON_CreateArray();
+		cJSON_AddItemToObject(uploadObject, "property_measurements", propertyMeasurements);
+		
+		for (const auto &item: items)
 		{
-			auto item = new Measurements::Measurement();
-			if (xQueueReceive(m_measurementQueue, &item, 0) != pdTRUE)
-				break;
-
-			cJSON_AddItemToArray(measurements, item->GetJSON());
+			cJSON_AddItemToArray(propertyMeasurements, item->GetJSON());
 			delete item;
-
-			measurementItems++;
-		}
-
-		if (measurementItems == 0)
-		{
-			ESP_LOGD(TAG, "There were no measurements in the upload queue.");
-			cJSON_Delete(uploadObject);
-			return;
 		}
 
 		HTTPUtil::buffer_t dataSend = cJSON_Print(uploadObject);
@@ -75,13 +58,18 @@ namespace SecureUpload
 		HTTPUtil::headers_t headersReceive;
 
 		auto statusCode = GenericESP32Firmware::PostHTTPSToBackend(ENDPOINT_VARIABLE_UPLOAD, dataSend, headersSend, dataReceive, headersReceive, true);
-		if (statusCode != 200)
-		{
-			ESP_LOGE(TAG, "Posting to backend returned statuscode %d.", statusCode);
-		}
+
+		cJSON_Delete(uploadObject);
 
 		ESP_LOGD(TAG, "Backend server response body: \n%s", dataReceive.c_str());
 
-		cJSON_Delete(uploadObject);
+		if (statusCode != 200)
+		{
+			ESP_LOGE(TAG, "Posting to backend returned statuscode %d.", statusCode);
+			return;
+		}
+
+		// Clear SPIFFS to avoid resending items in the future.
+		m_measurements.EraseItems();
 	}
 } // namespace SecureUpload

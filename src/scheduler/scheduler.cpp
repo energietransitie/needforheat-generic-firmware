@@ -8,6 +8,7 @@
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
 
+#include <power_manager.hpp>
 #include <util/delay.hpp>
 
 #ifdef ESP32DEV
@@ -196,7 +197,7 @@ namespace Scheduler
 				if (bits & EVENT_REQUEST_RESTART)
 				{
 					ESP_LOGI(TAG, "Restart requested. Restarting now.");
-					esp_restart();
+					PowerManager::GetInstance().Restart();
 				}
 
 				WaitUntilNextTaskTime();

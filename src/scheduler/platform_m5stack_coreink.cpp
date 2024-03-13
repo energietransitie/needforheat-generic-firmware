@@ -15,6 +15,7 @@
 #include <util/delay.hpp>
 #include <specific_m5coreink/powerpin.h>
 #include <specific_m5coreink/rtc.h>
+#include <power_manager.hpp>
 
 constexpr const char *TAG = "Scheduler";
 
@@ -99,7 +100,7 @@ namespace M5StackCoreInk
             rtc_set_alarm(nextTaskTime_s);
             vTaskDelay(Delay::MilliSeconds(250));
 
-            powerpin_reset();
+            PowerManager::GetInstance().PowerOff();
 
             ESP_LOGD(TAG, "Unable to shutdown because USB power is connected. Delaying instead.");
 

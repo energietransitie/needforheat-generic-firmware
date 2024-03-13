@@ -8,6 +8,7 @@
 #include <esp_wifi.h>
 #include <wifi_provisioning/manager.h>
 #include <esp_sntp.h>
+#include <esp_spiffs.h>
 #include <esp32/rom/crc.h>
 
 #include <freertos/FreeRTOS.h>
@@ -30,6 +31,7 @@
 #include <measurements.hpp>
 #include <secure_upload.hpp>
 #include <ota_firmware_updater.hpp>
+#include <power_manager.hpp>
 
 #ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
@@ -44,7 +46,7 @@
 #endif // ESP32DEV
 #if M5STACK_COREINK
 #include "platform_m5stack_coreink.hpp"
-#include <specific_m5coreink/power_off_timeout.hpp>
+#include <power_off_timeout.hpp>
 #endif // M5STACK_COREINK
 
 #define WIFI_CONNECTED_EVENT BIT0
@@ -120,9 +122,23 @@ namespace GenericESP32Firmware
             // If the device was not provisioned and activated,
             // the provisioning QR will still be on screen.
 
-            powerpin_reset();
+            PowerManager::GetInstance().PowerOff();
         }
 #endif // M5STACK_COREINK
+
+        /**
+         * Reset wireless settings and delete the bearer to force re-activation.
+         */
+        void ResetWireless()
+        {
+            BlinkLED(LED_WIFI_RESET, 5);
+
+            auto err = NVS::Erase(NVS_NAMESPACE, "bearer");
+            Error::CheckAppendName(err, TAG, "An error occured when erasing bearer");
+
+            esp_wifi_restore();
+            PowerManager::GetInstance().Restart();
+        }
 
         /**
          * Event handler for WiFi and provisioning events.
@@ -430,6 +446,27 @@ namespace GenericESP32Firmware
         }
 
         /**
+         * Initialize SPIFFS virtual filesystem.
+         */
+        esp_err_t InitializeSPIFFS()
+        {
+            esp_vfs_spiffs_conf_t spiffsConf{};
+            spiffsConf.base_path = "/spiffs";
+            spiffsConf.partition_label = nullptr;
+            spiffsConf.max_files = 2;
+            spiffsConf.format_if_mount_failed = true;
+
+            auto err = esp_vfs_spiffs_register(&spiffsConf);
+            if (err != ESP_OK) {
+                return err;
+            }
+
+            ESP_LOGI(TAG, "VFS for SPIFFS initialized");
+
+            return ESP_OK;
+        }
+
+        /**
          * Initialize and set the timezone.
          */
         void InitializeTimezone(const char *timezone)
@@ -540,8 +577,7 @@ namespace GenericESP32Firmware
 
                     ESP_LOGE(TAG, "Could still not get connection; restarting now.");
 
-                    fflush(stdout);
-                    esp_restart();
+                    PowerManager::GetInstance().Restart();
                 }
             }
 
@@ -723,7 +759,10 @@ namespace GenericESP32Firmware
         rtc_syncronize_sys_time();
 #endif // M5STACK_COREINK
 
-        auto err = InitializeWireless();
+        auto err = InitializeSPIFFS();
+        Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeSPIFFS()");
+
+        err = InitializeWireless();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeWireless()");
 
 #ifndef CONFIG_TWOMES_CUSTOM_GPIO
