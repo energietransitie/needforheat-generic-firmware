@@ -1,7 +1,7 @@
 # Find documentation here:
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
-# @energietransitie/twomes-maintainers will be requested for
+# @energietransitie/needforheat-maintainers will be requested for
 # a review when someone opens a pull request.
 # change the line below to suit your own organization
-*   @energietransitie/twomes-maintainers
+*   @energietransitie/needforheat-maintainers

@@ -39,7 +39,7 @@ namespace OTAFirmwareUpdater
     void CheckUpdateFinishedSuccessfully();
 
     /**
-     * Log firmware version to twomes backend.
+     * Log firmware version to needforheat server.
      * 
      * @param propertyName The name of the property. Can be "booted_fw" or "new_fw".
      * @param version The version as a string.

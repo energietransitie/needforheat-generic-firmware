@@ -1,10 +1,10 @@
 # Site information
-site_name: twomes-generic-esp-firmware library documentation
-site_description: Documentation for the Twomes generic firmware library.
-site_url: https://energietransitie.github.io/twomes-generic-esp-firmware
+site_name: needforheat-generic-firmware library documentation
+site_description: Documentation for the NeedForHeat generic firmware library.
+site_url: https://energietransitie.github.io/needforheat-generic-firmware
 
 # Repository
-repo_url: https://github.com/energietransitie/twomes-generic-esp-firmware
+repo_url: https://github.com/energietransitie/needforheat-generic-firmware
 edit_uri: edit/main/docs/
 
 # Copyright

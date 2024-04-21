@@ -1,6 +1,6 @@
 # Building firmware
 
-To build firmware for a Twomes measurement device, first open the root folder of the firmware directory in Visual Studio Code.
+To build firmware for a NeedForHeat measurement device, first open the root folder of the firmware directory in Visual Studio Code.
 
 ## Building firmware
 1. Click the PlatformIO Icon (the little alien in the left of the screen).
@@ -9,6 +9,6 @@ To build firmware for a Twomes measurement device, first open the root folder of
 3. Click `Upload and Monitor`. 
 > The first time might take a while because PlatformIO needs to install and build the ESP-IDF before it can upload the firmwware.
 4. When it is done uploading, press `CTRL+T` and then `B`, then type `115200` so that it sets the right baud rate and you see text not gibberish.
-5. To provision the device, use [the Twomes app or another app that supports Espressif Unified Provisioning](../provisioning/testing.md).
+5. To provision the device, use [the NeedForHeat app or another app that supports Espressif Unified Provisioning](../provisioning/testing.md).
 
 

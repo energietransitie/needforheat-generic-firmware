@@ -4,13 +4,13 @@ The purpose of a device info page is to inform people that encounter your measur
 
 On a [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk) device, after the device was provisioned, the e-ink screen can show a QR-code and a text like "scan for mor info". Your device info page is shown to people that scan the QR-code, typically from their smartphone. 
 
-The contents of the folder [`/docs/device-info/`](https://github.com/energietransitie/twomes-presence-detector/blob/main/docs/devic-einfo) of a Twomes measurement device repository can be used as the template for your device info page. 
+The contents of the folder [`/docs/device-info/`](https://github.com/energietransitie/needforheat-presence-detector/blob/main/docs/devic-einfo) of a NeedForHeat measurement device repository can be used as the template for your device info page. 
 
 ## Prerequisites
 
 To edit and preview the device info page, you need:
 
-- a Twomes firmware repository cloned on your local machine; 
+- a NeedForHeat firmware repository cloned on your local machine; 
 - a web browser;
 - a plain text editor (or your favourite IDE).
 
@@ -27,7 +27,7 @@ If you change or add styles in the stylesheet, please make sure this is done con
 
 ## Deploying
 
-> In a future version of this repository, we plan do automate deploying device info pages to GitHub Pages. Most likely, the deployment will be to the `/<github-repository-name>/device_info/` folder of your GitHub Pages server. For example, the Twomes Generic-Test measurement device info page will most likely be hosted at [https://energietransitiewindesheim.nl/twomes-generic-esp-firmware/device_info/](https://energietransitiewindesheim.nl/twomes-generic-esp-firmware/device_info/); the Twomes Presence Detection measurement device info page will most likely be hosted at [https://energietransitiewindesheim.nl/twomes-presence-detector/device_info/](https://energietransitiewindesheim.nl/twomes-presence-detector/device_info/)
+> In a future version of this repository, we plan do automate deploying device info pages to GitHub Pages. Most likely, the deployment will be to the `/<github-repository-name>/device_info/` folder of your GitHub Pages server. For example, the NeedForHeat Generic-Test measurement device info page will most likely be hosted at [https://energietransitiewindesheim.nl/needforheat-generic-firmware/device_info/](https://energietransitiewindesheim.nl/needforheat-generic-firmware/device_info/); the NeedForHeat Presence Detection measurement device info page will most likely be hosted at [https://energietransitiewindesheim.nl/needforheat-presence-detector/device_info/](https://energietransitiewindesheim.nl/needforheat-presence-detector/device_info/)
 
 Upload the contents to a webserver, like [GitHub Pages](https://pages.github.com/). Be sure to include all files in the folder `/docs/device_info/`: not only the the file `index.html`, but also all resources referred to in this file, like images.
 

@@ -17,7 +17,7 @@ See [NeedForHeat presence detection documentation](https://www.energietransitiew
 
 ![NeedForHeat generic firmware functions overview](./docs/needforheat-generic-firmware-functions.png)
 
-Different NeedForHeat measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
+Different NeedForHeat measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-server activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
 
 | Sensor | Property or *timestamp*           | Unit | [Printf format](https://en.wikipedia.org/wiki/Printf_format_string) | Default measurement interval \[h:mm:ss\] | Description                            |
 |--------|--------------------|------|--------|-------------------|----------------------------------------|

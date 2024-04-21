@@ -1,23 +1,23 @@
 # Measurement tasks
 
-The twomes-generic-esp-firmware library has a [scheduler](./scheduling.md) that runs tasks according to a specified interval. The library has some generic tasks that can be started. Your measurement device firmware code can add custom measurement tasks for custom properties.
+The needforheat-generic-firmware library has a [scheduler](./scheduling.md) that runs tasks according to a specified interval. The library has some generic tasks that can be started. Your measurement device firmware code can add custom measurement tasks for custom properties.
 
 ## Generic tasks
 
-The twomes-generic-esp-firmware library comes with support for the following generic tasks:
+The needforheat-generic-firmware library comes with support for the following generic tasks:
 
 | Task                                          | Purpose                                                                        | Default interval |
 |-----------------------------------------------|--------------------------------------------------------------------------------|------------------|
 | [Heartbeat](#heartbeat-task)             | Creates a heartbeat measurement and places it on the queue.                      | 10 minutes       |
 | [Battery voltage](#battery-voltage-task) | Measures the battery voltage and places it on the queue. | 10 minutes       |
-| [Upload](#upload-task)                   | Uploads the contents of the secure upload queue to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration).             | 10 minutes       |
+| [Upload](#upload-task)                   | Uploads the contents of the secure upload queue to a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration).             | 10 minutes       |
 | [Time sync](#time-sync-task)             | Synchronizes the device clock via NTP                           | 24 hours         |
 | [OTA firmware update](#ota-firmware-update-task) | Checks for OTA firmware updates and installs them          | 48 hours         |
 | [Presence detection](#presence-detection-task) | Sends Bluetooth name requests to specific static MAC addresses and places a response count on the queue. | 10 minutes |
 
 #### Upload task
 
-The upload task uploads all the contents of the [secure upload queue](./measuring.md#adding-a-measurement-to-the-upload-queue) to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration).
+The upload task uploads all the contents of the [secure upload queue](./measuring.md#adding-a-measurement-to-the-upload-queue) to a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration).
 
 #### Heartbeat task
 
@@ -68,9 +68,9 @@ Beside generic tasks, more tasks can be added to the scheduler. In your firmware
 
 ### Rules
 
-A Twomes measurement task is freeRTOS task, that adheres to specific rules and for which you need to add specific information that is used by the Twomes [scheduler](./scheduling.md) .
+A NeedForHeat measurement task is freeRTOS task, that adheres to specific rules and for which you need to add specific information that is used by the NeedForHeat [scheduler](./scheduling.md) .
 
-Any custom Twomes task needs to adhere to these rules:
+Any custom NeedForHeat task needs to adhere to these rules:
 
 1. A task is a function that takes a `void *taskInfo`[^taskInfo] as a parameter and should not return anything.
     ```cpp title="The task takes a void pointer and returns nothing"

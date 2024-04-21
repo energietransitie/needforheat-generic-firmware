@@ -31,13 +31,13 @@
 #include <secure_upload.hpp>
 #include <ota_firmware_updater.hpp>
 
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+#ifdef CONFIG_NFH_PROV_TRANSPORT_BLE
 #include <wifi_provisioning/scheme_ble.h>
 #endif // CONFIG_EXAMPLE_PROV_TRANSPORT_BLE
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_NFH_PRESENCE_DETECTION
 #include <control_panel.hpp>
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+#endif // CONFIG_NFH_PRESENCE_DETECTION
 
 #ifdef ESP32DEV
 #include "platform_esp32_dev.hpp"
@@ -50,14 +50,14 @@
 #define WIFI_CONNECTED_EVENT BIT0
 #define WIFI_DISCONNECTED_EVENT BIT1
 
-#ifdef CONFIG_TWOMES_TEST_SERVER
-constexpr const char *TWOMES_SERVER_HOSTNAME = "api.tst.energietransitiewindesheim.nl";
-constexpr const char *TWOMES_SERVER = "https://api.tst.energietransitiewindesheim.nl";
+#ifdef CONFIG_NFH_TEST_SERVER
+constexpr const char *NFH_SERVER_HOSTNAME = "api.tst.energietransitiewindesheim.nl";
+constexpr const char *NFH_SERVER = "https://api.tst.energietransitiewindesheim.nl";
 #endif
 
-#ifdef CONFIG_TWOMES_PRODUCTION_SERVER
-constexpr const char *TWOMES_SERVER_HOSTNAME = "api.energietransitiewindesheim.nl";
-constexpr const char *TWOMES_SERVER = "https://api.energietransitiewindesheim.nl";
+#ifdef CONFIG_NFH_PRODUCTION_SERVER
+constexpr const char *NFH_SERVER_HOSTNAME = "api.energietransitiewindesheim.nl";
+constexpr const char *NFH_SERVER = "https://api.energietransitiewindesheim.nl";
 #endif
 
 constexpr int WIFI_MAX_CONNECT_TRIES = 10;
@@ -66,9 +66,9 @@ constexpr int WIFI_MAX_WAIT_MS = 30 * 1000; // 30 seconds.
 constexpr int NTP_MAX_SYNC_TRIES = 10;
 constexpr int NTP_MAX_WAIT_MS = 2 * 1000; // 2 seconds.
 
-constexpr const char *TAG = "Twomes generic ESP32 firmware library";
-constexpr const char *NVS_NAMESPACE = "twomes_storage";
-constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "TWOMES-";
+constexpr const char *TAG = "NeedForHeat generic ESP32 firmware library";
+constexpr const char *NVS_NAMESPACE = "NFH_storage";
+constexpr const char *DEVICE_SERVICE_NAME_PREFIX = "NFH-";
 constexpr const char *QR_CODE_PAYLOAD_TEMPLATE = "{\n\"ver\":\"v1\",\n\"name\":\"%s\",\n\"pop\":\"%u\",\n\"transport\":\"ble\"\n}";
 constexpr const char *POST_DEVICE_PAYLOAD_TEMPLATE = "{\n\"name\":\"%s\",\n\"device_type\":\"%s\",\n\"activation_token\":\"%u\"\n}";
 constexpr const char *ACTIVATION_POST_REQUEST_TEMPLATE = "{\"name\":\"%s\"}";
@@ -342,9 +342,9 @@ namespace GenericESP32Firmware
             // This function does not return an error.
             esp_netif_create_default_wifi_sta();
 
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+#ifdef CONFIG_NFH_PROV_TRANSPORT_SOFTAP
             esp_netif_create_default_wifi_ap();
-#endif // CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+#endif // CONFIG_NFH_PROV_TRANSPORT_SOFTAP
 
             wifi_init_config_t wifiInitConfig = WIFI_INIT_CONFIG_DEFAULT();
             err = esp_wifi_init(&wifiInitConfig);
@@ -368,7 +368,7 @@ namespace GenericESP32Firmware
          */
         esp_err_t InitializeGPIO()
         {
-#ifndef CONFIG_TWOMES_CUSTOM_GPIO
+#ifndef CONFIG_NFH_CUSTOM_GPIO
             ESP_LOGD(TAG, "Initializing GPIO.");
 
 #ifdef ESP32DEV
@@ -388,7 +388,7 @@ namespace GenericESP32Firmware
             err = Buttons::ButtonPressHandler::AddButton(BUTTON_WIFI_RESET, "Wi-Fi reset", 0, nullptr, ResetWireless);
             if (Error::CheckAppendName(err, TAG, "An error occured when adding BUTTON_WIFI_RESET to handler"))
                 return err;
-#endif // CONFIG_TWOMES_CUSTOM_GPIO
+#endif // CONFIG_NFH_CUSTOM_GPIO
 
             return ESP_OK;
         }
@@ -403,12 +403,12 @@ namespace GenericESP32Firmware
             ESP_LOGD(TAG, "Initializing provisioning.");
 
             wifi_prov_mgr_config_t wifiProvConfig;
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+#ifdef CONFIG_NFH_PROV_TRANSPORT_BLE
             wifiProvConfig.scheme = wifi_prov_scheme_ble;
-#endif // CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+#endif // CONFIG_NFH_PROV_TRANSPORT_SOFTAP
+#ifdef CONFIG_NFH_PROV_TRANSPORT_SOFTAP
             wifiProvConfig.scheme = wifi_prov_scheme_softap;
-#endif // CONFIG_TWOMES_PROV_TRANSPORT_SOFTAP
+#endif // CONFIG_NFH_PROV_TRANSPORT_SOFTAP
             wifiProvConfig.scheme_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
             wifiProvConfig.app_event_handler = WIFI_PROV_EVENT_HANDLER_NONE;
 
@@ -480,7 +480,7 @@ namespace GenericESP32Firmware
             // Immediately sync time.
             InitializeTimeSync();
 
-            // Log the booted firmware version to the backend.
+            // Log the booted firmware version to the server.
             auto appDescription = esp_ota_get_app_description();
             OTAFirmwareUpdater::LogFirmwareToBackend("booted_fw", appDescription->version);
 
@@ -581,7 +581,7 @@ namespace GenericESP32Firmware
             s_powerOffTimeout.Start();
 #endif // M5STACK_COREINK
 
-#ifdef CONFIG_TWOMES_PROV_TRANSPORT_BLE
+#ifdef CONFIG_NFH_PROV_TRANSPORT_BLE
             /* This step is only useful when scheme is wifi_prov_scheme_ble. This will
              * set a custom 128 bit UUID which will be included in the BLE advertisement
              * and will correspond to the primary GATT service that provides provisioning
@@ -599,7 +599,7 @@ namespace GenericESP32Firmware
             err = wifi_prov_scheme_ble_set_service_uuid(serviceUUID);
             if (Error::Check(err, TAG))
                 return err;
-#endif // CONFIG_TWOMES_PROV_TRANSPORT_BLE
+#endif // CONFIG_NFH_PROV_TRANSPORT_BLE
 
             wifi_prov_security_t security = WIFI_PROV_SECURITY_1;
             auto datStr = std::to_string(GetDat());
@@ -621,7 +621,7 @@ namespace GenericESP32Firmware
         }
 
         /**
-         * Activate the device with the backend server.
+         * Activate the device with the server.
          * If a bearer exists, this function returns immediately.
          */
         void ActivateDevice()
@@ -706,9 +706,9 @@ namespace GenericESP32Firmware
         powerpin_set();
 #endif // M5STACK_COREINK
 
-#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#ifdef CONFIG_NFH_OTA_FIRMWARE_UPDATE
         OTAFirmwareUpdater::CheckUpdateFinishedSuccessfully();
-#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#endif // CONFIG_NFH_OTA_FIRMWARE_UPDATE
 
         s_deviceTypeName = deviceTypeName;
 
@@ -726,10 +726,10 @@ namespace GenericESP32Firmware
         auto err = InitializeWireless();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeWireless()");
 
-#ifndef CONFIG_TWOMES_CUSTOM_GPIO
+#ifndef CONFIG_NFH_CUSTOM_GPIO
         err = InitializeGPIO();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeGPIO()");
-#endif // CONFIG_TWOMES_CUSTOM_GPIO
+#endif // CONFIG_NFH_CUSTOM_GPIO
 
         err = InitializeProvisioning();
         Error::CheckAppendName(err, TAG, "An error occured inside GenericFirmware::<unnamed>::InitializeProvisioning()");
@@ -752,9 +752,9 @@ namespace GenericESP32Firmware
 
         ActivateDevice();
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_NFH_PRESENCE_DETECTION
         ControlPanel::initialzeButtons();
-#endif // CONFIG_TWOMES_PRESENCE
+#endif // CONFIG_NFH_PRESENCE
 
 #ifdef M5STACK_COREINK
         // Show information about what this device does on the screen.
@@ -820,7 +820,7 @@ namespace GenericESP32Firmware
     void ResetWireless()
     {
         // Blink LED if it is set.
-        // When CONFIG_TWOMES_CUSTOM_GPIO is used, the default value will be GPIO_NUM_MAX.
+        // When CONFIG_NFH_CUSTOM_GPIO is used, the default value will be GPIO_NUM_MAX.
         if (s_wifiResetLED != GPIO_NUM_MAX)
             BlinkLED(s_wifiResetLED, 5);
 
@@ -855,7 +855,7 @@ namespace GenericESP32Firmware
                            HTTPUtil::headers_t &headersReceive,
                            bool useBearer = false)
     {
-        std::string url = TWOMES_SERVER + endpoint;
+        std::string url = NFH_SERVER + endpoint;
 
         esp_http_client_config_t config{};
         config.url = url.c_str();
@@ -869,7 +869,7 @@ namespace GenericESP32Firmware
         if (useBearer)
             headersSend["Authorization"] = "Bearer " + GetBearer();
 
-        ESP_LOGD(TAG, "Sending data to backend with length: %d, data:\n%s", dataSend.size(), dataSend.c_str());
+        ESP_LOGD(TAG, "Sending data to server with length: %d, data:\n%s", dataSend.size(), dataSend.c_str());
 
         ESP_LOGD(TAG, "Remaining heap space: %d", esp_get_free_heap_size());
 

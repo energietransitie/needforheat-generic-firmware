@@ -1,11 +1,11 @@
 {
-    "name": "twomes-generic-esp-firmware",
+    "name": "needforheat-generic-firmware",
     "version": "3.0.1",
-    "description": "Generic firmware library for Twomes devices",
-    "keywords": "twomes, m5stack, espidf",
+    "description": "Generic firmware library for NeedForHeat devices",
+    "keywords": "needforheat, m5stack, espidf",
     "repository": {
         "type": "git",
-        "url": "https://github.com/energietransitie/twomes-generic-esp-firmware.git"
+        "url": "https://github.com/energietransitie/needforheat-generic-firmware.git"
     },
     "authors": [
         {

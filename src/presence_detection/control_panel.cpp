@@ -36,7 +36,7 @@
 #define PRESS_INPUT_PIN 38
 #define RIGHT_INPUT_PIN 39
 
-constexpr const char *NVS_NAMESPACE = "twomes_storage";
+constexpr const char *NVS_NAMESPACE = "NFH_storage";
 constexpr const char *TAG = "MAC Address";
 
 constexpr const uint64_t EXIT_TIMEOUT_S = Timer::Timeout::MINUTE * 2;

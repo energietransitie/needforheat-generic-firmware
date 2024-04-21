@@ -1,6 +1,6 @@
 # Uploading
 
-All queued measurments will be uploaded to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) when the [upload task](running-tasks.md#default-tasks) runs.
+All queued measurments will be uploaded to a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration) via the [NeedForHeat API](https://github.com/energietransitie/needforheat-server-api) when the [upload task](running-tasks.md#default-tasks) runs.
 
 In a single upload, one or more measurements for one or more properties can be uploaded. The payload of such an upload is a JSON-formatted string with the following structure:
 
@@ -25,4 +25,4 @@ An upload consists of an `upload_time`, which indicates the [Unix timestamp](htt
 
 <i>Currently, on battery-powerd measurement measurement devices that are completely powered down between measurement tasks, to prevent measurement data loss in the measurement queue, the upload task needs to run after each measurement task. This can be achieved by setting the upload task time equal to the greatest common denominator of all measurement tasks.
 
-> In a future version of the twomes-generic-esp-firmware library, we intend to add persistent memory support for the measurement queue. This would allow you to batch the measurement values and upload measurement values in the queue to the server much less often. This can help to extend the run time of battery-powered measurement devices. It also helps make the measurement devices more robust against intermittent loss of internet connectivity.
+> In a future version of the needforheat-generic-firmware library, we intend to add persistent memory support for the measurement queue. This would allow you to batch the measurement values and upload measurement values in the queue to the server much less often. This can help to extend the run time of battery-powered measurement devices. It also helps make the measurement devices more robust against intermittent loss of internet connectivity.

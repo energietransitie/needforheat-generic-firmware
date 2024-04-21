@@ -63,7 +63,7 @@ int32_t i2c_hal_write(void *handle, uint8_t address, uint8_t reg, const uint8_t 
 }
 
 // i2c write function copied from twomes-room-monitor-firmware firmware to be compatible with scd41 library
-esp_err_t twomes_i2c_write(uint8_t address, uint8_t *buffer, uint8_t len, bool sendStop) {
+esp_err_t NFH_i2c_write(uint8_t address, uint8_t *buffer, uint8_t len, bool sendStop) {
     //Setup i2c communication:
     i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
     esp_err_t err = i2c_master_start(i2c_cmd);
@@ -88,7 +88,7 @@ esp_err_t twomes_i2c_write(uint8_t address, uint8_t *buffer, uint8_t len, bool s
 }
 
 // i2c read function copied from twomes-room-monitor-firmware firmware to be compatible with scd41 library
-esp_err_t twomes_i2c_read(uint8_t address, uint8_t *buffer, uint8_t len) {
+esp_err_t NFH_i2c_read(uint8_t address, uint8_t *buffer, uint8_t len) {
     i2c_cmd_handle_t i2c_cmd = i2c_cmd_link_create();
     i2c_master_start(i2c_cmd);
     i2c_master_write_byte(i2c_cmd, (address << 1) | I2C_MASTER_READ, true);

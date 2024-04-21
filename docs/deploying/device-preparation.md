@@ -1,8 +1,8 @@
 # Device preparation
 
-This section describes how a device running firmware based on the twomes-generic-esp-firmware library should be prepared to work together with a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api).
+This section describes how a device running firmware based on the needforheat-generic-firmware library should be prepared to work together with a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration) using the [NeedForHeat API](https://github.com/energietransitie/needforheat-server-api).
 
-Currently, each device instance must be registered on a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) via the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api) before the server accepts data send data to it from that device.
+Currently, each device instance must be registered on a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration) via the [NeedForHeat API](https://github.com/energietransitie/needforheat-server-api) before the server accepts data send data to it from that device.
 
 ## Erase all persistenly stored data
 
@@ -19,18 +19,18 @@ Unless you are 100% sure that it is safe to only upload firmware and keep other 
 
 > Should you encounter issues you may try to replace `py -m esptool` in the above commands with `python -m esptool` or `esptool.py`
 
-After this command you should perform the full Twomes device preparation flow below:
+After this command you should perform the full NeedForHeat device preparation flow below:
 
 1. Upload firmware to the ESP32 device
 2. Find the device name and activation_token
-3. Register the device on the [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) using the [Twomes API](https://github.com/energietransitie/twomes-backoffice-api)
+3. Register the device on the [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration) using the [NeedForHeat API](https://github.com/energietransitie/needforheat-server-api)
 4. Generating a QR-code and print the QR_code<br>
 > For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this last step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.
  
 
 ## Step 1: Upload firmware to the ESP32 device
 
-1. Download the [binary release for your device](https://github.com/energietransitie/twomes-generic-esp-firmware/releases) and extract it to a directory of your choice.
+1. Download the [binary release for your device](https://github.com/energietransitie/needforheat-generic-firmware/releases) and extract it to a directory of your choice.
 2. Connect the device with a USB cable to the PC.
 3. If you used the device before, you shoud first [erase all persistenly stored data](#erase-all-persistenly-stored-data)
 4.	Open a comand prompt in the directory you chose to download and extract the binary releases in and enter the following:
@@ -57,7 +57,7 @@ After this command you should perform the full Twomes device preparation flow be
 ## Step 2: Generating a QR-code
 > For measurement devices that use the [M5Stack CoreInk](https://github.com/m5stack/M5-CoreInk), this step can be skipped, since the firmware automatically displays the QR-code on the e-ink screen of the device.<
 
-The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that visible to the subject that receives the Twomes measurement device. When printed on a sticker, we recomend attaching it the back of the measurement device.
+The `device.name` and `device.activation_token` of the device should be encoded in a QR-code that visible to the subject that receives the NeedForHeat measurement device. When printed on a sticker, we recomend attaching it the back of the measurement device.
 
 In general, we follow [Espressif's QR-code format](https://github.com/espressif/esp-idf-provisioning-android#qr-code-scan). With a few additional conventions: we always use security and currently, support for SoftAP is not yet fully implemented nor fully documented. Watch this space for changes in the way the `name` key of the QR-code payload is used.
 
@@ -68,7 +68,7 @@ Payload information :
 | Key       	| Value used                           	| Example                                  	| Required                                                            	|
 |-----------	|------------------------------------	|-----------------------------------------	|---------------------------------------------------------------------	|
 | ver       	| Version of the QR code.            	| `v1`				               	| Yes                                                                 	|
-| name      	| device.name	 		 	| `TWOMES-0D45DF`                             	| Yes                                                                 	|
+| name      	| device.name	 		 	| `NFH-0D45DF`                             	| Yes                                                                 	|
 | pop       	| device.activation_token              	| `810667973`				   	| Yes								 	|
 | transport 	| Wi-Fi provisioning transport type 	| Either `softap` or `ble`	               	| Yes                                                                 	|
 | security  	| Security during Wi-Fi provisioning  	| Either `0` or `1`		              	| Optional; considered `1` (secure) if not available in QR-code payload	|
@@ -82,5 +82,5 @@ To generate a QR-code, you can use any QR-code generator. When generating QR-cod
 If you want to repurpose and existing device (e.g. use it in another home), you should:
 
 * erase all persistently stored data on the device;
-* after the value in the `name` column of the existing device entry in the database, append something like `-OLD` and click on `SAVE` (for the Twomes test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
+* after the value in the `name` column of the existing device entry in the database, append something like `-OLD` and click on `SAVE` (for the NeedForHeat test database, you can do this via [CloudBeaver](https://db.energietransitiewindesheim.nl/#/));
 *  proceed with regular device preparation.

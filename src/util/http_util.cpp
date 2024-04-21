@@ -72,7 +72,7 @@ namespace HTTPUtil
         // Check if provisioning is done.
         // Use this info to skip retries if provisioning is not done.
         uint32_t postProvisioningDone = 0;
-        NVS::Get("twomes_storage", "ppDone", postProvisioningDone);
+        NVS::Get("NFH_storage", "ppDone", postProvisioningDone);
 
         for (int tries = 1; tries <= HTTPS_CONNECTION_RETRIES; tries++)
         {

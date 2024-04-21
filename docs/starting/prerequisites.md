@@ -31,4 +31,4 @@ We recommend using a device without [secure boot](../releasing/secure-boot-firmw
 5. In the `lib` folder you will find the library that this repository contains.
 6. To change between provisioning via BLE or SoftAP, in the `platformio.ini`file, comment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_BLE` and uncomment the line including `-DCONFIG_EXAMPLE_PROV_TRANSPORT_SOFTAP` or vice versa.
 7. Change the code in `src/main.c` as you see fit.
-8. Build the firmware. See also our documentation on how to [build Twomes firmware](../releasing/building.md)
+8. Build the firmware. See also our documentation on how to [build NeedForHeat firmware](../releasing/building.md)

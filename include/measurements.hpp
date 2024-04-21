@@ -80,7 +80,7 @@ namespace Measurements
 			: Measurement(propertyName, value, 0) {}
 
 		/**
-		 * Create a JSON object that can be used to send to the backend API.
+		 * Create a JSON object that can be used to send to the server API.
 		 *
 		 * @returns JSON object of the property.
 		 */

@@ -1,6 +1,6 @@
 # Secure boot firmware
 
-This section describes how to sign Twomes firmware to work on an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for Twomes](secure-boot-bootloader.md). 
+This section describes how to sign NeedForHeat firmware to work on an ESP32 with a secure bootloader. There is anonther page that describes [how to build and deploy a secure bootloader for NeedForHeat](secure-boot-bootloader.md). 
 
 For more information, see the [Espressif secure boot documentation](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/security/secure-boot-v1.html).
 
@@ -20,7 +20,7 @@ esptool.py --chip esp32 --baud 460800 --before default_reset --after hard_reset 
 ```
 
 ## GitHub Actions workflow
-The [GitHub Actions workflow](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/.github/workflows/release.yml) needs a secret with the name `SECURE_BOOTLOADER_SIGNING_KEY` in order to sign the firmware. This key needs to be set in `Settings > Secrets > Actions`.
+The [GitHub Actions workflow](https://github.com/energietransitie/needforheat-generic-firmware/blob/main/.github/workflows/release.yml) needs a secret with the name `SECURE_BOOTLOADER_SIGNING_KEY` in order to sign the firmware. This key needs to be set in `Settings > Secrets > Actions`.
 
 1. Generate a secure boot signing key:
   ```shell

@@ -26,7 +26,7 @@
 
 #define MACAddressLength 18
 
-constexpr const char *NVS_NAMESPACE = "twomes_storage";
+constexpr const char *NVS_NAMESPACE = "NFH_storage";
 constexpr const char *TAG = "MAC Address";
 
 namespace MACAddres
