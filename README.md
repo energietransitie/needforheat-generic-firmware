@@ -1,7 +1,7 @@
-# Generic firmware for Twomes measurement devices
-This repository contains the generic firmware, with features common to various Twomes measurement devices, based on an [ESP32](https://en.wikipedia.org/wiki/ESP32).
+# Generic firmware for NeedForHeat measurement devices
+This repository contains the generic firmware, with features common to various NeedForHeat measurement devices, based on an [ESP32](https://en.wikipedia.org/wiki/ESP32).
 
-See [Twomes presence detection documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/configuring-presence-detection) for more specific information about the optional presence detection capabilities of this Twomes generic firmware.
+See [NeedForHeat presence detection documentation](https://www.energietransitiewindesheim.nl/needforheat-generic-firmware/deploying/configuring-presence-detection) for more specific information about the optional presence detection capabilities of this NeedForHeat generic firmware.
 
 ## Table of contents
 * [General info](#general-info)
@@ -15,9 +15,9 @@ See [Twomes presence detection documentation](https://www.energietransitiewindes
 
 ## General info
 
-![Twomes generic firmware functions overview](./docs/twomes-generic-firmware-functions.png)
+![NeedForHeat generic firmware functions overview](./docs/needforheat-generic-firmware-functions.png)
 
-Different Twomes measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
+Different NeedForHeat measurement devices may have various features in common, including device preperation, provisioning of home Wi-Fi network credentials via Bluetooth Low Energy (BLE) or via a temporary software access point (SoftAP), device-backend activation, network time synchronisation, persistent buffering and secure uploading of measurement data. The generic firmware currently uploads the following data: 
 
 | Sensor | Property or *timestamp*           | Unit | [Printf format](https://en.wikipedia.org/wiki/Printf_format_string) | Default measurement interval \[h:mm:ss\] | Description                            |
 |--------|--------------------|------|--------|-------------------|----------------------------------------|
@@ -26,19 +26,19 @@ Different Twomes measurement devices may have various features in common, includ
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `occupancy__p`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones responding to Bluetooth name request                        |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `onboarded__p`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones that were onboarded and that are regularly sent Bluetooth name requests                        |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`timestamp`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Each measurement is timestamped |
-| [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`upload_time`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Uploads of the contents of the secure upload queue to a [Twomes server](https://github.com/energietransitie/twomes-backoffice-configuration) are timestamped |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32) device clock  | *`upload_time`* | [Unix time](https://en.wikipedia.org/wiki/Unix_time)   | %d   | 0:10:00           | Uploads of the contents of the secure upload queue to a [NeedForHeat server](https://github.com/energietransitie/needforheat-server-configuration) are timestamped |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) internet | `booted_fw`         | version   | %s   | 48:00:00           | Version string of firmware on first boot after provisioning or OTA update                        |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) internet | `new_fw`         | version   | %s   | 48:00:00  | If Over-The-Air (OTA) firmware updates are enabled; data is only logged when new valid firmware was downloaded |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) internet  | (none yet)         | [-]   | %u   | 24:00:00           | Device clock is synchronized regularly via the internet over NTP (time skew will be recorded in a future version of the firmware) |
 
-This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between Twomes devices based on an ESP32 SoC. This facilitates development of firmware for Twomes measurement devices.
+This software repository provides a shared libary for many of these common features. With this library, we also intend to make it easier to port software between NeedForHeat devices based on an ESP32 SoC. This facilitates development of firmware for NeedForHeat measurement devices.
 
 ## Deploying
 
-Go to the [deploying section of the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/deploying/prerequisites/) to learn you can deploy binary releases of the firmware, i.e. without changing the source code, without a development environment and without needing to compile the source code.
+Go to the [deploying section of the needforheat-generic-firmware library documentation](https://www.energietransitiewindesheim.nl/needforheat-generic-firmware/deploying/prerequisites/) to learn you can deploy binary releases of the firmware, i.e. without changing the source code, without a development environment and without needing to compile the source code.
 
 ## Developing 
-Go to the [developing section of the twomes-generic-esp-firmware library documentation](https://www.energietransitiewindesheim.nl/twomes-generic-esp-firmware/starting/prerequisites/) to learn how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be deployed, either via the development environment, or via the method described in the section [Deploying](#deploying).
+Go to the [developing section of the needforheat-generic-firmware library documentation](https://www.energietransitiewindesheim.nl/needforheat-generic-firmware/starting/prerequisites/) to learn how you can change the source code using a development environment and compile the source code into a binary release of the firmware that can be deployed, either via the development environment, or via the method described in the section [Deploying](#deploying).
 
 ## Supported devices
 
