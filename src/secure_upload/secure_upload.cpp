@@ -77,7 +77,7 @@ namespace SecureUpload
 		auto statusCode = GenericESP32Firmware::PostHTTPSToBackend(ENDPOINT_VARIABLE_UPLOAD, dataSend, headersSend, dataReceive, headersReceive, true);
 		if (statusCode != 200)
 		{
-			ESP_LOGE(TAG, "Posting to backend returned statuscode %d.", statusCode);
+			ESP_LOGE(TAG, "Posting to server returned statuscode %d.", statusCode);
 		}
 
 		ESP_LOGD(TAG, "Backend server response body: \n%s", dataReceive.c_str());

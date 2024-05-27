@@ -10,9 +10,9 @@ void i2c_hal_init();
 int32_t i2c_hal_read(void *handle, uint8_t address, uint8_t reg, uint8_t *buffer, uint16_t size);
 int32_t i2c_hal_write(void *handle, uint8_t address, uint8_t reg, const uint8_t *buffer, uint16_t size);
 
-// function from twomes source for compatibility
-esp_err_t twomes_i2c_write(uint8_t address, uint8_t *buffer, uint8_t len, bool sendStop);
-esp_err_t twomes_i2c_read(uint8_t address, uint8_t *buffer, uint8_t len);
+// function from needforheat source for compatibility
+esp_err_t NFH_i2c_write(uint8_t address, uint8_t *buffer, uint8_t len, bool sendStop);
+esp_err_t NFH_i2c_read(uint8_t address, uint8_t *buffer, uint8_t len);
 
 
 #endif

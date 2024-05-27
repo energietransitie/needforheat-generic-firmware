@@ -11,7 +11,7 @@ namespace SecureUpload
      * A queue that holds measurement data.
      *
      * Use Queue::AddMeasurement(measurement) to add a measurement to the queue.
-     * Use Queue::Upload() to upload the queue's contents to the backend server.
+     * Use Queue::Upload() to upload the queue's contents to the server server.
      */
     class Queue
     {
@@ -32,7 +32,7 @@ namespace SecureUpload
         void AddMeasurement(const Measurements::Measurement &measurement);
 
         /**
-         * Upload all measurements on the queue to the backend API.
+         * Upload all measurements on the queue to the server API.
          */
         void Upload();
 

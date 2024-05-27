@@ -31,13 +31,13 @@
 #include <util/buzzer.hpp>
 
 constexpr const char *TAG = "Presence detection";
-constexpr const char *NVS_NAMESPACE = "twomes_storage";
+constexpr const char *NVS_NAMESPACE = "NFH_storage";
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#ifdef CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 constexpr int RESPONSE_MAX_WAIT_MS = 20 * 1000; // 20 seconds.
 #else
 constexpr int RESPONSE_MAX_WAIT_MS = 10 * 1000; // 10 seconds.
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#endif // CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 
 constexpr const char *OCCUPANCY_MEASUREMENT_PROPERTY_NAME = "occupancy__p";
 constexpr const char *ONBOARDED_MEASUREMENT_PROPERTY_NAME = "onboarded__p";
@@ -250,10 +250,10 @@ namespace PresenceDetection
 				if (Error::CheckAppendName(err, TAG, "An error occured when sending BT name request"))
 					return err;
 
-#ifndef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#ifndef CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 				// Wait for the current name request to respond or timeout.
 				xEventGroupWaitBits(s_events, EVENT_RESPONSE_RECEIVED, pdTRUE, pdTRUE, Delay::MilliSeconds(RESPONSE_MAX_WAIT_MS));
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#endif // CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 			}
 
 			ESP_LOGD(TAG, "Sent %d name request(s).", s_macAddresses.size());
@@ -514,10 +514,10 @@ namespace PresenceDetection
 		err = SendNameRequests();
 		Error::CheckAppendName(err, TAG, "An error occured inside PresenceDetection::<anonymous>::SendNameRequests()");
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#ifdef CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 		// Wait for all requests to return or timeout.
 		xEventGroupWaitBits(s_events, EVENT_RESPONSES_FINISHED, pdTRUE, pdTRUE, Delay::MilliSeconds(RESPONSE_MAX_WAIT_MS));
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION_PARALLEL
+#endif // CONFIG_NFH_PRESENCE_DETECTION_PARALLEL
 
 		ESP_LOGD(TAG, "Received %d name request response(s).", s_responseCount);
 

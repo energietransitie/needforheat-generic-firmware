@@ -9,13 +9,13 @@
 #include <specific_m5coreink/battery_voltage.hpp>
 #endif // M5STACK_COREINK
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_NFH_PRESENCE_DETECTION
 #include <presence_detection.hpp>
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+#endif // CONFIG_NFH_PRESENCE_DETECTION
 
-#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#ifdef CONFIG_NFH_OTA_FIRMWARE_UPDATE
 #include <ota_firmware_updater.hpp>
-#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#endif // CONFIG_NFH_OTA_FIRMWARE_UPDATE
 
 namespace GenericTasks
 {
@@ -34,9 +34,9 @@ namespace GenericTasks
 		// until the other tasks have finished.
 		Scheduler::WaitForOtherTasks(taskInfo);
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
+#ifdef CONFIG_NFH_PRESENCE_DETECTION
 		PresenceDetection::WaitIfBluetoothActive();
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+#endif // CONFIG_NFH_PRESENCE_DETECTION
 
 		secureUploadQueue.Upload();
 	}
@@ -44,12 +44,12 @@ namespace GenericTasks
 	void HeartbeatTask(void *taskInfo)
 	{
 		// Add a measurement formatter for the heartbeat property.
-		Measurements::Measurement::AddFormatter("heartbeat", "%d");
+		Measurements::Measurement::AddFormatter("heartbeat__0", "%d");
 
 		static int heartbeatCounter = 0;
 		heartbeatCounter++;
 
-		Measurements::Measurement measurement("heartbeat", heartbeatCounter);
+		Measurements::Measurement measurement("heartbeat__0", heartbeatCounter);
 		secureUploadQueue.AddMeasurement(measurement);
 	}
 
@@ -77,8 +77,8 @@ namespace GenericTasks
 						   Scheduler::Interval::MINUTES_10);
 #endif // M5STACK_COREINK
 
-#ifdef CONFIG_TWOMES_PRESENCE_DETECTION
-#ifdef CONFIG_TWOMES_STRESS_TEST
+#ifdef CONFIG_NFH_PRESENCE_DETECTION
+#ifdef CONFIG_NFH_STRESS_TEST
 		Scheduler::AddTask(PresenceDetection::PresenceDetectionTask,
 						   "Presence detection task",
 						   4096,
@@ -92,10 +92,10 @@ namespace GenericTasks
 						   nullptr,
 						   1,
 						   Scheduler::Interval::MINUTES_10);
-#endif // CONFIG_TWOMES_STRESS_TEST
-#endif // CONFIG_TWOMES_PRESENCE_DETECTION
+#endif // CONFIG_NFH_STRESS_TEST
+#endif // CONFIG_NFH_PRESENCE_DETECTION
 
-#ifdef CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#ifdef CONFIG_NFH_OTA_FIRMWARE_UPDATE
 		// Add the firmware updater task to the scheduler.
 		Scheduler::AddTask(OTAFirmwareUpdater::OTAFirmwareUpdaterTask,
 						   "OTA Firmware update task",
@@ -103,7 +103,7 @@ namespace GenericTasks
 						   nullptr,
 						   1,
 						   Scheduler::Interval::HOURS_48);
-#endif // CONFIG_TWOMES_OTA_FIRMWARE_UPDATE
+#endif // CONFIG_NFH_OTA_FIRMWARE_UPDATE
 	   // Add tasks to the scheduler. Add the UploadTask as the last task.
 		Scheduler::AddTask(HeartbeatTask,
 						   "Heartbeat task",

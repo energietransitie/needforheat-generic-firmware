@@ -22,7 +22,7 @@ You will need:
 
 This container can be used to build the firmware on any plaftorm (Windows, MacOS or Linux). Windows and MacOS users can not use the devcontainer to deploy binary releases to a device. They should refer to [this section to learn how to deploy the firmware](../deploying/prerequisites.md).
 
-On Linux, the devcontainer can also be used to deploy the firmware to a device. Uncomment the following lines in the [`\.devcontainer\devcontainer.json`](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/.devcontainer/devcontainer.json) file to enable this functionality:
+On Linux, the devcontainer can also be used to deploy the firmware to a device. Uncomment the following lines in the [`\.devcontainer\devcontainer.json`](https://github.com/energietransitie/needforheat-generic-firmware/blob/main/.devcontainer/devcontainer.json) file to enable this functionality:
 
 ```diff
 // Uncommend the 6 lines below to use COM-ports (Linux and MacOS only)

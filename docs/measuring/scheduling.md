@@ -1,6 +1,6 @@
 # Scheduling
 
-The twomes-generic-esp-firmware library has a scheduler to which measurement tasks can be added. The scheduler will then run the tasks according to each task's specified interval.
+The needforheat-generic-firmware library has a scheduler to which measurement tasks can be added. The scheduler will then run the tasks according to each task's specified interval.
 
 ## Task time
 

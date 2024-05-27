@@ -28,7 +28,7 @@
 #define UPDATE_DOWNLOAD_URL "https://github.com/%s/%s/releases/download/%s/%s"
 
 // Set the user-agent to the repository, so GitHub can reach out if necessary.
-#define USER_AGENT_VALUE "github.com/energietransitie/twomes-generic-esp-firmware"
+#define USER_AGENT_VALUE "github.com/energietransitie/needforheat-generic-firmware"
 
 #define TASK_STACK_DEPTH 16384
 
@@ -165,7 +165,7 @@ namespace OTAFirmwareUpdater
         }
 
         std::string storedNewFirmware;
-        auto err = NVS::GetOrInit("twomes_storage", "new_fw", storedNewFirmware);
+        auto err = NVS::GetOrInit("NFH_storage", "new_fw", storedNewFirmware);
         if (err == ESP_OK)
         {
             SemanticVersion storedNew(storedNewFirmware);
@@ -175,7 +175,7 @@ namespace OTAFirmwareUpdater
             {
                 // This version was found before.
                 int installCount = 12;
-                NVS::GetOrInit("twomes_storage", "install_count", installCount);
+                NVS::GetOrInit("NFH_storage", "install_count", installCount);
                 if (installCount >= MAX_INSTALL_TRIES)
                 {
                     ESP_LOGE(TAG, "Installation of firmware update %s was already tried %d times. Skipping install.", version.c_str(), installCount);
@@ -186,7 +186,7 @@ namespace OTAFirmwareUpdater
             else
             {
                 // Reset install_count.
-                err = NVS::Set("twomes_storage", "install_count", 0);
+                err = NVS::Set("NFH_storage", "install_count", 0);
                 Error::CheckAppendName(err, TAG, "An error occured when resetting install_count");
             }
         }
@@ -195,10 +195,10 @@ namespace OTAFirmwareUpdater
             ESP_LOGD(TAG, "Key \"new_fw\" was not set in NVS yet.");
         }
 
-        err = NVS::Set("twomes_storage", "new_fw", version);
+        err = NVS::Set("NFH_storage", "new_fw", version);
         Error::CheckAppendName(err, TAG, "An error occured when writing new_fm in NVS");
 
-        err = NVS::Increment<int32_t>("twomes_storage", "install_count");
+        err = NVS::Increment<int32_t>("NFH_storage", "install_count");
         Error::CheckAppendName(err, TAG, "An error occured when incrementing install_count in NVS");
 
         ESP_LOGI(TAG, "Newer firmware version was found: %s", version.c_str());
@@ -227,7 +227,7 @@ namespace OTAFirmwareUpdater
             ESP_LOGD(TAG, "OTA partition is valid. This partition is not pending verification after an OTA firmware update.");
 
             std::string storedNewFirmware;
-            err = NVS::GetOrInit("twomes_storage", "new_fw", storedNewFirmware);
+            err = NVS::GetOrInit("NFH_storage", "new_fw", storedNewFirmware);
             if (Error::CheckAppendName(err, TAG, "An error occured when reading new_fw from NVS"))
                 return;
 
@@ -239,7 +239,7 @@ namespace OTAFirmwareUpdater
             {
                 ESP_LOGW(TAG, "It looks like a previously attempted update installation failed.");
                 LogFirmwareToBackend("booted_fw", currentVersionString);
-                NVS::Erase("twomes_storage", "new_fw");
+                NVS::Erase("NFH_storage", "new_fw");
             }
 
             return;

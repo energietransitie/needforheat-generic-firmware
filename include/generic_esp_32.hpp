@@ -16,7 +16,7 @@ namespace GenericESP32Firmware
      * Initialize generic ESP32 firmware.
      *
      * The firmware enables provisioning with the 'warmtewachter' app
-     * and sending measurement data to the twomes backend API.
+     * and sending measurement data to the needforheat server API.
      *
      * @param deviceTypeName Name of a valid device type.
      */
@@ -39,7 +39,7 @@ namespace GenericESP32Firmware
     /**
      * Configure the LED to blink when ResetWireless() is called.
      * 
-     * This function only needs to be called when using CONFIG_TWOMES_CUSTOM_GPIO.
+     * This function only needs to be called when using CONFIG_NFH_CUSTOM_GPIO.
      * The GPIO will NOT be configured for you.
      * 
      * @param gpioNum LED GPIO.
@@ -60,7 +60,7 @@ namespace GenericESP32Firmware
     void BlinkLED(gpio_num_t gpioNum, int amount);
 
     /**
-     * Send an HTTPS POST request to the backend API.
+     * Send an HTTPS POST request to the server API.
      *
      * @param endpoint API endpoint.
      * @param dataSend Data to send in the POST request.

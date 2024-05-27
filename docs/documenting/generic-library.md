@@ -1,6 +1,6 @@
 # Generic library
 
-In this section we describe how you can contribute to the [documentation of the twomes-generic-esp-firmware library](https://github.com/energietransitie/twomes-generic-esp-firmware/tree/main/docs), which is based on [MkDocs](https://www.mkdocs.org/).
+In this section we describe how you can contribute to the [documentation of the needforheat-generic-firmware library](https://github.com/energietransitie/needforheat-generic-firmware/tree/main/docs), which is based on [MkDocs](https://www.mkdocs.org/).
 
 ## Prerequisites
 

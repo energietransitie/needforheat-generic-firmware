@@ -1,6 +1,6 @@
 # Releasing firmware
 
-A GitHub repository for Twomes firmware comes with [a workflow that automatically initiates actions to build and create a draft for a new release](https://github.com/energietransitie/twomes-generic-esp-firmware/blob/main/.github/workflows/release.yml). 
+A GitHub repository for NeedForHeat firmware comes with [a workflow that automatically initiates actions to build and create a draft for a new release](https://github.com/energietransitie/needforheat-generic-firmware/blob/main/.github/workflows/release.yml). 
 
 Such a draft should be verified before it is published. At the time of verifying, a title and description can be added to the release.
 
@@ -19,7 +19,7 @@ Follow the steps below to start the GitHub actions workflow which build the bina
 ### Steps
 1. If you have not already cloned the repository, do this now:
     ```shell
-    git clone https://github.com/energietransitie/twomes-generic-esp-firmware.git
+    git clone https://github.com/energietransitie/needforheat-generic-firmware.git
     ```
 2. If you are not already on the main branch, checkout to the main branch:
     ```shell
@@ -42,7 +42,7 @@ Follow the steps below to start the GitHub actions workflow which build the bina
 ## Publishing
 > This information below only applies to firwmare released by the [Research Group Energy Transition](https://github.com/energietransitie).
 
-1. Go to the [releases page](https://github.com/energietransitie/twomes-generic-esp-firmware/releases).
+1. Go to the [releases page](https://github.com/energietransitie/needforheat-generic-firmware/releases).
 2. The latest draft release should be at the top of the page. Click on the pen icon in the top right of the release.
 3. You can now change the release title and description.
 4. The associated tag can be seen. Check if this is correct.
