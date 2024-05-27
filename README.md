@@ -21,7 +21,7 @@ Different NeedForHeat measurement devices may have various features in common, i
 
 | Sensor | Property or *timestamp*           | Unit | [Printf format](https://en.wikipedia.org/wiki/Printf_format_string) | Default measurement interval \[h:mm:ss\] | Description                            |
 |--------|--------------------|------|--------|-------------------|----------------------------------------|
-| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `heartbeat` |   | %d     | 0:10:00           | Incrementing counter indicating the device is working                       |
+| [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `heartbeat__0` |   | %d     | 0:10:00           | Incrementing counter indicating the device is working                       |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32)  | `battery_voltage__V` | V  | %.2f   | 0:10:00           | Measures the battery voltage                      |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `occupancy__p`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones responding to Bluetooth name request                        |
 | [ESP32](https://en.wikipedia.org/wiki/ESP32) Bluetooth  | `onboarded__p`         | [-]   | %u   | 0:10:00           | If enabled; number of smartphones that were onboarded and that are regularly sent Bluetooth name requests                        |
@@ -54,7 +54,7 @@ Currently ready:
 * Unified Provisioning over Bluetooth Low Energy (BLE; ESP32 only) and SoftAP
 * Time synchronisation using NTP
 * Secure transport over TLS/SSL (ESP32 only), using the [ISRG Root X1 certificate](https://crt.sh/?id=9314791)
-* Heartbeats: regular measurement and upload of timestamped measurment data with property `heartbeat`
+* Heartbeats: regular measurement and upload of timestamped measurment data with property `heartbeat__0`
 * Wi-Fi reset via long button press
 * Example code
 * Over-the-Air (OTA) firmware updates

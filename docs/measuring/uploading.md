@@ -9,7 +9,7 @@ In a single upload, one or more measurements for one or more properties can be u
   "upload_time": "1622237550",
   "property_measurements": [
     {
-      "property_name": "heartbeat",
+      "property_name": "heartbeat__0",
       "measurements": [
         {
           "timestamp": "1622237550",

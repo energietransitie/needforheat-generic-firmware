@@ -486,9 +486,9 @@ namespace GenericESP32Firmware
 
             ESP_LOGD(TAG, "Sending a heartbeat once.");
             // Add a measurement formatter for the heartbeat property.
-            Measurements::Measurement::AddFormatter("heartbeat", "%d");
+            Measurements::Measurement::AddFormatter("heartbeat__0", "%d");
 
-            Measurements::Measurement measurement("heartbeat", 0, time(nullptr));
+            Measurements::Measurement measurement("heartbeat__0", 0, time(nullptr));
             SecureUpload::Queue::GetInstance().AddMeasurement(measurement);
             GenericTasks::UploadTask(nullptr);
 

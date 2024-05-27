@@ -44,12 +44,12 @@ namespace GenericTasks
 	void HeartbeatTask(void *taskInfo)
 	{
 		// Add a measurement formatter for the heartbeat property.
-		Measurements::Measurement::AddFormatter("heartbeat", "%d");
+		Measurements::Measurement::AddFormatter("heartbeat__0", "%d");
 
 		static int heartbeatCounter = 0;
 		heartbeatCounter++;
 
-		Measurements::Measurement measurement("heartbeat", heartbeatCounter);
+		Measurements::Measurement measurement("heartbeat__0", heartbeatCounter);
 		secureUploadQueue.AddMeasurement(measurement);
 	}
 
