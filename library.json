@@ -1,6 +1,6 @@
 {
     "name": "needforheat-generic-firmware",
-    "version": "3.0.1",
+    "version": "4.0.0",
     "description": "Generic firmware library for NeedForHeat devices",
     "keywords": "needforheat, m5stack, espidf",
     "repository": {
@@ -24,6 +24,22 @@
         {
             "name": "Tiemen Molenaar",
             "url": "https://github.com/Tiemen-M"
+        },
+        {
+            "name": "Joël van de Weg",
+            "url": "https://github.com/JoelvdWeg"
+        },
+        {
+            "name": "Jorrin Kievit",
+            "url": "https://github.com/JorrinKievit"
+        },
+        {
+            "name": "Sjors Smit",
+            "url": "https://github.com/Shorts1999"
+        },
+        {
+            "name": "Stijn Wingens",
+            "url": "https://github.com/stijnwingens"
         }
     ],
     "license": "Apache-2.0",
