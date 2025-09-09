@@ -11,6 +11,7 @@ See [NeedForHeat presence detection documentation](https://www.energietransitiew
 - [Features](#features)
 - [Status](#status)
 - [License](#license)
+- [Citation](#citation)
 - [Credits](#credits)
 
 ## General info
@@ -101,6 +102,14 @@ Project is: in-progress
 ## License
 This software is available under the [Apache 2.0 license](./LICENSE.md), Copyright 2021 [Research group Energy Transition, Windesheim University of Applied Sciences](https://windesheim.nl/energietransitie) 
 
+## Citation
+
+If you use this repository in your research or work, please cite the following pre-print, which describes the overall NeedForHeat DataGear system of which this repository is a part:
+
+> Ter Hofte, H., & van Ravenzwaaij, N. (2025). *NeedForHeat DataGear: An Open Monitoring System to Accelerate the Residential Heating Transition*. arXiv preprint arXiv:2509.06927. https://doi.org/10.48550/arXiv.2509.06927
+
+**Note:** This is a pre-print submitted on 8 Sep 2025 and has not yet been peer-reviewed. For the full paper, see [https://arxiv.org/abs/2509.06927](https://arxiv.org/abs/2509.06927).
+
 ## Credits
 This software is made by:
 * Nick van Ravenzwaaij ·  [@n-vr](https://github.com/n-vr)
@@ -116,7 +125,7 @@ Thanks also go to:
 * Tiemen Molenaar · [@Tiemen-M](https://github.com/Tiemen-M)
 
 Product owner:
-* Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte) · Twitter [@HeNRGi](https://twitter.com/HeNRGi)
+* Henri ter Hofte · [@henriterhofte](https://github.com/henriterhofte)
 
 We use and gratefully acknowlegde the efforts of the makers of the following source code and libraries:
 * [ESP-IDF](https://github.com/espressif/esp-idf), by Espressif Systems, licensed under [Apache 2.0 license](https://github.com/espressif/esp-idf/blob/73db142403c6e5b763a0e1c07312200e9b622673/LICENSE)
